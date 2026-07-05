@@ -53,6 +53,19 @@ pnpm test
 pnpm boundaries
 ```
 
+CI uses the non-mutating formatter/linter command:
+
+```bash
+pnpm check:ci
+```
+
+Deployment notes live in [`docs/deployment.md`](docs/deployment.md). The root
+`Dockerfile` supports Turbo-pruned images with `APP_SCOPE`, for example:
+
+```bash
+docker build --build-arg APP_SCOPE=@repo/app -t personal-saas-app .
+```
+
 ## Architecture Rules
 
 - `apps/*` are independently deployable.

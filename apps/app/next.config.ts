@@ -4,6 +4,7 @@ import { env } from "./env";
 const apiUrl = env.API_INTERNAL_URL ?? env.NEXT_PUBLIC_API_URL;
 
 const nextConfig: NextConfig = {
+	output: "standalone",
 	transpilePackages: [
 		"@repo/api",
 		"@repo/auth",

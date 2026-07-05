@@ -27,6 +27,8 @@ domain assumptions.
 - Generic design-system and helper packages.
 - Handoff surfaces for future products: docs app, React Email previews, Storybook design-system examples, and template
   tracks for base SaaS, education, dev tools, and Shopify-adjacent add-ons.
+- Production discipline with standalone Next.js outputs, per-surface start scripts, Turbo-pruned Docker builds, CI
+  validation, and deployment docs.
 
 ## Non-Goals
 

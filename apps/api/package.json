@@ -6,6 +6,7 @@
 	"scripts": {
 		"dev": "dotenv -e ../../.env -- tsx watch src/index.ts",
 		"build": "tsc --noEmit",
+		"start": "tsx src/index.ts",
 		"check-types": "tsc --noEmit",
 		"test": "echo 'api app tests live in @repo/api'",
 		"test:unit": "echo 'api app unit tests live in @repo/api'",

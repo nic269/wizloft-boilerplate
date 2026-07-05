@@ -8,6 +8,10 @@
 			"dependsOn": ["^build"],
 			"outputs": [".next/**", "!.next/cache/**", "dist/**", "storybook-static/**", ".react-email/**"]
 		},
+		"@repo/api-app#build": {
+			"dependsOn": ["^build"],
+			"outputs": []
+		},
 		"check-types": {
 			"dependsOn": ["^check-types"]
 		},
