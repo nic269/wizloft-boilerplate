@@ -17,6 +17,8 @@ domain assumptions.
   membership, and an audit record.
 - Permissioned invitation lifecycle with hashed tokens, optional mail delivery, exact-email acceptance, Member role
   activation, revocation, and audit evidence.
+- Organization-scoped role management with a whitelist permission catalog, member role assignment, and recent audit log
+  review.
 - Optional mail, storage, jobs, billing, analytics, CMS, and observability packages that degrade gracefully.
 - Generic design-system and helper packages.
 

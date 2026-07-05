@@ -1,3 +1,11 @@
+import {
+	createRole,
+	isKnownPermission,
+	listAuditLogs,
+	listMembers,
+	listRoles,
+	updateMemberRole,
+} from "@repo/auth/access-control";
 import { createInvitation, InvitationError, listInvitations, revokeInvitation } from "@repo/auth/invitations";
 import { keys } from "@repo/auth/keys";
 import {
@@ -20,6 +28,21 @@ const createOrganizationSchema = z.object({
 
 const createInvitationSchema = z.object({ email: z.string().trim().email().max(254) });
 
+const permissionSchema = z
+	.object({
+		module: z.string().min(1),
+		action: z.string().min(1),
+	})
+	.refine(isKnownPermission, "Unknown permission.");
+
+const createRoleSchema = z.object({
+	name: z.string().trim().min(2).max(40),
+	description: z.string().trim().max(160).optional(),
+	permissions: z.array(permissionSchema).min(1),
+});
+
+const updateMemberRoleSchema = z.object({ roleId: z.string().min(1) });
+
 const requireUser = async (headers: Headers) => {
 	const session = await getCurrentSession(headers);
 	if (!session) {
@@ -28,9 +51,15 @@ const requireUser = async (headers: Headers) => {
 	return session.user;
 };
 
-const requireOrganizationPermission = async (userId: string, organizationId: string, action: string) => {
-	if (!(await hasPermission({ userId, organizationId, module: "members", action }))) {
-		throw new ApiError("FORBIDDEN", "You do not have permission to manage invitations.", 403);
+const requireOrganizationPermission = async (
+	userId: string,
+	organizationId: string,
+	module: string,
+	action: string,
+	message = "You do not have permission for this organization action.",
+) => {
+	if (!(await hasPermission({ userId, organizationId, module, action }))) {
+		throw new ApiError("FORBIDDEN", message, 403);
 	}
 };
 
@@ -77,13 +106,13 @@ export const organizationsRouter = new Hono()
 	.get("/:organizationId/invitations", async (context) => {
 		const user = await requireUser(context.req.raw.headers);
 		const organizationId = context.req.param("organizationId");
-		await requireOrganizationPermission(user.id, organizationId, "read");
+		await requireOrganizationPermission(user.id, organizationId, "members", "read");
 		return context.json({ data: await listInvitations(organizationId) });
 	})
 	.post("/:organizationId/invitations", async (context) => {
 		const user = await requireUser(context.req.raw.headers);
 		const organizationId = context.req.param("organizationId");
-		await requireOrganizationPermission(user.id, organizationId, "invite");
+		await requireOrganizationPermission(user.id, organizationId, "members", "invite");
 		const parsed = createInvitationSchema.safeParse(await context.req.json().catch(() => null));
 		if (!parsed.success) {
 			throw new ApiError("VALIDATION_ERROR", "Enter a valid email address.", 422, parsed.error.flatten());
@@ -129,7 +158,7 @@ export const organizationsRouter = new Hono()
 	.delete("/:organizationId/invitations/:invitationId", async (context) => {
 		const user = await requireUser(context.req.raw.headers);
 		const organizationId = context.req.param("organizationId");
-		await requireOrganizationPermission(user.id, organizationId, "invite");
+		await requireOrganizationPermission(user.id, organizationId, "members", "invite");
 		try {
 			await revokeInvitation({
 				organizationId,
@@ -143,4 +172,71 @@ export const organizationsRouter = new Hono()
 			}
 			throw error;
 		}
+	})
+	.get("/:organizationId/roles", async (context) => {
+		const user = await requireUser(context.req.raw.headers);
+		const organizationId = context.req.param("organizationId");
+		await requireOrganizationPermission(user.id, organizationId, "roles", "read");
+		return context.json({ data: await listRoles(organizationId) });
+	})
+	.post("/:organizationId/roles", async (context) => {
+		const user = await requireUser(context.req.raw.headers);
+		const organizationId = context.req.param("organizationId");
+		await requireOrganizationPermission(user.id, organizationId, "roles", "manage");
+		const parsed = createRoleSchema.safeParse(await context.req.json().catch(() => null));
+		if (!parsed.success) {
+			throw new ApiError("VALIDATION_ERROR", "Invalid role details.", 422, parsed.error.flatten());
+		}
+
+		try {
+			const role = await createRole({
+				organizationId,
+				name: parsed.data.name,
+				permissions: parsed.data.permissions,
+				actorId: user.id,
+				...(parsed.data.description ? { description: parsed.data.description } : {}),
+			});
+			return context.json({ data: role }, 201);
+		} catch (error) {
+			if (isUniqueConstraintError(error)) {
+				throw new ApiError("CONFLICT", "That role already exists in this organization.", 409);
+			}
+			throw error;
+		}
+	})
+	.get("/:organizationId/members", async (context) => {
+		const user = await requireUser(context.req.raw.headers);
+		const organizationId = context.req.param("organizationId");
+		await requireOrganizationPermission(user.id, organizationId, "members", "read");
+		return context.json({ data: await listMembers(organizationId) });
+	})
+	.patch("/:organizationId/members/:membershipId/role", async (context) => {
+		const user = await requireUser(context.req.raw.headers);
+		const organizationId = context.req.param("organizationId");
+		await requireOrganizationPermission(user.id, organizationId, "members", "manage");
+		const parsed = updateMemberRoleSchema.safeParse(await context.req.json().catch(() => null));
+		if (!parsed.success) {
+			throw new ApiError("VALIDATION_ERROR", "Invalid member role.", 422, parsed.error.flatten());
+		}
+
+		try {
+			await updateMemberRole({
+				organizationId,
+				membershipId: context.req.param("membershipId"),
+				roleId: parsed.data.roleId,
+				actorId: user.id,
+			});
+			return context.body(null, 204);
+		} catch (error) {
+			if (error instanceof Error && ["ROLE_NOT_FOUND", "MEMBERSHIP_NOT_FOUND"].includes(error.message)) {
+				throw new ApiError("NOT_FOUND", "Role or membership not found in this organization.", 404);
+			}
+			throw error;
+		}
+	})
+	.get("/:organizationId/audit-logs", async (context) => {
+		const user = await requireUser(context.req.raw.headers);
+		const organizationId = context.req.param("organizationId");
+		await requireOrganizationPermission(user.id, organizationId, "audit", "read");
+		return context.json({ data: await listAuditLogs(organizationId) });
 	});

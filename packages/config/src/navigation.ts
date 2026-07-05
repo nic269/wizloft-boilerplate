@@ -8,4 +8,5 @@ export const dashboardNav = [
 	{ label: "Dashboard", href: "/dashboard" },
 	{ label: "Settings", href: "/settings" },
 	{ label: "Members", href: "/settings/members" },
+	{ label: "Access", href: "/settings/access" },
 ] as const;

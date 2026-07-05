@@ -1,12 +1,5 @@
 import { prisma } from "@repo/database";
-
-export const OWNER_PERMISSIONS = [
-	{ module: "organization", action: "read" },
-	{ module: "organization", action: "update" },
-	{ module: "members", action: "read" },
-	{ module: "members", action: "invite" },
-	{ module: "members", action: "manage" },
-] as const;
+import { OWNER_PERMISSIONS } from "./access-control";
 
 export const normalizeOrganizationSlug = (value: string) =>
 	value

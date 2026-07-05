@@ -1,3 +1,4 @@
+import { createRole, listAuditLogs, listMembers, listRoles, updateMemberRole } from "@repo/auth/access-control";
 import { acceptInvitation, createInvitation } from "@repo/auth/invitations";
 import { createOrganizationForUser, listOrganizationsForUser } from "@repo/auth/organizations";
 import { hasPermission } from "@repo/auth/permissions";
@@ -36,6 +37,24 @@ vi.mock("@repo/auth/invitations", () => ({
 	},
 	listInvitations: vi.fn(),
 	revokeInvitation: vi.fn(),
+}));
+vi.mock("@repo/auth/access-control", () => ({
+	createRole: vi.fn(),
+	isKnownPermission: (permission: { module: string; action: string }) =>
+		[
+			"organization:read",
+			"organization:update",
+			"members:read",
+			"members:invite",
+			"members:manage",
+			"roles:read",
+			"roles:manage",
+			"audit:read",
+		].includes(`${permission.module}:${permission.action}`),
+	listAuditLogs: vi.fn(),
+	listMembers: vi.fn(),
+	listRoles: vi.fn(),
+	updateMemberRole: vi.fn(),
 }));
 vi.mock("@repo/auth/permissions", () => ({ hasPermission: vi.fn() }));
 vi.mock("@repo/mail", () => ({ sendMail: vi.fn() }));
@@ -160,5 +179,98 @@ describe("api app", () => {
 			userId: "user-1",
 			userEmail: "member@example.com",
 		});
+	});
+
+	it("requires role read permission before listing roles", async () => {
+		vi.mocked(getCurrentSession).mockResolvedValue({ user: { id: "user-1" } } as never);
+		vi.mocked(hasPermission).mockResolvedValue(false);
+
+		const response = await createApiApp().request("/api/organizations/org-1/roles");
+
+		expect(response.status).toBe(403);
+		expect(hasPermission).toHaveBeenCalledWith({
+			userId: "user-1",
+			organizationId: "org-1",
+			module: "roles",
+			action: "read",
+		});
+		expect(listRoles).not.toHaveBeenCalled();
+	});
+
+	it("creates roles through catalog permissions and audit-aware service", async () => {
+		vi.mocked(getCurrentSession).mockResolvedValue({ user: { id: "owner-1" } } as never);
+		vi.mocked(hasPermission).mockResolvedValue(true);
+		vi.mocked(createRole).mockResolvedValue({
+			id: "role-1",
+			name: "Manager",
+			description: null,
+			permissions: [{ module: "members", action: "read" }],
+			_count: { memberships: 0 },
+		} as never);
+
+		const response = await createApiApp().request("/api/organizations/org-1/roles", {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({
+				name: "Manager",
+				permissions: [{ module: "members", action: "read" }],
+			}),
+		});
+
+		expect(response.status).toBe(201);
+		expect(createRole).toHaveBeenCalledWith({
+			organizationId: "org-1",
+			name: "Manager",
+			permissions: [{ module: "members", action: "read" }],
+			actorId: "owner-1",
+		});
+	});
+
+	it("updates member roles inside the organization boundary", async () => {
+		vi.mocked(getCurrentSession).mockResolvedValue({ user: { id: "owner-1" } } as never);
+		vi.mocked(hasPermission).mockResolvedValue(true);
+		vi.mocked(updateMemberRole).mockResolvedValue(undefined);
+
+		const response = await createApiApp().request("/api/organizations/org-1/members/member-1/role", {
+			method: "PATCH",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ roleId: "role-2" }),
+		});
+
+		expect(response.status).toBe(204);
+		expect(updateMemberRole).toHaveBeenCalledWith({
+			organizationId: "org-1",
+			membershipId: "member-1",
+			roleId: "role-2",
+			actorId: "owner-1",
+		});
+	});
+
+	it("requires audit read permission before exposing audit logs", async () => {
+		vi.mocked(getCurrentSession).mockResolvedValue({ user: { id: "user-1" } } as never);
+		vi.mocked(hasPermission).mockResolvedValue(true);
+		vi.mocked(listAuditLogs).mockResolvedValue([{ id: "audit-1", action: "role.created" }] as never);
+
+		const response = await createApiApp().request("/api/organizations/org-1/audit-logs");
+
+		expect(response.status).toBe(200);
+		expect(hasPermission).toHaveBeenCalledWith({
+			userId: "user-1",
+			organizationId: "org-1",
+			module: "audit",
+			action: "read",
+		});
+		expect(listAuditLogs).toHaveBeenCalledWith("org-1");
+	});
+
+	it("lists members through member read permission", async () => {
+		vi.mocked(getCurrentSession).mockResolvedValue({ user: { id: "user-1" } } as never);
+		vi.mocked(hasPermission).mockResolvedValue(true);
+		vi.mocked(listMembers).mockResolvedValue([]);
+
+		const response = await createApiApp().request("/api/organizations/org-1/members");
+
+		expect(response.status).toBe(200);
+		expect(listMembers).toHaveBeenCalledWith("org-1");
 	});
 });

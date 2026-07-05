@@ -1,10 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { prisma } from "@repo/database";
-
-const MEMBER_PERMISSIONS = [
-	{ module: "organization", action: "read" },
-	{ module: "members", action: "read" },
-] as const;
+import { MEMBER_PERMISSIONS } from "./access-control";
 
 export type InvitationErrorCode =
 	| "INVITATION_NOT_FOUND"
