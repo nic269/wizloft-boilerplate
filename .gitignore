@@ -38,3 +38,5 @@ scripts/bin/harness-cli.exe
 .claude/
 .codex/
 .history/
+
+.env

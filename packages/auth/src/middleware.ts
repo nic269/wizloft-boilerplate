@@ -1,12 +1,30 @@
-import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-export const createAuthGuard = (paths: { signIn: string; dashboard: string }) => {
-	return (request: NextRequest) => {
-		const sessionCookie = request.cookies.get("better-auth.session_token");
-		const isProtected = request.nextUrl.pathname.startsWith(paths.dashboard);
+type AuthGuardRequest = Request & {
+	nextUrl?: URL;
+	cookies?: {
+		get: (name: string) => unknown;
+	};
+};
 
-		if (isProtected && !sessionCookie) {
+const sessionCookieNames = ["better-auth.session_token", "__Secure-better-auth.session_token"] as const;
+
+const hasSessionCookie = (request: AuthGuardRequest) =>
+	sessionCookieNames.some((name) => {
+		if (request.cookies?.get(name)) {
+			return true;
+		}
+
+		const cookieHeader = request.headers.get("cookie") ?? "";
+		return cookieHeader.split(";").some((cookie) => cookie.trim().startsWith(`${name}=`));
+	});
+
+export const createAuthGuard = (paths: { signIn: string; dashboard: string }) => {
+	return (request: AuthGuardRequest) => {
+		const url = request.nextUrl ?? new URL(request.url);
+		const isProtected = url.pathname.startsWith(paths.dashboard);
+
+		if (isProtected && !hasSessionCookie(request)) {
 			return NextResponse.redirect(new URL(paths.signIn, request.url));
 		}
 

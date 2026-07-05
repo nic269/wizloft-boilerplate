@@ -10,6 +10,8 @@ domain assumptions.
 - Multi-app monorepo with independent deployable surfaces.
 - Better Auth server/client package split.
 - Same-origin auth/API rewrites from `apps/app` to `apps/api`.
+- Email/password auth pages call Better Auth through same-origin `/api/auth` and protected app pages read the current
+  server session.
 - Generic Prisma schema for auth, organizations, RBAC, invitations, audit, files, webhooks, jobs, integrations, and flags.
 - Optional mail, storage, jobs, billing, analytics, CMS, and observability packages that degrade gracefully.
 - Generic design-system and helper packages.
@@ -26,3 +28,4 @@ domain assumptions.
 - `pnpm check-types`
 - `pnpm dev`
 - `pnpm boundaries`
+- `pnpm test:e2e` for the auth smoke when a migrated PostgreSQL database is available.

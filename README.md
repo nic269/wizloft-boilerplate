@@ -36,6 +36,14 @@ pnpm db:seed
 pnpm dev
 ```
 
+If another local Postgres already uses `5432`, start this repo on another host
+port and update `DATABASE_URL` accordingly:
+
+```bash
+POSTGRES_PORT=5434 docker compose up -d postgres
+DATABASE_URL=postgresql://postgres:postgres@localhost:5434/personal_saas_boilerplate pnpm db:push
+```
+
 Useful checks:
 
 ```bash

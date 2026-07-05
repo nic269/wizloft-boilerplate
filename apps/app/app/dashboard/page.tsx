@@ -1,3 +1,4 @@
+import { getCurrentSession } from "@repo/auth/session";
 import { appConfig, dashboardNav } from "@repo/config";
 import {
 	AppShell,
@@ -12,8 +13,17 @@ import {
 	Settings,
 	Users,
 } from "@repo/design-system";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { SignOutButton } from "./sign-out-button";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+	const session = await getCurrentSession(await headers());
+
+	if (!session) {
+		redirect("/sign-in");
+	}
+
 	return (
 		<AppShell
 			brand={appConfig.name}
@@ -27,12 +37,20 @@ export default function DashboardPage() {
 					<Home className="h-4 w-4" />
 				),
 			}))}
-			topbar={<div className="text-sm text-muted-foreground">Authenticated app shell</div>}
+			topbar={
+				<div className="flex items-center gap-3">
+					<div className="text-right text-sm">
+						<div className="font-medium text-foreground">{session.user.name}</div>
+						<div className="text-muted-foreground">{session.user.email}</div>
+					</div>
+					<SignOutButton />
+				</div>
+			}
 		>
 			<div className="space-y-6">
 				<PageHeader
 					title="Dashboard"
-					description="A neutral starting point for authenticated SaaS products."
+					description={`Signed in as ${session.user.email}.`}
 					actions={<Button>Invite member</Button>}
 				/>
 				<div className="grid gap-4 md:grid-cols-3">
