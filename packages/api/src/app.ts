@@ -5,6 +5,7 @@ import { ApiError, type ApiErrorResponse } from "./errors";
 import { openApiDocument } from "./openapi";
 import { filesRouter } from "./routers/files";
 import { healthRouter } from "./routers/health";
+import { invitationsRouter } from "./routers/invitations";
 import { jobsRouter } from "./routers/jobs";
 import { organizationsRouter } from "./routers/organizations";
 
@@ -18,6 +19,7 @@ export const createApiApp = () => {
 
 	app.on(["GET", "POST"], "/api/auth/*", (context) => auth.handler(context.req.raw));
 	app.route("/api/organizations", organizationsRouter);
+	app.route("/api/invitations", invitationsRouter);
 	app.route("/api/files", filesRouter);
 	app.route("/api/jobs", jobsRouter);
 

@@ -11,6 +11,7 @@
 		"./permissions": "./src/permissions.ts",
 		"./invitations": "./src/invitations.ts",
 		"./session": "./src/session.ts",
+		"./organizations": "./src/organizations.ts",
 		"./keys": "./src/keys.ts"
 	},
 	"scripts": {

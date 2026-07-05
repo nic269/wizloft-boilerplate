@@ -2,7 +2,6 @@ import { getCurrentSession } from "@repo/auth/session";
 import { appConfig, dashboardNav } from "@repo/config";
 import {
 	AppShell,
-	Button,
 	Card,
 	CardContent,
 	CardDescription,
@@ -15,6 +14,7 @@ import {
 } from "@repo/design-system";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { OrganizationsPanel } from "./organizations-panel";
 import { SignOutButton } from "./sign-out-button";
 
 export default async function DashboardPage() {
@@ -48,19 +48,9 @@ export default async function DashboardPage() {
 			}
 		>
 			<div className="space-y-6">
-				<PageHeader
-					title="Dashboard"
-					description={`Signed in as ${session.user.email}.`}
-					actions={<Button>Invite member</Button>}
-				/>
+				<PageHeader title="Dashboard" description={`Signed in as ${session.user.email}.`} />
 				<div className="grid gap-4 md:grid-cols-3">
-					<Card>
-						<CardHeader>
-							<CardTitle>Organizations</CardTitle>
-							<CardDescription>Org-scoped roles and permissions are the default.</CardDescription>
-						</CardHeader>
-						<CardContent className="text-2xl font-semibold">Ready</CardContent>
-					</Card>
+					<OrganizationsPanel />
 					<Card>
 						<CardHeader>
 							<CardTitle>API</CardTitle>

@@ -13,6 +13,10 @@ domain assumptions.
 - Email/password auth pages call Better Auth through same-origin `/api/auth` and protected app pages read the current
   server session.
 - Generic Prisma schema for auth, organizations, RBAC, invitations, audit, files, webhooks, jobs, integrations, and flags.
+- Membership-scoped organization onboarding that atomically provisions an Owner role, baseline permissions, creator
+  membership, and an audit record.
+- Permissioned invitation lifecycle with hashed tokens, optional mail delivery, exact-email acceptance, Member role
+  activation, revocation, and audit evidence.
 - Optional mail, storage, jobs, billing, analytics, CMS, and observability packages that degrade gracefully.
 - Generic design-system and helper packages.
 

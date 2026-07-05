@@ -11,6 +11,7 @@ type AuthMode = "sign-in" | "sign-up";
 
 type AuthFormProps = {
 	mode: AuthMode;
+	callbackUrl?: string;
 };
 
 const copy = {
@@ -40,7 +41,7 @@ const getErrorMessage = (error: unknown) => {
 	return "Authentication failed. Check your details and try again.";
 };
 
-export const AuthForm = ({ mode }: AuthFormProps) => {
+export const AuthForm = ({ mode, callbackUrl = "/dashboard" }: AuthFormProps) => {
 	const router = useRouter();
 	const [error, setError] = useState<string | null>(null);
 	const [isPending, setIsPending] = useState(false);
@@ -59,15 +60,15 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
 		try {
 			const response =
 				mode === "sign-up"
-					? await signUp.email({ email, password, name, callbackURL: "/dashboard" })
-					: await signIn.email({ email, password, callbackURL: "/dashboard" });
+					? await signUp.email({ email, password, name, callbackURL: callbackUrl })
+					: await signIn.email({ email, password, callbackURL: callbackUrl });
 
 			if (response.error) {
 				setError(getErrorMessage(response.error));
 				return;
 			}
 
-			router.push("/dashboard");
+			router.push(callbackUrl);
 			router.refresh();
 		} catch (caughtError) {
 			setError(getErrorMessage(caughtError));
@@ -104,7 +105,10 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
 					</Button>
 					<p className="text-center text-sm text-muted-foreground">
 						{text.switchLabel}{" "}
-						<Link className="font-medium text-primary hover:underline" href={text.switchHref}>
+						<Link
+							className="font-medium text-primary hover:underline"
+							href={`${text.switchHref}?callbackUrl=${encodeURIComponent(callbackUrl)}`}
+						>
 							{text.switchText}
 						</Link>
 					</p>
