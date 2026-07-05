@@ -54,11 +54,19 @@ export type StorageProvider = {
 	getSignedDownloadUrl?(input: SignedDownloadInput): Promise<SignedDownload>;
 };
 
+export const sanitizeObjectKeySegment = (value: string) =>
+	value
+		.normalize("NFKD")
+		.replace(/[\u0300-\u036f]/g, "")
+		.replace(/[^a-zA-Z0-9._-]+/g, "-")
+		.replace(/^[.-]+|[.-]+$/g, "")
+		.slice(0, 120) || "file";
+
 export const buildTenantObjectKey = (input: { organizationId?: string; ownerId?: string; fileName: string }) => {
 	const scope = input.organizationId
-		? `org/${input.organizationId}`
+		? `org/${sanitizeObjectKeySegment(input.organizationId)}`
 		: input.ownerId
-			? `user/${input.ownerId}`
+			? `user/${sanitizeObjectKeySegment(input.ownerId)}`
 			: "global";
-	return `${scope}/${crypto.randomUUID()}-${input.fileName}`;
+	return `${scope}/${crypto.randomUUID()}-${sanitizeObjectKeySegment(input.fileName)}`;
 };

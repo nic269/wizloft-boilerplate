@@ -58,6 +58,12 @@ vi.mock("@repo/auth/access-control", () => ({
 }));
 vi.mock("@repo/auth/permissions", () => ({ hasPermission: vi.fn() }));
 vi.mock("@repo/mail", () => ({ sendMail: vi.fn() }));
+vi.mock("@repo/storage", () => ({
+	getStorageProviderStatus: () => ({ provider: "local", configured: true, mode: "durable" }),
+}));
+vi.mock("@repo/jobs", () => ({
+	getJobProviderStatus: () => ({ provider: "local", configured: true, mode: "in-process" }),
+}));
 
 describe("api app", () => {
 	beforeEach(() => vi.clearAllMocks());
@@ -86,6 +92,16 @@ describe("api app", () => {
 		const document = await response.json();
 		expect(document.paths["/status"].get.operationId).toBe("status.get.rest");
 		expect(document.paths["/rpc/status.get"].get.operationId).toBe("status.get.rpc");
+	});
+
+	it("exposes optional provider statuses", async () => {
+		const files = await createApiApp().request("/api/files");
+		const jobs = await createApiApp().request("/api/jobs");
+
+		expect(files.status).toBe(200);
+		expect(await files.json()).toMatchObject({ data: { provider: "local", configured: true } });
+		expect(jobs.status).toBe(200);
+		expect(await jobs.json()).toMatchObject({ data: { provider: "local", configured: true } });
 	});
 
 	it("rejects anonymous organization access", async () => {

@@ -21,7 +21,9 @@ domain assumptions.
   review.
 - Hono API contract registry with stable procedure IDs, RPC-style health procedures, typed client helpers, and OpenAPI
   paths generated from the same registry.
-- Optional mail, storage, jobs, billing, analytics, CMS, and observability packages that degrade gracefully.
+- Optional mail, storage, jobs, billing, analytics, CMS, and observability packages that degrade gracefully. Mail falls
+  back to console delivery, storage supports local/memory/S3-compatible private objects, and jobs include a local
+  in-process provider with idempotency, retry, and run status.
 - Generic design-system and helper packages.
 
 ## Non-Goals

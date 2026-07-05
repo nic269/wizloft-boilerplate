@@ -290,12 +290,18 @@ importers:
       '@repo/database':
         specifier: workspace:*
         version: link:../database
+      '@repo/jobs':
+        specifier: workspace:*
+        version: link:../jobs
       '@repo/logger':
         specifier: workspace:*
         version: link:../logger
       '@repo/mail':
         specifier: workspace:*
         version: link:../mail
+      '@repo/storage':
+        specifier: workspace:*
+        version: link:../storage
       hono:
         specifier: ^4.11.1
         version: 4.12.27

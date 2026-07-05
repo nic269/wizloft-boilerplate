@@ -22,8 +22,10 @@
 		"@hono/node-server": "^1.19.7",
 		"@repo/auth": "workspace:*",
 		"@repo/database": "workspace:*",
+		"@repo/jobs": "workspace:*",
 		"@repo/logger": "workspace:*",
 		"@repo/mail": "workspace:*",
+		"@repo/storage": "workspace:*",
 		"hono": "^4.11.1",
 		"zod": "^4.3.6"
 	},

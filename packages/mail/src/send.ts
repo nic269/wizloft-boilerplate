@@ -14,6 +14,12 @@ export type MailProvider = {
 	send(input: SendMailInput): Promise<{ id: string; provider: string }>;
 };
 
+export type MailProviderStatus = {
+	provider: "console" | "resend";
+	configured: boolean;
+	mode: "development" | "provider";
+};
+
 export const consoleMailProvider: MailProvider = {
 	async send(input) {
 		logger.info("mail.console", { to: input.to, subject: input.subject });
@@ -21,10 +27,21 @@ export const consoleMailProvider: MailProvider = {
 	},
 };
 
-export const getMailProvider = (): MailProvider => {
+export const getMailProviderStatus = (): MailProviderStatus => {
 	const env = keys();
 
 	if (!env.RESEND_API_KEY) {
+		return { provider: "console", configured: true, mode: "development" };
+	}
+
+	return { provider: "resend", configured: Boolean(env.RESEND_FROM_EMAIL), mode: "provider" };
+};
+
+export const getMailProvider = (): MailProvider => {
+	const env = keys();
+	const status = getMailProviderStatus();
+
+	if (status.provider === "console") {
 		return consoleMailProvider;
 	}
 
