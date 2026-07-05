@@ -25,6 +25,8 @@ domain assumptions.
   back to console delivery, storage supports local/memory/S3-compatible private objects, and jobs include a local
   in-process provider with idempotency, retry, and run status.
 - Generic design-system and helper packages.
+- Handoff surfaces for future products: docs app, React Email previews, Storybook design-system examples, and template
+  tracks for base SaaS, education, dev tools, and Shopify-adjacent add-ons.
 
 ## Non-Goals
 
@@ -38,4 +40,5 @@ domain assumptions.
 - `pnpm check-types`
 - `pnpm dev`
 - `pnpm boundaries`
+- `pnpm build`
 - `pnpm test:e2e` for the auth smoke when a migrated PostgreSQL database is available.
