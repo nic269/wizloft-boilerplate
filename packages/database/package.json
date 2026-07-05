@@ -1,0 +1,35 @@
+{
+	"name": "@repo/database",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./client": "./src/client.ts",
+		"./env": "./src/env.ts"
+	},
+	"scripts": {
+		"build": "prisma generate",
+		"check-types": "tsc --noEmit",
+		"generate": "prisma generate",
+		"db:push": "prisma db push",
+		"db:migrate:dev": "prisma migrate dev",
+		"db:migrate:deploy": "prisma migrate deploy",
+		"db:seed": "tsx src/seed.ts",
+		"test": "vitest run --passWithNoTests",
+		"test:unit": "vitest run --passWithNoTests",
+		"test:integration": "echo 'database integration tests require a test database'"
+	},
+	"dependencies": {
+		"@prisma/client": "^6.19.1",
+		"@repo/env": "workspace:*",
+		"zod": "^4.3.6"
+	},
+	"devDependencies": {
+		"@repo/typescript-config": "workspace:*",
+		"prisma": "^6.19.1",
+		"tsx": "^4.21.0",
+		"typescript": "^6.0.3",
+		"vitest": "^4.0.18"
+	}
+}

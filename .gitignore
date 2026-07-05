@@ -13,6 +13,12 @@ dist/
 # JavaScript dependencies for local web UI packages.
 node_modules/
 *.tsbuildinfo
+.pnpm-store/
+.turbo/
+.next/
+storybook-static/
+.react-email/
+coverage/
 
 # Local web UI build and test output.
 desktop-dist/
@@ -28,3 +34,7 @@ scripts/bin/harness-cli.exe
 .harness/*
 !.harness/changesets/
 !.harness/changesets/*.changeset.jsonl
+.agents/
+.claude/
+.codex/
+.history/

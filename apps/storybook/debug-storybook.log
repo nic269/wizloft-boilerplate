@@ -1,0 +1,24 @@
+[17:25:22.273] [INFO] storybook v10.4.6
+[17:25:23.546] [DEBUG] Getting package.json info for /Volumes/anh.nguyen/Projects/AnhN/wizloft-boilerplate/apps/storybook/package.json...
+[17:25:24.211] [INFO] Starting...
+[17:25:24.328] [DEBUG] Starting preview..
+[17:25:24.340] [INFO] Using implicit CSS loaders
+[17:25:24.455] [INFO] Using SWC as compiler
+[17:25:24.470] [INFO] Using default Webpack5 setup
+[17:25:24.794] [DEBUG] Using tsconfig paths for react-docgen
+[17:25:26.085] [ERROR] Failed to build the preview
+[17:25:26.098] [WARN] Force closed preview build
+[17:25:26.099] [ERROR] [38;2;241;97;97mSB_BUILDER-WEBPACK5_0003 (WebpackCompilationError): There were problems when compiling your code with Webpack.
+Run Storybook with --debug-webpack for more information.[39m
+    at starter (file:///Volumes/anh.nguyen/Projects/AnhN/wizloft-boilerplate/node_modules/.pnpm/@storybook+builder-webpack5@10.4.6_esbuild@0.28.1_postcss@8.5.16_storybook@10.4.6_@test_ea1b079651a951b1341e983854c6cd02/node_modules/@storybook/builder-webpack5/dist/index.js:857:11)
+    at starter.next (<anonymous>)
+    at Module.start (file:///Volumes/anh.nguyen/Projects/AnhN/wizloft-boilerplate/node_modules/.pnpm/@storybook+builder-webpack5@10.4.6_esbuild@0.28.1_postcss@8.5.16_storybook@10.4.6_@test_ea1b079651a951b1341e983854c6cd02/node_modules/@storybook/builder-webpack5/dist/index.js:915:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async storybookDevServer (file:///Volumes/anh.nguyen/Projects/AnhN/wizloft-boilerplate/node_modules/.pnpm/storybook@10.4.6_@testing-library+dom@10.4.1_@types+react@19.2.17_prettier@3.9.4_react@19.2.7/node_modules/storybook/dist/core-server/index.js:11496:158)
+    at async buildOrThrow (file:///Volumes/anh.nguyen/Projects/AnhN/wizloft-boilerplate/node_modules/.pnpm/storybook@10.4.6_@testing-library+dom@10.4.1_@types+react@19.2.17_prettier@3.9.4_react@19.2.7/node_modules/storybook/dist/core-server/index.js:8205:12)
+    at async buildDevStandalone (file:///Volumes/anh.nguyen/Projects/AnhN/wizloft-boilerplate/node_modules/.pnpm/storybook@10.4.6_@testing-library+dom@10.4.1_@types+react@19.2.17_prettier@3.9.4_react@19.2.7/node_modules/storybook/dist/core-server/index.js:12057:41)
+    at async withTelemetry (file:///Volumes/anh.nguyen/Projects/AnhN/wizloft-boilerplate/node_modules/.pnpm/storybook@10.4.6_@testing-library+dom@10.4.1_@types+react@19.2.17_prettier@3.9.4_react@19.2.7/node_modules/storybook/dist/_node-chunks/chunk-G7NXW2C2.js:650:12)
+    at async dev (file:///Volumes/anh.nguyen/Projects/AnhN/wizloft-boilerplate/node_modules/.pnpm/storybook@10.4.6_@testing-library+dom@10.4.1_@types+react@19.2.17_prettier@3.9.4_react@19.2.7/node_modules/storybook/dist/bin/core.js:2735:3)
+    at async _Command.<anonymous> (file:///Volumes/anh.nguyen/Projects/AnhN/wizloft-boilerplate/node_modules/.pnpm/storybook@10.4.6_@testing-library+dom@10.4.1_@types+react@19.2.17_prettier@3.9.4_react@19.2.7/node_modules/storybook/dist/bin/core.js:2805:92)
+[17:25:26.104] [WARN] Broken build, fix the error above.
+You may need to refresh the browser.

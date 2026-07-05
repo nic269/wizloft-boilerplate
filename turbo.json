@@ -1,0 +1,43 @@
+{
+	"$schema": "https://turborepo.com/schema.json",
+	"globalDependencies": ["**/.env.*local", ".env.local"],
+	"envMode": "loose",
+	"ui": "tui",
+	"tasks": {
+		"build": {
+			"dependsOn": ["^build"],
+			"outputs": [".next/**", "!.next/cache/**", "dist/**", "storybook-static/**", ".react-email/**"]
+		},
+		"check-types": {
+			"dependsOn": ["^check-types"]
+		},
+		"test": {
+			"dependsOn": ["^test"]
+		},
+		"test:unit": {
+			"dependsOn": ["^test:unit"]
+		},
+		"test:integration": {
+			"dependsOn": ["^test:integration"]
+		},
+		"dev": {
+			"cache": false,
+			"persistent": true
+		},
+		"generate": {
+			"cache": false
+		},
+		"db:push": {
+			"cache": false
+		},
+		"db:migrate:dev": {
+			"cache": false
+		},
+		"db:migrate:deploy": {
+			"cache": false
+		},
+		"db:seed": {
+			"cache": false
+		}
+	}
+}

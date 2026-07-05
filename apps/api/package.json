@@ -1,0 +1,29 @@
+{
+	"name": "@repo/api-app",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "tsx watch src/index.ts",
+		"build": "tsc --noEmit",
+		"check-types": "tsc --noEmit",
+		"test": "echo 'api app tests live in @repo/api'",
+		"test:unit": "echo 'api app unit tests live in @repo/api'",
+		"test:integration": "echo 'api app integration tests live in @repo/api'"
+	},
+	"dependencies": {
+		"@hono/node-server": "^1.19.7",
+		"@repo/api": "workspace:*",
+		"@repo/auth": "workspace:*",
+		"@repo/database": "workspace:*",
+		"@repo/env": "workspace:*",
+		"hono": "^4.11.1",
+		"zod": "^4.3.6"
+	},
+	"devDependencies": {
+		"@repo/typescript-config": "workspace:*",
+		"@types/node": "^22.19.0",
+		"tsx": "^4.21.0",
+		"typescript": "^6.0.3"
+	}
+}

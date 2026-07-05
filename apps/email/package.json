@@ -1,0 +1,26 @@
+{
+	"name": "@repo/email-app",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "email dev --dir src/templates --port 3004",
+		"build": "echo 'email preview app has no production build yet'",
+		"check-types": "tsc --noEmit",
+		"test": "echo 'email template tests live in @repo/mail'",
+		"test:unit": "echo 'email template unit tests live in @repo/mail'",
+		"test:integration": "echo 'email integration tests live in @repo/mail'"
+	},
+	"dependencies": {
+		"@react-email/components": "^1.0.1",
+		"@react-email/preview-server": "^4.3.1",
+		"@repo/mail": "workspace:*",
+		"react": "^19.2.0",
+		"react-email": "^4.3.1"
+	},
+	"devDependencies": {
+		"@repo/typescript-config": "workspace:*",
+		"@types/react": "^19.2.14",
+		"typescript": "^6.0.3"
+	}
+}

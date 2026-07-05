@@ -1,0 +1,50 @@
+{
+	"name": "@repo/auth",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./server": "./src/server.ts",
+		"./client": "./src/client.ts",
+		"./middleware": "./src/middleware.ts",
+		"./permissions": "./src/permissions.ts",
+		"./invitations": "./src/invitations.ts",
+		"./session": "./src/session.ts",
+		"./env": "./src/env.ts"
+	},
+	"scripts": {
+		"build": "echo '@repo/auth is source-only'",
+		"check-types": "tsc --noEmit",
+		"test": "vitest run --passWithNoTests",
+		"test:unit": "vitest run --passWithNoTests",
+		"test:integration": "echo 'auth integration tests require api/database'"
+	},
+	"dependencies": {
+		"@repo/database": "workspace:*",
+		"@repo/env": "workspace:*",
+		"better-auth": "^1.4.8",
+		"zod": "^4.3.6"
+	},
+	"devDependencies": {
+		"@repo/typescript-config": "workspace:*",
+		"@types/node": "^22.19.0",
+		"@types/react": "^19.2.14",
+		"next": "^16.1.0",
+		"react": "^19.2.0",
+		"typescript": "^6.0.3",
+		"vitest": "^4.0.18"
+	},
+	"peerDependencies": {
+		"next": "^16.0.0",
+		"react": "^19.0.0"
+	},
+	"peerDependenciesMeta": {
+		"next": {
+			"optional": true
+		},
+		"react": {
+			"optional": true
+		}
+	}
+}
