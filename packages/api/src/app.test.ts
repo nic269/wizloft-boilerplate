@@ -68,6 +68,26 @@ describe("api app", () => {
 		expect(await response.json()).toMatchObject({ ok: true, service: "api" });
 	});
 
+	it("serves typed RPC status procedure", async () => {
+		const response = await createApiApp().request("/rpc/status.get");
+		expect(response.status).toBe(200);
+		expect(await response.json()).toMatchObject({ data: { ok: true, service: "api" } });
+	});
+
+	it("returns structured errors for unknown RPC procedures", async () => {
+		const response = await createApiApp().request("/rpc/missing.get");
+		expect(response.status).toBe(404);
+		expect(await response.json()).toMatchObject({ error: { code: "RPC_NOT_FOUND" } });
+	});
+
+	it("publishes OpenAPI paths from the contract registry", async () => {
+		const response = await createApiApp().request("/openapi.json");
+		expect(response.status).toBe(200);
+		const document = await response.json();
+		expect(document.paths["/status"].get.operationId).toBe("status.get.rest");
+		expect(document.paths["/rpc/status.get"].get.operationId).toBe("status.get.rpc");
+	});
+
 	it("rejects anonymous organization access", async () => {
 		vi.mocked(getCurrentSession).mockResolvedValue(null);
 		const response = await createApiApp().request("/api/organizations");

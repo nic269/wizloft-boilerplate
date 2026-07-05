@@ -19,6 +19,8 @@ domain assumptions.
   activation, revocation, and audit evidence.
 - Organization-scoped role management with a whitelist permission catalog, member role assignment, and recent audit log
   review.
+- Hono API contract registry with stable procedure IDs, RPC-style health procedures, typed client helpers, and OpenAPI
+  paths generated from the same registry.
 - Optional mail, storage, jobs, billing, analytics, CMS, and observability packages that degrade gracefully.
 - Generic design-system and helper packages.
 

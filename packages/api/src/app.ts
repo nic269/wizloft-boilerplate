@@ -8,6 +8,7 @@ import { healthRouter } from "./routers/health";
 import { invitationsRouter } from "./routers/invitations";
 import { jobsRouter } from "./routers/jobs";
 import { organizationsRouter } from "./routers/organizations";
+import { rpcRouter } from "./rpc/router";
 
 export const createApiApp = () => {
 	const app = new Hono();
@@ -16,6 +17,7 @@ export const createApiApp = () => {
 	app.route("/", healthRouter);
 	app.get("/openapi.json", (context) => context.json(openApiDocument));
 	app.get("/docs/api", (context) => context.html("<html><body><pre>/openapi.json</pre></body></html>"));
+	app.route("/rpc", rpcRouter);
 
 	app.on(["GET", "POST"], "/api/auth/*", (context) => auth.handler(context.req.raw));
 	app.route("/api/organizations", organizationsRouter);

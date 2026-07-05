@@ -8,6 +8,7 @@
 		"./app": "./src/app.ts",
 		"./client": "./src/client.ts",
 		"./context": "./src/context.ts",
+		"./contract": "./src/rpc/contract.ts",
 		"./errors": "./src/errors.ts",
 		"./openapi": "./src/openapi.ts"
 	},

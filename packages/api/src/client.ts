@@ -1,3 +1,5 @@
+import type { RpcProcedureId, RpcProcedureOutput } from "./rpc/contract";
+
 export type ApiClientOptions = {
 	baseUrl: string;
 	fetch?: typeof fetch;
@@ -24,5 +26,7 @@ export const createApiClient = ({ baseUrl, fetch: fetcher = fetch }: ApiClientOp
 		status: () => request<{ ok: boolean; service: string; time: string }>("/status"),
 		organizations: () => request<{ data: { id: string; name: string; slug: string }[] }>("/api/organizations"),
 		openapi: () => request<typeof import("./openapi").openApiDocument>("/openapi.json"),
+		rpc: <TProcedureId extends RpcProcedureId>(procedure: TProcedureId) =>
+			request<{ data: RpcProcedureOutput<TProcedureId> }>(`/rpc/${procedure}`),
 	};
 };

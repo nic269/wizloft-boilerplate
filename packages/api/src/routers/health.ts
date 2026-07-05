@@ -1,6 +1,7 @@
 import { Hono } from "hono";
+import { getHealthPayload, getReadyPayload, getStatusPayload } from "../health";
 
 export const healthRouter = new Hono()
-	.get("/status", (context) => context.json({ ok: true, service: "api", time: new Date().toISOString() }))
-	.get("/health", (context) => context.json({ ok: true }))
-	.get("/ready", (context) => context.json({ ok: true }));
+	.get("/status", (context) => context.json(getStatusPayload()))
+	.get("/health", (context) => context.json(getHealthPayload()))
+	.get("/ready", (context) => context.json(getReadyPayload()));
