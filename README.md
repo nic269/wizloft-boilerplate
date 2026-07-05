@@ -28,7 +28,7 @@ A reusable monorepo starter for Anh Nguyen's future SaaS, education, internal to
 
 ```bash
 pnpm install
-cp .env.example .env.local
+cp .env.example .env
 docker compose up -d postgres
 pnpm db:generate
 pnpm db:push
@@ -58,8 +58,10 @@ pnpm boundaries
 - `apps/*` are independently deployable.
 - `apps/*` must not import from other `apps/*`.
 - `packages/*` must not import from `apps/*`.
-- Apps own `env.ts` and compose only the package env fragments they use.
-- Root `.env.example` is onboarding only, not the production env contract.
+- Root `.env` is the single local-development env file. Root and direct workspace commands load it through `dotenv-cli`.
+- Packages own reusable `keys.ts` contracts with `@t3-oss/env-core`.
+- Next apps compose package contracts with `@t3-oss/env-nextjs`; the Hono API uses `@t3-oss/env-core`.
+- Production deployments inject environment variables through their platform; they do not depend on a checked-in `.env` file.
 - Optional integrations must not crash the app when env vars are missing.
 
 ## Generic Core

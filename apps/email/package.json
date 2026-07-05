@@ -4,7 +4,7 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "email dev --dir src/templates --port 3004",
+		"dev": "dotenv -e ../../.env -- email dev --dir src/templates --port 3004",
 		"build": "echo 'email preview app has no production build yet'",
 		"check-types": "tsc --noEmit",
 		"test": "echo 'email template tests live in @repo/mail'",

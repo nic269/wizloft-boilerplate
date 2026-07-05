@@ -4,8 +4,8 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "storybook dev -p 6006",
-		"build": "storybook build",
+		"dev": "dotenv -e ../../.env -- storybook dev -p 6006",
+		"build": "dotenv -e ../../.env -- storybook build",
 		"check-types": "tsc --noEmit",
 		"test": "echo 'storybook tests not configured yet'",
 		"test:unit": "echo 'storybook unit tests not configured yet'",

@@ -11,7 +11,7 @@
 		"./permissions": "./src/permissions.ts",
 		"./invitations": "./src/invitations.ts",
 		"./session": "./src/session.ts",
-		"./env": "./src/env.ts"
+		"./keys": "./src/keys.ts"
 	},
 	"scripts": {
 		"build": "echo '@repo/auth is source-only'",
@@ -22,7 +22,7 @@
 	},
 	"dependencies": {
 		"@repo/database": "workspace:*",
-		"@repo/env": "workspace:*",
+		"@t3-oss/env-core": "^0.13.10",
 		"better-auth": "^1.4.8",
 		"zod": "^4.3.6"
 	},

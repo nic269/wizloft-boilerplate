@@ -1,8 +1,7 @@
 import { PrismaClient } from "@prisma/client";
+import { keys } from "./keys";
 
-if (process.env.NODE_ENV !== "production") {
-	process.env.DATABASE_URL ??= "postgresql://postgres:postgres@localhost:5432/personal_saas_boilerplate";
-}
+keys();
 
 const globalForPrisma = globalThis as unknown as {
 	prisma?: PrismaClient;

@@ -1,5 +1,6 @@
 import { logger } from "@repo/logger";
 import type { ReactElement } from "react";
+import { keys } from "./keys";
 
 export type SendMailInput = {
 	to: string;
@@ -21,19 +22,21 @@ export const consoleMailProvider: MailProvider = {
 };
 
 export const getMailProvider = (): MailProvider => {
-	if (!process.env.RESEND_API_KEY) {
+	const env = keys();
+
+	if (!env.RESEND_API_KEY) {
 		return consoleMailProvider;
 	}
 
 	return {
 		async send(input) {
 			const { Resend } = await import("resend");
-			const resend = new Resend(process.env.RESEND_API_KEY);
+			const resend = new Resend(env.RESEND_API_KEY);
 			const emails = resend.emails as unknown as {
 				send(input: Record<string, unknown>): Promise<{ data?: { id?: string } }>;
 			};
 			const payload = {
-				from: input.from ?? process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
+				from: input.from ?? env.RESEND_FROM_EMAIL ?? "noreply@example.com",
 				to: input.to,
 				subject: input.subject,
 				...(input.react ? { react: input.react } : {}),

@@ -4,8 +4,8 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "next dev --port 3003",
-		"build": "next build",
+		"dev": "dotenv -e ../../.env -- next dev --port 3003",
+		"build": "dotenv -e ../../.env -- next build",
 		"check-types": "tsc --noEmit",
 		"test": "echo 'no docs tests yet'",
 		"test:unit": "echo 'no docs unit tests yet'",
@@ -13,7 +13,7 @@
 	},
 	"dependencies": {
 		"@repo/design-system": "workspace:*",
-		"@repo/env": "workspace:*",
+		"@t3-oss/env-nextjs": "^0.13.10",
 		"next": "^16.1.0",
 		"react": "^19.2.0",
 		"react-dom": "^19.2.0",

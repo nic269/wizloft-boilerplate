@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
+import "./env";
 
 export default {
-	transpilePackages: ["@repo/design-system"],
+	transpilePackages: ["@repo/design-system", "@t3-oss/env-core", "@t3-oss/env-nextjs"],
 } satisfies NextConfig;

@@ -1,25 +1,15 @@
-import { authEnv } from "@repo/auth/env";
-import { databaseEnv } from "@repo/database/env";
-import { createEnv, z } from "@repo/env";
-
-const developmentDefaults = {
-	NEXT_PUBLIC_API_URL: "http://localhost:3002",
-	DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/personal_saas_boilerplate",
-	BETTER_AUTH_SECRET: "development-secret-at-least-32-characters",
-	BETTER_AUTH_URL: "http://localhost:3002/api/auth",
-};
-
-if (process.env.NODE_ENV !== "production") {
-	for (const [key, value] of Object.entries(developmentDefaults)) {
-		process.env[key] ??= value;
-	}
-}
+import { keys as auth } from "@repo/auth/keys";
+import { keys as database } from "@repo/database/keys";
+import { createEnv } from "@t3-oss/env-core";
+import { z } from "zod";
 
 export const env = createEnv({
+	extends: [auth(), database()],
 	server: {
 		NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 		NEXT_PUBLIC_API_URL: z.string().url(),
-		...databaseEnv.server,
-		...authEnv.server,
 	},
+	runtimeEnv: process.env,
+	emptyStringAsUndefined: true,
+	skipValidation: process.env.SKIP_ENV_VALIDATION === "true",
 });

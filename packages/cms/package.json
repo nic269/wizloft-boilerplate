@@ -5,7 +5,7 @@
 	"type": "module",
 	"exports": {
 		".": "./src/index.ts",
-		"./env": "./src/env.ts"
+		"./keys": "./src/keys.ts"
 	},
 	"scripts": {
 		"check-types": "tsc --noEmit",
@@ -14,7 +14,7 @@
 		"test:integration": "echo 'cms integration tests not configured'"
 	},
 	"dependencies": {
-		"@repo/env": "workspace:*",
+		"@t3-oss/env-core": "^0.13.10",
 		"zod": "^4.3.6"
 	},
 	"devDependencies": {

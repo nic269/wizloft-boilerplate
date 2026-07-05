@@ -1,4 +1,4 @@
-export * from "./env";
+export * from "./keys";
 
 export type ContentDocument = {
 	slug: string;

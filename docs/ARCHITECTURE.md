@@ -20,6 +20,17 @@ Before proposing implementation shape, identify:
 Record stack choices in `docs/decisions/` when they meaningfully constrain
 future work.
 
+## Environment Strategy
+
+- Root `.env` is the single source of truth for local development.
+- Root scripts and direct workspace scripts use `dotenv-cli` to load it before starting their underlying tool.
+- Existing process variables take precedence, so CI and deployment platforms inject configuration normally.
+- `NODE_ENV` is owned by the runtime command and is intentionally ignored from `.env`.
+- Packages expose typed `keys.ts` contracts through `@t3-oss/env-core`.
+- Next apps compose only the package contracts they consume through `@t3-oss/env-nextjs`; non-Next runtimes use `@t3-oss/env-core`.
+- Optional integrations validate as optional and disable cleanly when their variables are absent.
+- `.env.example` documents the aggregate local onboarding contract and is copied to `.env`.
+
 ## Default Layering
 
 ```text

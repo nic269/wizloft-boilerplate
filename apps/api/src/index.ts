@@ -1,4 +1,3 @@
-import "./bootstrap-env";
 import { serve } from "@hono/node-server";
 import { createApiApp } from "@repo/api";
 import { env } from "../env";

@@ -1,19 +1,17 @@
 import { prisma } from "@repo/database";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { keys } from "./keys";
 
-const googleEnabled = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
-const isProduction = process.env.NODE_ENV === "production";
+const env = keys();
+const googleEnabled = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
 
 export const auth = betterAuth({
 	database: prismaAdapter(prisma, { provider: "postgresql" }),
 	basePath: "/api/auth",
-	baseURL: process.env.BETTER_AUTH_URL ?? (isProduction ? undefined : "http://localhost:3002/api/auth"),
-	secret: process.env.BETTER_AUTH_SECRET ?? (isProduction ? undefined : "development-secret-at-least-32-characters"),
-	trustedOrigins: [
-		process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-		process.env.NEXT_PUBLIC_WEB_URL ?? "http://localhost:3001",
-	].filter(Boolean) as string[],
+	baseURL: env.BETTER_AUTH_URL,
+	secret: env.BETTER_AUTH_SECRET,
+	trustedOrigins: [env.NEXT_PUBLIC_APP_URL, env.NEXT_PUBLIC_WEB_URL],
 	emailAndPassword: {
 		enabled: true,
 		autoSignIn: true,
@@ -23,8 +21,8 @@ export const auth = betterAuth({
 	socialProviders: googleEnabled
 		? {
 				google: {
-					clientId: process.env.GOOGLE_CLIENT_ID as string,
-					clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+					clientId: env.GOOGLE_CLIENT_ID as string,
+					clientSecret: env.GOOGLE_CLIENT_SECRET as string,
 				},
 			}
 		: undefined,

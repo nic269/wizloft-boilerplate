@@ -38,7 +38,6 @@ Core packages:
 - `@repo/database`
 - `@repo/design-system`
 - `@repo/config`
-- `@repo/env`
 - `@repo/logger`
 - `@repo/helpers`
 - `@repo/mail`
@@ -50,7 +49,8 @@ Environment model:
 
 - Root `.env.example` is aggregate local onboarding.
 - Each deployable app owns `env.ts`.
-- Package-level env requirements are exported as reusable schema fragments.
+- Package-level env requirements are exported through `keys.ts` using `@t3-oss/env-core`.
+- Next apps use `@t3-oss/env-nextjs` and compose package contracts with `extends`.
 - Optional integrations disable or use mock/noop/local providers when env vars are missing.
 
 Deployment boundary:

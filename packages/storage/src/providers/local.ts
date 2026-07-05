@@ -2,9 +2,7 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, normalize } from "node:path";
 import type { StorageProvider } from "../provider";
 
-export const createLocalStorageProvider = (
-	root = process.env.LOCAL_STORAGE_DIR ?? ".data/storage",
-): StorageProvider => {
+export const createLocalStorageProvider = (root = ".data/storage"): StorageProvider => {
 	const resolveKey = (key: string) => join(root, normalize(key).replace(/^(\.\.(\/|\\|$))+/, ""));
 
 	return {

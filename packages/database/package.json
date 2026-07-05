@@ -6,23 +6,23 @@
 	"exports": {
 		".": "./src/index.ts",
 		"./client": "./src/client.ts",
-		"./env": "./src/env.ts"
+		"./keys": "./src/keys.ts"
 	},
 	"scripts": {
-		"build": "prisma generate",
+		"build": "dotenv -e ../../.env -- prisma generate",
 		"check-types": "tsc --noEmit",
-		"generate": "prisma generate",
-		"db:push": "prisma db push",
-		"db:migrate:dev": "prisma migrate dev",
-		"db:migrate:deploy": "prisma migrate deploy",
-		"db:seed": "tsx src/seed.ts",
+		"generate": "dotenv -e ../../.env -- prisma generate",
+		"db:push": "dotenv -e ../../.env -- prisma db push",
+		"db:migrate:dev": "dotenv -e ../../.env -- prisma migrate dev",
+		"db:migrate:deploy": "dotenv -e ../../.env -- prisma migrate deploy",
+		"db:seed": "dotenv -e ../../.env -- tsx src/seed.ts",
 		"test": "vitest run --passWithNoTests",
 		"test:unit": "vitest run --passWithNoTests",
 		"test:integration": "echo 'database integration tests require a test database'"
 	},
 	"dependencies": {
 		"@prisma/client": "^6.19.1",
-		"@repo/env": "workspace:*",
+		"@t3-oss/env-core": "^0.13.10",
 		"zod": "^4.3.6"
 	},
 	"devDependencies": {

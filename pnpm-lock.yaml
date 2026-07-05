@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      zod:
-        specifier: ^4.3.6
-        version: 4.4.3
     devDependencies:
       '@biomejs/biome':
         specifier: 2.4.13
@@ -24,6 +20,9 @@ importers:
       '@types/node':
         specifier: ^22.19.0
         version: 22.20.0
+      dotenv-cli:
+        specifier: ^11.0.0
+        version: 11.0.0
       tsx:
         specifier: ^4.21.0
         version: 4.23.0
@@ -51,9 +50,9 @@ importers:
       '@repo/database':
         specifier: workspace:*
         version: link:../../packages/database
-      '@repo/env':
-        specifier: workspace:*
-        version: link:../../packages/env
+      '@t3-oss/env-core':
+        specifier: ^0.13.10
+        version: 0.13.11(typescript@6.0.3)(valibot@1.2.0(typescript@6.0.3))(zod@4.4.3)
       hono:
         specifier: ^4.11.1
         version: 4.12.27
@@ -85,12 +84,15 @@ importers:
       '@repo/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       '@repo/design-system':
         specifier: workspace:*
         version: link:../../packages/design-system
-      '@repo/env':
-        specifier: workspace:*
-        version: link:../../packages/env
+      '@t3-oss/env-nextjs':
+        specifier: ^0.13.10
+        version: 0.13.11(typescript@6.0.3)(valibot@1.2.0(typescript@6.0.3))(zod@4.4.3)
       '@tanstack/react-query':
         specifier: ^5.90.12
         version: 5.101.2(react@19.2.7)
@@ -131,9 +133,9 @@ importers:
       '@repo/design-system':
         specifier: workspace:*
         version: link:../../packages/design-system
-      '@repo/env':
-        specifier: workspace:*
-        version: link:../../packages/env
+      '@t3-oss/env-nextjs':
+        specifier: ^0.13.10
+        version: 0.13.11(typescript@6.0.3)(valibot@1.2.0(typescript@6.0.3))(zod@4.4.3)
       next:
         specifier: ^16.1.0
         version: 16.2.10(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -233,9 +235,9 @@ importers:
       '@repo/design-system':
         specifier: workspace:*
         version: link:../../packages/design-system
-      '@repo/env':
-        specifier: workspace:*
-        version: link:../../packages/env
+      '@t3-oss/env-nextjs':
+        specifier: ^0.13.10
+        version: 0.13.11(typescript@6.0.3)(valibot@1.2.0(typescript@6.0.3))(zod@4.4.3)
       next:
         specifier: ^16.1.0
         version: 16.2.10(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -313,9 +315,9 @@ importers:
       '@repo/database':
         specifier: workspace:*
         version: link:../database
-      '@repo/env':
-        specifier: workspace:*
-        version: link:../env
+      '@t3-oss/env-core':
+        specifier: ^0.13.10
+        version: 0.13.11(typescript@6.0.3)(valibot@1.2.0(typescript@6.0.3))(zod@4.4.3)
       better-auth:
         specifier: ^1.4.8
         version: 1.6.23(@prisma/client@7.8.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@6.0.3))(typescript@6.0.3))(mysql2@3.15.3)(next@16.2.10(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@6.0.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.9(@types/node@22.20.0)(vite@8.1.3(@types/node@22.20.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.0)(yaml@2.9.0)))
@@ -361,9 +363,9 @@ importers:
 
   packages/cms:
     dependencies:
-      '@repo/env':
-        specifier: workspace:*
-        version: link:../env
+      '@t3-oss/env-core':
+        specifier: ^0.13.10
+        version: 0.13.11(typescript@6.0.3)(valibot@1.2.0(typescript@6.0.3))(zod@4.4.3)
       zod:
         specifier: ^4.3.6
         version: 4.4.3
@@ -395,9 +397,9 @@ importers:
       '@prisma/client':
         specifier: ^6.19.1
         version: 6.19.3(prisma@6.19.3(typescript@6.0.3))(typescript@6.0.3)
-      '@repo/env':
-        specifier: workspace:*
-        version: link:../env
+      '@t3-oss/env-core':
+        specifier: ^0.13.10
+        version: 0.13.11(typescript@6.0.3)(valibot@1.2.0(typescript@6.0.3))(zod@4.4.3)
       zod:
         specifier: ^4.3.6
         version: 4.4.3
@@ -463,22 +465,6 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.17)
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
-      vitest:
-        specifier: ^4.0.18
-        version: 4.1.9(@types/node@22.20.0)(vite@8.1.3(@types/node@22.20.0)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.0)(yaml@2.9.0))
-
-  packages/env:
-    dependencies:
-      zod:
-        specifier: ^4.3.6
-        version: 4.4.3
-    devDependencies:
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../typescript-config
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -554,12 +540,12 @@ importers:
       '@react-email/components':
         specifier: ^1.0.1
         version: 1.0.12(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@repo/env':
-        specifier: workspace:*
-        version: link:../env
       '@repo/logger':
         specifier: workspace:*
         version: link:../logger
+      '@t3-oss/env-core':
+        specifier: ^0.13.10
+        version: 0.13.11(typescript@6.0.3)(valibot@1.2.0(typescript@6.0.3))(zod@4.4.3)
       react:
         specifier: ^19.2.0
         version: 19.2.7
@@ -618,9 +604,9 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.955.0
         version: 3.1079.0
-      '@repo/env':
-        specifier: workspace:*
-        version: link:../env
+      '@t3-oss/env-core':
+        specifier: ^0.13.10
+        version: 0.13.11(typescript@6.0.3)(valibot@1.2.0(typescript@6.0.3))(zod@4.4.3)
       zod:
         specifier: ^4.3.6
         version: 4.4.3
@@ -3862,6 +3848,40 @@ packages:
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
 
+  '@t3-oss/env-core@0.13.11':
+    resolution: {integrity: sha512-sM7GYY+KL7H/Hl0BE0inWfk3nRHZOLhmVn7sHGxaZt9FAR6KqREXAE+6TqKfiavfXmpRxO/OZ2QgKRd+oiBYRQ==}
+    peerDependencies:
+      arktype: ^2.1.0
+      typescript: '>=5.0.0'
+      valibot: ^1.0.0-beta.7 || ^1.0.0
+      zod: ^3.24.0 || ^4.0.0
+    peerDependenciesMeta:
+      arktype:
+        optional: true
+      typescript:
+        optional: true
+      valibot:
+        optional: true
+      zod:
+        optional: true
+
+  '@t3-oss/env-nextjs@0.13.11':
+    resolution: {integrity: sha512-NC+3j7YWgpzdFu1t5y/8wqibTK0lm5RS4bjXA1n8uwik3wIR4iZM4Fa+U2BaMa5k3Qk8RZiYhoAIX0WogmGkzg==}
+    peerDependencies:
+      arktype: ^2.1.0
+      typescript: '>=5.0.0'
+      valibot: ^1.0.0-beta.7 || ^1.0.0
+      zod: ^3.24.0 || ^4.0.0
+    peerDependenciesMeta:
+      arktype:
+        optional: true
+      typescript:
+        optional: true
+      valibot:
+        optional: true
+      zod:
+        optional: true
+
   '@tailwindcss/node@4.3.2':
     resolution: {integrity: sha512-yWP/sqEcBLaD8JuA6zNwxoYKr75qxTioYwlRwekj5Jr/I5GXnoJfjetH/psLUIv74cYTH2lBUEzBkinthoYcBg==}
 
@@ -4916,6 +4936,14 @@ packages:
 
   dot-case@3.0.4:
     resolution: {integrity: sha512-Kv5nKlh6yRrdrGvxeJ2e5y2eRUpkUosIW4A2AS38zwSz27zu7ufDwQPi5Jhs3XAlGNetl3bmnGhQsMtkKJnj3w==}
+
+  dotenv-cli@11.0.0:
+    resolution: {integrity: sha512-r5pA8idbk7GFWuHEU7trSTflWcdBpQEK+Aw17UrSHjS6CReuhrrPcyC3zcQBPQvhArRHnBo/h6eLH1fkCvNlww==}
+    hasBin: true
+
+  dotenv-expand@12.0.3:
+    resolution: {integrity: sha512-uc47g4b+4k/M/SeaW1y4OApx+mtLWl92l5LMPP0GNXctZqELk+YGgOPIIC5elYmUH4OuoK3JLhuRUYegeySiFA==}
+    engines: {node: '>=12'}
 
   dotenv@16.6.1:
     resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
@@ -10415,6 +10443,20 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  '@t3-oss/env-core@0.13.11(typescript@6.0.3)(valibot@1.2.0(typescript@6.0.3))(zod@4.4.3)':
+    optionalDependencies:
+      typescript: 6.0.3
+      valibot: 1.2.0(typescript@6.0.3)
+      zod: 4.4.3
+
+  '@t3-oss/env-nextjs@0.13.11(typescript@6.0.3)(valibot@1.2.0(typescript@6.0.3))(zod@4.4.3)':
+    dependencies:
+      '@t3-oss/env-core': 0.13.11(typescript@6.0.3)(valibot@1.2.0(typescript@6.0.3))(zod@4.4.3)
+    optionalDependencies:
+      typescript: 6.0.3
+      valibot: 1.2.0(typescript@6.0.3)
+      zod: 4.4.3
+
   '@tailwindcss/node@4.3.2':
     dependencies:
       '@jridgewell/remapping': 2.3.5
@@ -11546,10 +11588,20 @@ snapshots:
       no-case: 3.0.4
       tslib: 2.8.1
 
+  dotenv-cli@11.0.0:
+    dependencies:
+      cross-spawn: 7.0.6
+      dotenv: 17.4.2
+      dotenv-expand: 12.0.3
+      minimist: 1.2.8
+
+  dotenv-expand@12.0.3:
+    dependencies:
+      dotenv: 16.6.1
+
   dotenv@16.6.1: {}
 
-  dotenv@17.4.2:
-    optional: true
+  dotenv@17.4.2: {}
 
   dunder-proto@1.0.1:
     dependencies:

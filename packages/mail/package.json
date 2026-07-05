@@ -5,7 +5,7 @@
 	"type": "module",
 	"exports": {
 		".": "./src/index.ts",
-		"./env": "./src/env.ts",
+		"./keys": "./src/keys.ts",
 		"./templates": "./src/templates/index.tsx"
 	},
 	"scripts": {
@@ -16,7 +16,7 @@
 	},
 	"dependencies": {
 		"@react-email/components": "^1.0.1",
-		"@repo/env": "workspace:*",
+		"@t3-oss/env-core": "^0.13.10",
 		"@repo/logger": "workspace:*",
 		"react": "^19.2.0",
 		"resend": "^6.6.0",
