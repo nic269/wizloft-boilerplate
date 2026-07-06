@@ -57,6 +57,7 @@ Do not copy `.env` into production images. `.dockerignore` excludes local env fi
 pnpm install --frozen-lockfile
 pnpm db:generate
 pnpm db:push
+pnpm templates:validate
 pnpm check:ci
 pnpm check-types
 pnpm test
@@ -66,8 +67,17 @@ pnpm build
 
 The workflow starts a PostgreSQL service and injects CI env vars directly.
 
+Run the same release ladder locally before cutting a reusable boilerplate fork:
+
+```bash
+pnpm release:check
+```
+
+This command validates template catalog drift before the normal lint, type,
+test, boundary, and build checks.
+
 ## Follow-Ups
 
 - Add provider-specific deployment smoke checks when choosing a hosting platform.
 - Add live mail, storage, and job provider checks only in environments with credentials.
-- Add E2E CI once the one-command auth E2E database bootstrap backlog item is complete.
+- Promote `pnpm test:e2e:db` into CI when pull request runtime budget allows a browser smoke.

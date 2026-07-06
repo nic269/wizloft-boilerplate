@@ -37,6 +37,8 @@ domain assumptions.
   shadcn component generation.
 - Template tracks are code-owned through a typed catalog, docs app rendering, and CLI validation/list commands so future
   products can select add-ons without copying domain code into core.
+- CI and local release readiness both validate template catalog drift before lint, type, test, boundary, and production
+  build checks.
 
 ## Non-Goals
 
@@ -57,3 +59,4 @@ domain assumptions.
   workflows.
 - `pnpm templates:list`, `pnpm templates:json`, and `pnpm templates:validate` for template track handoff and drift
   checks.
+- `pnpm release:check` for the local pre-release ladder matching CI's non-E2E validation contract.

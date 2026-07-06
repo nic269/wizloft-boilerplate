@@ -51,6 +51,7 @@ pnpm check
 pnpm check-types
 pnpm test
 pnpm boundaries
+pnpm release:check
 ```
 
 Maintenance commands:
@@ -64,6 +65,15 @@ pnpm ui:gen
 pnpm templates:list
 pnpm templates:validate
 ```
+
+Before promoting a fork or template change, run:
+
+```bash
+pnpm release:check
+```
+
+This mirrors the local release ladder: template drift validation, Biome,
+TypeScript, tests, package boundaries, and production builds.
 
 For a local auth E2E smoke with automatic PostgreSQL bootstrap:
 

@@ -61,6 +61,9 @@ jobs:
       - name: Push database schema
         run: pnpm db:push
 
+      - name: Validate templates
+        run: pnpm templates:validate
+
       - name: Check formatting and lint
         run: pnpm check:ci
 
