@@ -24,12 +24,13 @@ domain assumptions.
 - Optional mail, storage, jobs, billing, analytics, CMS, and observability packages that degrade gracefully. Mail falls
   back to console delivery, storage supports local/memory/S3-compatible private objects, and jobs include a local
   in-process provider with idempotency, retry, and run status.
-- Generic design-system and helper packages.
+- A source-owned design-system with the complete shadcn Base UI component set,
+  stable component subpath exports, and generic helper packages.
 - Handoff surfaces for future products: docs app, React Email previews, Storybook design-system examples, and template
   tracks for base SaaS, education, dev tools, and Shopify-adjacent add-ons.
 - Production discipline with standalone Next.js outputs, per-surface start scripts, Turbo-pruned Docker builds, CI
   validation, and deployment docs.
-- Design-system provider ownership with a reusable theme provider. App, web, docs, and Storybook surfaces own local
+- Design-system provider ownership with reusable theme, tooltip, and toast providers. App, web, docs, and Storybook surfaces own local
   Tailwind entry stylesheets, source scanning, and CSS override seams. Shared design-system globals provide reusable
   token variables, dark tokens, base rules, and token utility classes without leaking raw Tailwind directives into app
   output.

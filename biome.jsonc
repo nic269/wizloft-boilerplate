@@ -20,5 +20,50 @@
         "noUnnecessaryConditions": "off"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["packages/design-system/src/components/ui/**/*.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noLabelWithoutControl": "off",
+            "noNoninteractiveElementInteractions": "off",
+            "noRedundantRoles": "off",
+            "useAriaPropsForRole": "off",
+            "useFocusableInteractive": "off",
+            "useKeyWithClickEvents": "off",
+            "useSemanticElements": "off"
+          },
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off"
+          },
+          "correctness": {
+            "noNestedComponentDefinitions": "off",
+            "useExhaustiveDependencies": "off"
+          },
+          "performance": {
+            "noNamespaceImport": "off"
+          },
+          "security": {
+            "noDangerouslySetInnerHtml": "off"
+          },
+          "style": {
+            "noExportedImports": "off",
+            "noNestedTernary": "off",
+            "useConsistentTypeDefinitions": "off"
+          },
+          "suspicious": {
+            "noArrayIndexKey": "off",
+            "noDocumentCookie": "off",
+            "noDoubleEquals": "off",
+            "noDuplicateJsxProps": "off",
+            "noEqualsToNull": "off",
+            "noLeakedRender": "off",
+            "noShadow": "off"
+          }
+        }
+      }
+    }
+  ]
 }

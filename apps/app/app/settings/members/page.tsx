@@ -1,17 +1,10 @@
-import { getCurrentSession } from "@repo/auth/session";
-import { appConfig, dashboardNav } from "@repo/config";
-import { AppShell, PageHeader } from "@repo/design-system";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { PageHeader } from "@repo/design-system";
+import { AppShellLayout } from "../../app-shell-layout";
 import { MembersPanel } from "./members-panel";
 
 export default async function MembersPage() {
-  if (!(await getCurrentSession(await headers()))) {
-    redirect("/sign-in");
-  }
-
   return (
-    <AppShell brand={appConfig.name} navItems={dashboardNav}>
+    <AppShellLayout>
       <div className="space-y-6">
         <PageHeader
           description="Invite collaborators and manage pending access."
@@ -19,6 +12,6 @@ export default async function MembersPage() {
         />
         <MembersPanel />
       </div>
-    </AppShell>
+    </AppShellLayout>
   );
 }

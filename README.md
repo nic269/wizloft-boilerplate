@@ -9,7 +9,7 @@ A reusable monorepo starter for Anh Nguyen's future SaaS, education, internal to
 - Next.js App Router for app/web/docs
 - Hono API service
 - Better Auth with Prisma/PostgreSQL
-- shadcn-style design-system package
+- Complete shadcn Base UI design-system package
 - Vitest and Playwright
 - Optional provider abstractions for mail, storage, jobs, billing, analytics, CMS, and observability
 
@@ -65,6 +65,17 @@ pnpm ui:gen
 pnpm templates:list
 pnpm templates:validate
 ```
+
+Shadcn components are source-owned by `@repo/design-system` and available
+through explicit subpath imports:
+
+```tsx
+import { Dialog, DialogContent } from "@repo/design-system/components/ui/dialog";
+import { Select, SelectItem } from "@repo/design-system/components/ui/select";
+```
+
+The package provider owns theme, tooltip, and toast providers. Run
+`pnpm ui:gen <component>` when adding or refreshing a registry component.
 
 Before promoting a fork or template change, run:
 

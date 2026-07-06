@@ -9,6 +9,7 @@ export {
   Database,
   FileText,
   Home,
+  LayoutDashboard,
   Loader2,
   LogOut,
   Mail,

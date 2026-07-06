@@ -1,9 +1,9 @@
-import { appConfig, dashboardNav } from "@repo/config";
-import { AppShell, EmptyState, PageHeader } from "@repo/design-system";
+import { EmptyState, PageHeader } from "@repo/design-system";
+import { AppShellLayout } from "../app-shell-layout";
 
 export default function SettingsPage() {
   return (
-    <AppShell brand={appConfig.name} navItems={dashboardNav}>
+    <AppShellLayout>
       <div className="space-y-6">
         <PageHeader
           description="Project-specific settings belong in app feature folders or templates."
@@ -14,6 +14,6 @@ export default function SettingsPage() {
           title="No settings yet"
         />
       </div>
-    </AppShell>
+    </AppShellLayout>
   );
 }

@@ -15,8 +15,12 @@ export default function WebHomePage() {
             </a>
           ))}
         </nav>
-        <Button asChild size="sm">
-          <a href="http://localhost:3000/sign-in">Open app</a>
+        <Button
+          nativeButton={false}
+          render={<a href="http://localhost:3000/sign-in" />}
+          size="sm"
+        >
+          Open app
         </Button>
       </header>
       <section className="mx-auto grid max-w-6xl gap-10 px-6 py-24 md:grid-cols-[1.1fr_0.9fr] md:items-center">
@@ -29,13 +33,18 @@ export default function WebHomePage() {
             for education apps, internal tools, and SaaS products.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Button asChild>
-              <a href="http://localhost:3000/sign-up">
-                Start building <ArrowRight className="h-4 w-4" />
-              </a>
+            <Button
+              nativeButton={false}
+              render={<a href="http://localhost:3000/sign-up" />}
+            >
+              Start building <ArrowRight data-icon="inline-end" />
             </Button>
-            <Button asChild variant="outline">
-              <a href="http://localhost:3003">Read docs</a>
+            <Button
+              nativeButton={false}
+              render={<a href="http://localhost:3003" />}
+              variant="outline"
+            >
+              Read docs
             </Button>
           </div>
         </div>
