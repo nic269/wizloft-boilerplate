@@ -3,10 +3,10 @@ import { existsSync, readFileSync } from "node:fs";
 import net from "node:net";
 
 const DEFAULTS = {
+  BETTER_AUTH_SECRET: "local-e2e-better-auth-secret-at-least-32",
+  NEXT_PUBLIC_API_URL: "http://localhost:3002",
   NEXT_PUBLIC_APP_URL: "http://localhost:3000",
   NEXT_PUBLIC_WEB_URL: "http://localhost:3001",
-  NEXT_PUBLIC_API_URL: "http://localhost:3002",
-  BETTER_AUTH_SECRET: "local-e2e-better-auth-secret-at-least-32",
 };
 
 const LINE_PATTERN = /\r?\n/;
@@ -84,9 +84,9 @@ const waitForPort = async (port, timeoutMs = 45_000) => {
   throw new Error(`PostgreSQL did not accept TCP connections on localhost:${port}.`);
 };
 
-const run = (command, args, env) => {
+const run = (command, args, commandEnv) => {
   const result = spawnSync(command, args, {
-    env,
+    env: commandEnv,
     stdio: "inherit",
   });
 
@@ -104,9 +104,9 @@ const env = {
   ...DEFAULTS,
   ...dotenv,
   ...process.env,
-  POSTGRES_PORT: String(postgresPort),
-  DATABASE_URL: databaseUrl,
   BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? dotenv.BETTER_AUTH_URL ?? `${DEFAULTS.NEXT_PUBLIC_API_URL}/api/auth`,
+  DATABASE_URL: databaseUrl,
+  POSTGRES_PORT: String(postgresPort),
 };
 
 console.log(`Using PostgreSQL on localhost:${postgresPort}`);

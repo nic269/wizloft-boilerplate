@@ -4,16 +4,9 @@ export const createMemoryStorageProvider = (): StorageProvider => {
   const objects = new Map<string, StoredObjectBody>();
 
   return {
-    putObject(input) {
-      const stored = {
-        key: input.key,
-        body: input.body,
-        sizeBytes: input.body.byteLength,
-        contentType: input.contentType,
-        provider: "memory",
-      };
-      objects.set(input.key, stored);
-      return Promise.resolve(stored);
+    deleteObject(input) {
+      objects.delete(input.key);
+      return Promise.resolve();
     },
     getObject(input) {
       const object = objects.get(input.key);
@@ -22,9 +15,16 @@ export const createMemoryStorageProvider = (): StorageProvider => {
       }
       return Promise.resolve(object);
     },
-    deleteObject(input) {
-      objects.delete(input.key);
-      return Promise.resolve();
+    putObject(input) {
+      const stored = {
+        body: input.body,
+        contentType: input.contentType,
+        key: input.key,
+        provider: "memory",
+        sizeBytes: input.body.byteLength,
+      };
+      objects.set(input.key, stored);
+      return Promise.resolve(stored);
     },
   };
 };

@@ -18,9 +18,9 @@ export function InviteAcceptance({ token }: { token: string }) {
     setIsPending(true);
     try {
       const response = await fetch("/api/invitations/accept", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
         body: JSON.stringify({ token }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
       });
       const payload = (await response.json()) as { error?: { message?: string } };
       if (response.status === 401) {

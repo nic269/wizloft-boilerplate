@@ -10,17 +10,17 @@ describe("mail provider", () => {
     vi.stubEnv("RESEND_API_KEY", "");
     const status = getMailProviderStatus();
 
-    await expect(sendMail({ to: "user@example.com", subject: "Hello", text: "Body" })).resolves.toMatchObject({
+    await expect(sendMail({ subject: "Hello", text: "Body", to: "user@example.com" })).resolves.toMatchObject({
       provider: "console",
     });
-    expect(status).toEqual({ provider: "console", configured: true, mode: "development" });
+    expect(status).toEqual({ configured: true, mode: "development", provider: "console" });
   });
 
   it("reports resend as configured only when a sender is present", () => {
     vi.stubEnv("RESEND_API_KEY", "test-key");
-    expect(getMailProviderStatus()).toEqual({ provider: "resend", configured: false, mode: "provider" });
+    expect(getMailProviderStatus()).toEqual({ configured: false, mode: "provider", provider: "resend" });
 
     vi.stubEnv("RESEND_FROM_EMAIL", "noreply@example.com");
-    expect(getMailProviderStatus()).toEqual({ provider: "resend", configured: true, mode: "provider" });
+    expect(getMailProviderStatus()).toEqual({ configured: true, mode: "provider", provider: "resend" });
   });
 });

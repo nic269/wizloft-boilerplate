@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createAuthGuard } from "./middleware";
 
-const guard = createAuthGuard({ signIn: "/sign-in", dashboard: "/dashboard" });
+const guard = createAuthGuard({ dashboard: "/dashboard", signIn: "/sign-in" });
 
 describe("createAuthGuard", () => {
   it("redirects protected routes without a Better Auth session cookie", () => {

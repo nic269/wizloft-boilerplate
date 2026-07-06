@@ -9,48 +9,48 @@ const statusResponseSchema = z.object({
 const okResponseSchema = z.object({ ok: z.literal(true) });
 
 export const rpcContract = {
-  "status.get": {
-    id: "status.get",
-    method: "GET",
-    restPath: "/status",
-    rpcPath: "/rpc/status.get",
-    summary: "Service status",
-    response: statusResponseSchema,
-    openapiResponse: {
-      type: "object",
-      required: ["ok", "service", "time"],
-      properties: {
-        ok: { type: "boolean", const: true },
-        service: { type: "string", const: "api" },
-        time: { type: "string", format: "date-time" },
-      },
-    },
-  },
   "health.get": {
     id: "health.get",
     method: "GET",
+    openapiResponse: {
+      properties: { ok: { const: true, type: "boolean" } },
+      required: ["ok"],
+      type: "object",
+    },
+    response: okResponseSchema,
     restPath: "/health",
     rpcPath: "/rpc/health.get",
     summary: "Health check",
-    response: okResponseSchema,
-    openapiResponse: {
-      type: "object",
-      required: ["ok"],
-      properties: { ok: { type: "boolean", const: true } },
-    },
   },
   "ready.get": {
     id: "ready.get",
     method: "GET",
+    openapiResponse: {
+      properties: { ok: { const: true, type: "boolean" } },
+      required: ["ok"],
+      type: "object",
+    },
+    response: okResponseSchema,
     restPath: "/ready",
     rpcPath: "/rpc/ready.get",
     summary: "Readiness check",
-    response: okResponseSchema,
+  },
+  "status.get": {
+    id: "status.get",
+    method: "GET",
     openapiResponse: {
+      properties: {
+        ok: { const: true, type: "boolean" },
+        service: { const: "api", type: "string" },
+        time: { format: "date-time", type: "string" },
+      },
+      required: ["ok", "service", "time"],
       type: "object",
-      required: ["ok"],
-      properties: { ok: { type: "boolean", const: true } },
     },
+    response: statusResponseSchema,
+    restPath: "/status",
+    rpcPath: "/rpc/status.get",
+    summary: "Service status",
   },
 } as const;
 

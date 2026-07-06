@@ -7,10 +7,10 @@ import { ApiError } from "../errors";
 const acceptInvitationSchema = z.object({ token: z.string().min(32).max(256) });
 
 const errorStatus: Record<InvitationErrorCode, 404 | 409 | 410 | 403> = {
+  INVITATION_EMAIL_MISMATCH: 403,
+  INVITATION_EXPIRED: 410,
   INVITATION_NOT_FOUND: 404,
   INVITATION_NOT_PENDING: 409,
-  INVITATION_EXPIRED: 410,
-  INVITATION_EMAIL_MISMATCH: 403,
 };
 
 export const invitationsRouter = new Hono().post("/accept", async (context) => {
@@ -26,13 +26,13 @@ export const invitationsRouter = new Hono().post("/accept", async (context) => {
   try {
     const organization = await acceptInvitation({
       token: parsed.data.token,
-      userId: session.user.id,
       userEmail: session.user.email,
+      userId: session.user.id,
     });
     return context.json({ data: { organization } });
   } catch (error) {
     if (error instanceof InvitationError) {
-      throw new ApiError(error.code, error.message, errorStatus[error.code]);
+      throw new ApiError(error.code, error.message, errorStatus[error.code], undefined, { cause: error });
     }
     throw error;
   }

@@ -1,11 +1,11 @@
 export const featureConfig = {
-  organizations: true,
-  billing: false,
-  email: true,
-  storage: true,
   analytics: false,
+  billing: false,
   cms: false,
   docs: true,
+  email: true,
   i18n: false,
   jobs: true,
+  organizations: true,
+  storage: true,
 } as const;

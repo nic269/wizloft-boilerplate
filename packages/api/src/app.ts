@@ -46,8 +46,8 @@ export const createApiApp = () => {
       {
         error: {
           code: apiError.code,
-          message: apiError.message,
           details: apiError.details,
+          message: apiError.message,
           requestId: context.get("requestId"),
         },
       },

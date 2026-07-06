@@ -23,10 +23,10 @@ export const createApiClient = ({ baseUrl, fetch: fetcher = fetch }: ApiClientOp
   };
 
   return {
-    status: () => request<{ ok: boolean; service: string; time: string }>("/status"),
-    organizations: () => request<{ data: { id: string; name: string; slug: string }[] }>("/api/organizations"),
     openapi: () => request<typeof import("./openapi").openApiDocument>("/openapi.json"),
+    organizations: () => request<{ data: { id: string; name: string; slug: string }[] }>("/api/organizations"),
     rpc: <TProcedureId extends RpcProcedureId>(procedure: TProcedureId) =>
       request<{ data: RpcProcedureOutput<TProcedureId> }>(`/rpc/${procedure}`),
+    status: () => request<{ ok: boolean; service: string; time: string }>("/status"),
   };
 };

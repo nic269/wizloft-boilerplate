@@ -3,14 +3,6 @@ import type { Preview } from "@storybook/react";
 import "./styles.css";
 
 const preview: Preview = {
-  parameters: {
-    controls: {
-      matchers: {
-        color: /(background|color)$/i,
-        date: /Date$/i,
-      },
-    },
-  },
   decorators: [
     (Story) => (
       <DesignSystemProvider defaultTheme="light" enableSystem={false}>
@@ -20,6 +12,14 @@ const preview: Preview = {
       </DesignSystemProvider>
     ),
   ],
+  parameters: {
+    controls: {
+      matchers: {
+        color: /(background|color)$/i,
+        date: /Date$/i,
+      },
+    },
+  },
 };
 
 export default preview;

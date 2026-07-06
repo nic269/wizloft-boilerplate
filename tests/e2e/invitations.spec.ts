@@ -18,7 +18,7 @@ test("owner can invite a member who signs up and accepts access", async ({ brows
   await expect(page).toHaveURL(DASHBOARD_URL_PATTERN);
 
   await page.getByPlaceholder("Organization name").fill(organizationName);
-  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.getByRole("button", { exact: true, name: "Create" }).click();
   await expect(page.getByText(organizationName, { exact: true })).toBeVisible();
 
   await page.goto("/settings/members");

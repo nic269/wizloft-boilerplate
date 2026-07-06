@@ -19,19 +19,19 @@
     "test:integration": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.7",
+    "@hono/node-server": "^2.0.8",
     "@repo/auth": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/jobs": "workspace:*",
     "@repo/logger": "workspace:*",
     "@repo/mail": "workspace:*",
     "@repo/storage": "workspace:*",
-    "hono": "^4.11.1",
-    "zod": "^4.3.6"
+    "hono": "^4.12.27",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "typescript": "^6.0.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.9"
   }
 }

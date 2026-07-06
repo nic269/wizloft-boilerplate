@@ -37,9 +37,9 @@ export interface JobQueueProvider {
 
 export const getJobProviderStatus = () =>
   ({
-    provider: "local",
     configured: true,
     mode: "in-process",
+    provider: "local",
   }) as const;
 
 export const createLocalJobProvider = (): JobQueueProvider => {
@@ -86,9 +86,6 @@ export const createLocalJobProvider = (): JobQueueProvider => {
   };
 
   return {
-    register(definition) {
-      definitions.set(definition.name, definition);
-    },
     enqueue(input) {
       const key = input.idempotencyKey ? `${input.name}:${input.idempotencyKey}` : undefined;
       const existingRunId = key ? idempotency.get(key) : undefined;
@@ -103,11 +100,11 @@ export const createLocalJobProvider = (): JobQueueProvider => {
 
       const runId = crypto.randomUUID();
       runs.set(runId, {
-        runId,
-        name: input.name,
-        status: "queued",
         attempts: 0,
+        name: input.name,
         queuedAt: new Date(),
+        runId,
+        status: "queued",
         ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}),
       });
       if (key) {
@@ -122,6 +119,9 @@ export const createLocalJobProvider = (): JobQueueProvider => {
     },
     listRuns() {
       return [...runs.values()].sort((left, right) => left.queuedAt.getTime() - right.queuedAt.getTime());
+    },
+    register(definition) {
+      definitions.set(definition.name, definition);
     },
     async waitUntilIdle() {
       while (pending.size > 0) {

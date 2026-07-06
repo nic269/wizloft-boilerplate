@@ -8,29 +8,29 @@ export const createLocalStorageProvider = (root = ".data/storage"): StorageProvi
   const resolveKey = (key: string) => join(root, normalize(key).replace(PARENT_DIRECTORY_PREFIX_PATTERN, ""));
 
   return {
+    async deleteObject(input) {
+      await rm(resolveKey(input.key), { force: true });
+    },
+    async getObject(input) {
+      const body = await readFile(resolveKey(input.key));
+      return {
+        body,
+        contentType: "application/octet-stream",
+        key: input.key,
+        provider: "local",
+        sizeBytes: body.byteLength,
+      };
+    },
     async putObject(input) {
       const path = resolveKey(input.key);
       await mkdir(dirname(path), { recursive: true });
       await writeFile(path, input.body);
       return {
-        key: input.key,
-        sizeBytes: input.body.byteLength,
         contentType: input.contentType,
-        provider: "local",
-      };
-    },
-    async getObject(input) {
-      const body = await readFile(resolveKey(input.key));
-      return {
         key: input.key,
-        body,
-        sizeBytes: body.byteLength,
-        contentType: "application/octet-stream",
         provider: "local",
+        sizeBytes: input.body.byteLength,
       };
-    },
-    async deleteObject(input) {
-      await rm(resolveKey(input.key), { force: true });
     },
   };
 };

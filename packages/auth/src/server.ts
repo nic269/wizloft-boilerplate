@@ -7,16 +7,24 @@ const env = keys();
 const googleEnabled = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
 
 export const auth = betterAuth({
-  database: prismaAdapter(prisma, { provider: "postgresql" }),
+  advanced: {
+    database: {
+      generateId: false,
+    },
+  },
   basePath: "/api/auth",
   baseURL: env.BETTER_AUTH_URL,
-  secret: env.BETTER_AUTH_SECRET,
-  trustedOrigins: [env.NEXT_PUBLIC_APP_URL, env.NEXT_PUBLIC_WEB_URL],
+  database: prismaAdapter(prisma, { provider: "postgresql" }),
   emailAndPassword: {
-    enabled: true,
     autoSignIn: true,
-    minPasswordLength: 8,
+    enabled: true,
     maxPasswordLength: 128,
+    minPasswordLength: 8,
+  },
+  secret: env.BETTER_AUTH_SECRET,
+  session: {
+    expiresIn: 60 * 60 * 24 * 7,
+    updateAge: 60 * 60 * 24,
   },
   socialProviders: googleEnabled
     ? {
@@ -26,15 +34,7 @@ export const auth = betterAuth({
         },
       }
     : undefined,
-  session: {
-    expiresIn: 60 * 60 * 24 * 7,
-    updateAge: 60 * 60 * 24,
-  },
-  advanced: {
-    database: {
-      generateId: false,
-    },
-  },
+  trustedOrigins: [env.NEXT_PUBLIC_APP_URL, env.NEXT_PUBLIC_WEB_URL],
 });
 
 export type Auth = typeof auth;

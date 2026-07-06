@@ -6,7 +6,7 @@
   "license": "MIT",
   "description": "A reusable personal SaaS boilerplate monorepo for production-ready apps.",
   "type": "module",
-  "packageManager": "pnpm@10.4.0",
+  "packageManager": "pnpm@11.10.0",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=10.0.0"
@@ -44,15 +44,15 @@
     "ui:gen": "pnpm --filter @repo/design-system gen-components"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.13",
-    "@playwright/test": "^1.57.0",
+    "@biomejs/biome": "2.5.2",
+    "@playwright/test": "^1.61.1",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^22.19.0",
+    "@types/node": "^26.1.0",
     "dotenv-cli": "^11.0.0",
-    "tsx": "^4.21.0",
-    "turbo": "^2.9.6",
+    "tsx": "^4.23.0",
+    "turbo": "^2.10.3",
     "typescript": "^6.0.3",
-    "ultracite": "7.2.5",
-    "vitest": "^4.0.18"
+    "ultracite": "7.9.0",
+    "vitest": "^4.1.9"
   }
 }

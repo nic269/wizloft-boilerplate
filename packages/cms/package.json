@@ -14,12 +14,12 @@
     "test:integration": "echo 'cms integration tests not configured'"
   },
   "dependencies": {
-    "@t3-oss/env-core": "^0.13.10",
-    "zod": "^4.3.6"
+    "@t3-oss/env-core": "^0.13.11",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "typescript": "^6.0.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.9"
   }
 }

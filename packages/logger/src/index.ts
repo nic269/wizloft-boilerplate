@@ -39,9 +39,9 @@ const getSink = (level: LogLevel) => {
 export const createLogger = (base: LogContext = {}) => {
   const write = (level: LogLevel, message: string, context: LogContext = {}) => {
     const payload = {
-      timestamp: new Date().toISOString(),
       level,
       message,
+      timestamp: new Date().toISOString(),
       ...redact(base),
       ...redact(context),
     };
@@ -52,11 +52,11 @@ export const createLogger = (base: LogContext = {}) => {
   };
 
   return {
+    child: (context: LogContext) => createLogger({ ...base, ...context }),
     debug: (message: string, context?: LogContext) => write("debug", message, context),
+    error: (message: string, context?: LogContext) => write("error", message, context),
     info: (message: string, context?: LogContext) => write("info", message, context),
     warn: (message: string, context?: LogContext) => write("warn", message, context),
-    error: (message: string, context?: LogContext) => write("error", message, context),
-    child: (context: LogContext) => createLogger({ ...base, ...context }),
   };
 };
 

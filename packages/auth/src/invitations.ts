@@ -25,16 +25,16 @@ export const createInvitationToken = () => randomBytes(32).toString("base64url")
 
 export const listInvitations = (organizationId: string) =>
   prisma.invitation.findMany({
-    where: { organizationId },
-    select: {
-      id: true,
-      email: true,
-      status: true,
-      expiresAt: true,
-      createdAt: true,
-      invitedBy: { select: { name: true } },
-    },
     orderBy: { createdAt: "desc" },
+    select: {
+      createdAt: true,
+      email: true,
+      expiresAt: true,
+      id: true,
+      invitedBy: { select: { name: true } },
+      status: true,
+    },
+    where: { organizationId },
   });
 
 export const createInvitation = async (input: {
@@ -48,42 +48,42 @@ export const createInvitation = async (input: {
 
   const invitation = await prisma.$transaction(async (transaction) => {
     const memberRole = await transaction.role.upsert({
-      where: { organizationId_name: { organizationId: input.organizationId, name: "Member" } },
       create: {
-        organizationId: input.organizationId,
-        name: "Member",
         description: "Standard organization member access.",
+        name: "Member",
+        organizationId: input.organizationId,
         permissions: { createMany: { data: [...MEMBER_PERMISSIONS] } },
       },
-      update: {},
       select: { id: true },
+      update: {},
+      where: { organizationId_name: { name: "Member", organizationId: input.organizationId } },
     });
 
     const pending = await transaction.invitation.findFirst({
-      where: { organizationId: input.organizationId, email, status: "PENDING" },
       select: { id: true },
+      where: { email, organizationId: input.organizationId, status: "PENDING" },
     });
 
     const data = {
-      roleId: memberRole.id,
-      invitedById: input.invitedById,
       expiresAt: input.expiresAt,
+      invitedById: input.invitedById,
+      roleId: memberRole.id,
       tokenHash: hashInvitationToken(token),
     };
     const created = pending
-      ? await transaction.invitation.update({ where: { id: pending.id }, data })
+      ? await transaction.invitation.update({ data, where: { id: pending.id } })
       : await transaction.invitation.create({
-          data: { ...data, organizationId: input.organizationId, email },
+          data: { ...data, email, organizationId: input.organizationId },
         });
 
     await transaction.auditLog.create({
       data: {
-        organizationId: input.organizationId,
-        actorId: input.invitedById,
         action: "invitation.created",
-        targetType: "Invitation",
-        targetId: created.id,
+        actorId: input.invitedById,
         metadata: { email, expiresAt: input.expiresAt.toISOString() },
+        organizationId: input.organizationId,
+        targetId: created.id,
+        targetType: "Invitation",
       },
     });
 
@@ -96,8 +96,8 @@ export const createInvitation = async (input: {
 export const revokeInvitation = (input: { organizationId: string; invitationId: string; actorId: string }) =>
   prisma.$transaction(async (transaction) => {
     const result = await transaction.invitation.updateMany({
+      data: { revokedAt: new Date(), status: "REVOKED" },
       where: { id: input.invitationId, organizationId: input.organizationId, status: "PENDING" },
-      data: { status: "REVOKED", revokedAt: new Date() },
     });
     if (result.count === 0) {
       throw new InvitationError("INVITATION_NOT_PENDING", "Pending invitation not found.");
@@ -105,11 +105,11 @@ export const revokeInvitation = (input: { organizationId: string; invitationId: 
 
     await transaction.auditLog.create({
       data: {
-        organizationId: input.organizationId,
-        actorId: input.actorId,
         action: "invitation.revoked",
-        targetType: "Invitation",
+        actorId: input.actorId,
+        organizationId: input.organizationId,
         targetId: input.invitationId,
+        targetType: "Invitation",
       },
     });
   });
@@ -117,16 +117,16 @@ export const revokeInvitation = (input: { organizationId: string; invitationId: 
 export const acceptInvitation = (input: { token: string; userId: string; userEmail: string; now?: Date }) =>
   prisma.$transaction(async (transaction) => {
     const invitation = await transaction.invitation.findUnique({
-      where: { tokenHash: hashInvitationToken(input.token) },
       select: {
-        id: true,
-        organizationId: true,
         email: true,
+        expiresAt: true,
+        id: true,
+        organization: { select: { name: true, slug: true } },
+        organizationId: true,
         roleId: true,
         status: true,
-        expiresAt: true,
-        organization: { select: { name: true, slug: true } },
       },
+      where: { tokenHash: hashInvitationToken(input.token) },
     });
 
     if (!invitation) {
@@ -143,34 +143,34 @@ export const acceptInvitation = (input: { token: string; userId: string; userEma
     }
 
     const transition = await transaction.invitation.updateMany({
+      data: { acceptedAt: input.now ?? new Date(), status: "ACCEPTED" },
       where: { id: invitation.id, status: "PENDING" },
-      data: { status: "ACCEPTED", acceptedAt: input.now ?? new Date() },
     });
     if (transition.count === 0) {
       throw new InvitationError("INVITATION_NOT_PENDING", "Invitation is no longer pending.");
     }
 
     await transaction.membership.upsert({
-      where: {
-        userId_organizationId: { userId: input.userId, organizationId: invitation.organizationId },
-      },
       create: {
-        userId: input.userId,
         organizationId: invitation.organizationId,
         roleId: invitation.roleId,
         status: "ACTIVE",
+        userId: input.userId,
       },
       update: { roleId: invitation.roleId, status: "ACTIVE" },
+      where: {
+        userId_organizationId: { organizationId: invitation.organizationId, userId: input.userId },
+      },
     });
 
     await transaction.auditLog.create({
       data: {
-        organizationId: invitation.organizationId,
-        actorId: input.userId,
         action: "invitation.accepted",
-        targetType: "Invitation",
-        targetId: invitation.id,
+        actorId: input.userId,
         metadata: { email: invitation.email },
+        organizationId: invitation.organizationId,
+        targetId: invitation.id,
+        targetType: "Invitation",
       },
     });
 

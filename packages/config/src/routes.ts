@@ -1,9 +1,9 @@
 export const routes = {
+  apiStatus: "/status",
+  dashboard: "/dashboard",
   home: "/",
+  openapi: "/openapi.json",
+  settings: "/settings",
   signIn: "/sign-in",
   signUp: "/sign-up",
-  dashboard: "/dashboard",
-  settings: "/settings",
-  apiStatus: "/status",
-  openapi: "/openapi.json",
 } as const;

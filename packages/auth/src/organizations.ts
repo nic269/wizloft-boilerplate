@@ -12,22 +12,22 @@ export const normalizeOrganizationSlug = (value: string) =>
 
 export const listOrganizationsForUser = (userId: string) =>
   prisma.organization.findMany({
-    where: {
-      memberships: {
-        some: { userId, status: "ACTIVE" },
-      },
-    },
+    orderBy: { createdAt: "asc" },
     select: {
       id: true,
-      name: true,
-      slug: true,
       memberships: {
-        where: { userId },
         select: { role: { select: { name: true } } },
         take: 1,
+        where: { userId },
+      },
+      name: true,
+      slug: true,
+    },
+    where: {
+      memberships: {
+        some: { status: "ACTIVE", userId },
       },
     },
-    orderBy: { createdAt: "asc" },
   });
 
 export const createOrganizationForUser = async (input: { userId: string; name: string; slug: string }) =>
@@ -39,9 +39,9 @@ export const createOrganizationForUser = async (input: { userId: string; name: s
 
     const ownerRole = await transaction.role.create({
       data: {
-        organizationId: organization.id,
-        name: "Owner",
         description: "Full access to organization settings and members.",
+        name: "Owner",
+        organizationId: organization.id,
         permissions: { createMany: { data: [...OWNER_PERMISSIONS] } },
       },
       select: { id: true, name: true },
@@ -49,21 +49,21 @@ export const createOrganizationForUser = async (input: { userId: string; name: s
 
     await transaction.membership.create({
       data: {
-        userId: input.userId,
         organizationId: organization.id,
         roleId: ownerRole.id,
         status: "ACTIVE",
+        userId: input.userId,
       },
     });
 
     await transaction.auditLog.create({
       data: {
-        organizationId: organization.id,
-        actorId: input.userId,
         action: "organization.created",
-        targetType: "Organization",
-        targetId: organization.id,
+        actorId: input.userId,
         metadata: { name: organization.name, slug: organization.slug },
+        organizationId: organization.id,
+        targetId: organization.id,
+        targetType: "Organization",
       },
     });
 

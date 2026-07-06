@@ -15,7 +15,7 @@ describe("storage provider", () => {
 
   it("sanitizes tenant object keys", () => {
     expect(sanitizeObjectKeySegment("../invoice final.pdf")).toBe("invoice-final.pdf");
-    expect(buildTenantObjectKey({ organizationId: "../org", fileName: "../../debug.csv" })).toMatch(
+    expect(buildTenantObjectKey({ fileName: "../../debug.csv", organizationId: "../org" })).toMatch(
       ORGANIZATION_OBJECT_KEY_PATTERN,
     );
   });
@@ -26,9 +26,9 @@ describe("storage provider", () => {
     const provider = getStorageProvider();
 
     await provider.putObject({
-      key: "org/acme/file.txt",
       body: new TextEncoder().encode("hello"),
       contentType: "text/plain",
+      key: "org/acme/file.txt",
     });
 
     await expect(readFile(join(root, "org/acme/file.txt"), "utf8")).resolves.toBe("hello");
@@ -44,12 +44,12 @@ describe("storage provider", () => {
     vi.stubEnv("LOCAL_STORAGE_DIR", root);
     vi.stubEnv("S3_BUCKET", "private-files");
 
-    expect(getStorageProviderStatus()).toEqual({ provider: "s3", configured: false, mode: "durable" });
+    expect(getStorageProviderStatus()).toEqual({ configured: false, mode: "durable", provider: "s3" });
     await expect(
       getStorageProvider().putObject({
-        key: "global/test.txt",
         body: new TextEncoder().encode("fallback"),
         contentType: "text/plain",
+        key: "global/test.txt",
       }),
     ).resolves.toMatchObject({ provider: "local" });
   });
@@ -57,9 +57,9 @@ describe("storage provider", () => {
   it("detects complete s3 configuration", () => {
     expect(
       isS3StorageConfigured({
+        accessKeyId: "key",
         bucket: "bucket",
         region: "auto",
-        accessKeyId: "key",
         secretAccessKey: "secret",
       }),
     ).toBe(true);

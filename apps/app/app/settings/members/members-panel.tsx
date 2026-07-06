@@ -62,9 +62,9 @@ export function MembersPanel() {
     setIsBusy(true);
     try {
       const response = await fetch(`/api/organizations/${organizationId}/invitations`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
         body: JSON.stringify({ email }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
       });
       const created = await readPayload<{ acceptUrl: string }>(response);
       setAcceptUrl(created.acceptUrl);

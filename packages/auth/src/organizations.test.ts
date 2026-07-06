@@ -4,8 +4,8 @@ import { createOrganizationForUser, listOrganizationsForUser, normalizeOrganizat
 
 vi.mock("@repo/database", () => ({
   prisma: {
-    organization: { findMany: vi.fn() },
     $transaction: vi.fn(),
+    organization: { findMany: vi.fn() },
   },
 }));
 
@@ -22,39 +22,39 @@ describe("organization service", () => {
 
     expect(prisma.organization.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { memberships: { some: { userId: "user-1", status: "ACTIVE" } } },
+        where: { memberships: { some: { status: "ACTIVE", userId: "user-1" } } },
       }),
     );
   });
 
   it("provisions owner access and audit evidence in one transaction", async () => {
     const transaction = {
+      auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
+      membership: { create: vi.fn().mockResolvedValue({ id: "membership-1" }) },
       organization: { create: vi.fn().mockResolvedValue({ id: "org-1", name: "Acme", slug: "acme" }) },
       role: { create: vi.fn().mockResolvedValue({ id: "role-1", name: "Owner" }) },
-      membership: { create: vi.fn().mockResolvedValue({ id: "membership-1" }) },
-      auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
     };
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(transaction as never));
 
-    await expect(createOrganizationForUser({ userId: "user-1", name: "Acme", slug: "Acme" })).resolves.toEqual({
+    await expect(createOrganizationForUser({ name: "Acme", slug: "Acme", userId: "user-1" })).resolves.toEqual({
       id: "org-1",
       name: "Acme",
-      slug: "acme",
       role: "Owner",
+      slug: "acme",
     });
     expect(transaction.membership.create).toHaveBeenCalledWith({
       data: {
-        userId: "user-1",
         organizationId: "org-1",
         roleId: "role-1",
         status: "ACTIVE",
+        userId: "user-1",
       },
     });
     expect(transaction.auditLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        organizationId: "org-1",
-        actorId: "user-1",
         action: "organization.created",
+        actorId: "user-1",
+        organizationId: "org-1",
       }),
     });
   });

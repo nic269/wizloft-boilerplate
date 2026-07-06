@@ -11,12 +11,12 @@ export interface OpenApiPathItem {
 }
 
 const successResponse = (description: string, schema: unknown) => ({
-  description,
   content: {
     "application/json": {
       schema,
     },
   },
+  description,
 });
 
 const contractPaths = Object.fromEntries(
@@ -26,10 +26,10 @@ const contractPaths = Object.fromEntries(
       {
         get: {
           operationId: `${procedure.id}.rest`,
-          summary: procedure.summary,
           responses: {
             "200": successResponse("Successful response", procedure.openapiResponse),
           },
+          summary: procedure.summary,
         },
       },
     ],
@@ -38,14 +38,14 @@ const contractPaths = Object.fromEntries(
       {
         get: {
           operationId: `${procedure.id}.rpc`,
-          summary: `RPC ${procedure.id}`,
           responses: {
             "200": successResponse("Successful RPC response", {
-              type: "object",
-              required: ["data"],
               properties: { data: procedure.openapiResponse },
+              required: ["data"],
+              type: "object",
             }),
           },
+          summary: `RPC ${procedure.id}`,
         },
       },
     ],
@@ -53,10 +53,10 @@ const contractPaths = Object.fromEntries(
 ) as Record<string, OpenApiPathItem>;
 
 export const openApiDocument = {
-  openapi: "3.1.0",
   info: {
     title: "Personal SaaS Boilerplate API",
     version: "0.1.0",
   },
+  openapi: "3.1.0",
   paths: contractPaths,
 } as const;

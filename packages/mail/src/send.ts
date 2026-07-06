@@ -22,7 +22,7 @@ export interface MailProviderStatus {
 
 export const consoleMailProvider: MailProvider = {
   send(input) {
-    logger.info("mail.console", { to: input.to, subject: input.subject });
+    logger.info("mail.console", { subject: input.subject, to: input.to });
     return Promise.resolve({ id: crypto.randomUUID(), provider: "console" });
   },
 };
@@ -31,10 +31,10 @@ export const getMailProviderStatus = (): MailProviderStatus => {
   const env = keys();
 
   if (!env.RESEND_API_KEY) {
-    return { provider: "console", configured: true, mode: "development" };
+    return { configured: true, mode: "development", provider: "console" };
   }
 
-  return { provider: "resend", configured: Boolean(env.RESEND_FROM_EMAIL), mode: "provider" };
+  return { configured: Boolean(env.RESEND_FROM_EMAIL), mode: "provider", provider: "resend" };
 };
 
 export const getMailProvider = (): MailProvider => {
@@ -54,8 +54,8 @@ export const getMailProvider = (): MailProvider => {
       };
       const payload = {
         from: input.from ?? env.RESEND_FROM_EMAIL ?? "noreply@example.com",
-        to: input.to,
         subject: input.subject,
+        to: input.to,
         ...(input.react ? { react: input.react } : {}),
         ...(input.text ? { text: input.text } : {}),
       };

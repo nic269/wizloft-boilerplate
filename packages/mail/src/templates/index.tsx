@@ -8,14 +8,6 @@ const baseStyles = {
     margin: "0",
     padding: "32px 16px",
   },
-  container: {
-    backgroundColor: "#ffffff",
-    border: "1px solid #e4e4e7",
-    borderRadius: "8px",
-    margin: "0 auto",
-    maxWidth: "560px",
-    padding: "32px",
-  },
   button: {
     backgroundColor: "#18181b",
     borderRadius: "6px",
@@ -25,6 +17,14 @@ const baseStyles = {
     fontWeight: "600",
     padding: "12px 18px",
     textDecoration: "none",
+  },
+  container: {
+    backgroundColor: "#ffffff",
+    border: "1px solid #e4e4e7",
+    borderRadius: "8px",
+    margin: "0 auto",
+    maxWidth: "560px",
+    padding: "32px",
   },
   muted: {
     color: "#71717a",

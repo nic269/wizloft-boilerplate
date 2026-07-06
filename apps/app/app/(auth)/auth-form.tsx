@@ -16,20 +16,20 @@ interface AuthFormProps {
 
 const copy = {
   "sign-in": {
-    title: "Sign in",
     description: "Use your email and password to open the authenticated app.",
     submit: "Sign in",
-    switchLabel: "Need an account?",
     switchHref: "/sign-up",
+    switchLabel: "Need an account?",
     switchText: "Create one",
+    title: "Sign in",
   },
   "sign-up": {
-    title: "Create account",
     description: "Create the first account for this SaaS starter.",
     submit: "Create account",
-    switchLabel: "Already have an account?",
     switchHref: "/sign-in",
+    switchLabel: "Already have an account?",
     switchText: "Sign in",
+    title: "Create account",
   },
 } satisfies Record<AuthMode, Record<string, string>>;
 
@@ -60,8 +60,8 @@ export const AuthForm = ({ mode, callbackUrl = "/dashboard" }: AuthFormProps) =>
     try {
       const response =
         mode === "sign-up"
-          ? await signUp.email({ email, password, name, callbackURL: callbackUrl })
-          : await signIn.email({ email, password, callbackURL: callbackUrl });
+          ? await signUp.email({ callbackURL: callbackUrl, email, name, password })
+          : await signIn.email({ callbackURL: callbackUrl, email, password });
 
       if (response.error) {
         setError(getErrorMessage(response.error));

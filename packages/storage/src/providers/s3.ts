@@ -22,69 +22,69 @@ export const createS3StorageProvider = (config: S3StorageConfig): StorageProvide
   }
 
   const client = new S3Client({
-    region: config.region,
-    forcePathStyle: config.forcePathStyle ?? Boolean(config.endpoint),
     credentials: {
       accessKeyId: config.accessKeyId ?? "",
       secretAccessKey: config.secretAccessKey ?? "",
     },
+    forcePathStyle: config.forcePathStyle ?? Boolean(config.endpoint),
+    region: config.region,
     ...(config.endpoint ? { endpoint: config.endpoint } : {}),
   });
 
   return {
-    async putObject(input) {
-      await client.send(
-        new PutObjectCommand({
-          Bucket: config.bucket,
-          Key: input.key,
-          Body: input.body,
-          ContentType: input.contentType,
-          Metadata: input.metadata,
-          ServerSideEncryption: "AES256",
-        }),
-      );
-
-      return {
-        key: input.key,
-        sizeBytes: input.body.byteLength,
-        contentType: input.contentType,
-        provider: "s3",
-      };
+    async deleteObject(input) {
+      await client.send(new DeleteObjectCommand({ Bucket: config.bucket, Key: input.key }));
     },
     async getObject(input) {
       const response = await client.send(new GetObjectCommand({ Bucket: config.bucket, Key: input.key }));
       const body = response.Body ? new Uint8Array(await response.Body.transformToByteArray()) : new Uint8Array();
       return {
-        key: input.key,
         body,
-        sizeBytes: body.byteLength,
         contentType: response.ContentType ?? "application/octet-stream",
+        key: input.key,
         provider: "s3",
-      };
-    },
-    async deleteObject(input) {
-      await client.send(new DeleteObjectCommand({ Bucket: config.bucket, Key: input.key }));
-    },
-    async getSignedUploadUrl(input) {
-      const expiresInSeconds = input.expiresInSeconds ?? 900;
-      const command = new PutObjectCommand({
-        Bucket: config.bucket,
-        Key: input.key,
-        ContentType: input.contentType,
-        ServerSideEncryption: "AES256",
-      });
-      return {
-        url: await getSignedUrl(client, command, { expiresIn: expiresInSeconds }),
-        headers: { "content-type": input.contentType, "x-amz-server-side-encryption": "AES256" },
-        expiresAt: new Date(Date.now() + expiresInSeconds * 1000),
+        sizeBytes: body.byteLength,
       };
     },
     async getSignedDownloadUrl(input) {
       const expiresInSeconds = input.expiresInSeconds ?? 900;
       const command = new GetObjectCommand({ Bucket: config.bucket, Key: input.key });
       return {
-        url: await getSignedUrl(client, command, { expiresIn: expiresInSeconds }),
         expiresAt: new Date(Date.now() + expiresInSeconds * 1000),
+        url: await getSignedUrl(client, command, { expiresIn: expiresInSeconds }),
+      };
+    },
+    async getSignedUploadUrl(input) {
+      const expiresInSeconds = input.expiresInSeconds ?? 900;
+      const command = new PutObjectCommand({
+        Bucket: config.bucket,
+        ContentType: input.contentType,
+        Key: input.key,
+        ServerSideEncryption: "AES256",
+      });
+      return {
+        expiresAt: new Date(Date.now() + expiresInSeconds * 1000),
+        headers: { "content-type": input.contentType, "x-amz-server-side-encryption": "AES256" },
+        url: await getSignedUrl(client, command, { expiresIn: expiresInSeconds }),
+      };
+    },
+    async putObject(input) {
+      await client.send(
+        new PutObjectCommand({
+          Body: input.body,
+          Bucket: config.bucket,
+          ContentType: input.contentType,
+          Key: input.key,
+          Metadata: input.metadata,
+          ServerSideEncryption: "AES256",
+        }),
+      );
+
+      return {
+        contentType: input.contentType,
+        key: input.key,
+        provider: "s3",
+        sizeBytes: input.body.byteLength,
       };
     },
   };

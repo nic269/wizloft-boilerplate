@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 import "./styles.css";
 
 export const metadata: Metadata = {
-  title: "Personal SaaS Boilerplate",
   description: "A reusable SaaS platform starter.",
+  title: "Personal SaaS Boilerplate",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

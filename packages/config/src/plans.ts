@@ -1,14 +1,14 @@
 export const plans = [
   {
-    id: "free",
-    name: "Free",
     features: ["basic"],
+    id: "free",
     limits: { projects: 1, storageMb: 100 },
+    name: "Free",
   },
   {
-    id: "pro",
-    name: "Pro",
     features: ["basic", "advanced"],
+    id: "pro",
     limits: { projects: 10, storageMb: 10_000 },
+    name: "Pro",
   },
 ] as const;

@@ -1,12 +1,12 @@
 export const marketingNav = [
-  { label: "Features", href: "/#features" },
-  { label: "Docs", href: "/docs" },
-  { label: "Pricing", href: "/pricing" },
+  { href: "/#features", label: "Features" },
+  { href: "/docs", label: "Docs" },
+  { href: "/pricing", label: "Pricing" },
 ] as const;
 
 export const dashboardNav = [
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "Settings", href: "/settings" },
-  { label: "Members", href: "/settings/members" },
-  { label: "Access", href: "/settings/access" },
+  { href: "/dashboard", label: "Dashboard" },
+  { href: "/settings", label: "Settings" },
+  { href: "/settings/members", label: "Members" },
+  { href: "/settings/access", label: "Access" },
 ] as const;

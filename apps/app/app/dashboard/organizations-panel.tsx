@@ -44,10 +44,10 @@ export function OrganizationsPanel() {
 
     try {
       const response = await fetch("/api/organizations", {
-        method: "POST",
+        body: JSON.stringify({ name }),
         credentials: "include",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name }),
+        method: "POST",
       });
       const payload = (await response.json()) as { error?: { message?: string } };
       if (!response.ok) {

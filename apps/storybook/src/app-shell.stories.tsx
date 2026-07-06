@@ -13,10 +13,10 @@ import {
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
-  title: "Design System/App Shell",
   parameters: {
     layout: "fullscreen",
   },
+  title: "Design System/App Shell",
 } satisfies Meta;
 
 export default meta;
@@ -26,9 +26,9 @@ export const ProductWorkspace: StoryObj<typeof meta> = {
     <AppShell
       brand="Wizloft"
       navItems={[
-        { label: "Dashboard", href: "#dashboard", icon: <Home className="h-4 w-4" /> },
-        { label: "Members", href: "#members", icon: <Users className="h-4 w-4" /> },
-        { label: "Settings", href: "#settings", icon: <Settings className="h-4 w-4" /> },
+        { href: "#dashboard", icon: <Home className="h-4 w-4" />, label: "Dashboard" },
+        { href: "#members", icon: <Users className="h-4 w-4" />, label: "Members" },
+        { href: "#settings", icon: <Settings className="h-4 w-4" />, label: "Settings" },
       ]}
       topbar={
         <>

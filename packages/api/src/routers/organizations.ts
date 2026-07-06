@@ -30,14 +30,14 @@ const createInvitationSchema = z.object({ email: z.string().trim().email().max(2
 
 const permissionSchema = z
   .object({
-    module: z.string().min(1),
     action: z.string().min(1),
+    module: z.string().min(1),
   })
   .refine(isKnownPermission, "Unknown permission.");
 
 const createRoleSchema = z.object({
-  name: z.string().trim().min(2).max(40),
   description: z.string().trim().max(160).optional(),
+  name: z.string().trim().min(2).max(40),
   permissions: z.array(permissionSchema).min(1),
 });
 
@@ -58,7 +58,7 @@ const requireOrganizationPermission = async (
   action: string,
   message = "You do not have permission for this organization action.",
 ) => {
-  if (!(await hasPermission({ userId, organizationId, module, action }))) {
+  if (!(await hasPermission({ action, module, organizationId, userId }))) {
     throw new ApiError("FORBIDDEN", message, 403);
   }
 };
@@ -91,9 +91,9 @@ export const organizationsRouter = new Hono()
 
     try {
       const organization = await createOrganizationForUser({
-        userId: user.id,
         name: parsed.data.name,
         slug,
+        userId: user.id,
       });
       return context.json({ data: organization }, 201);
     } catch (error) {
@@ -120,18 +120,18 @@ export const organizationsRouter = new Hono()
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const { invitation, token } = await createInvitation({
-      organizationId,
       email: parsed.data.email,
-      invitedById: user.id,
       expiresAt,
+      invitedById: user.id,
+      organizationId,
     });
     const acceptUrl = new URL(`/invite/${token}`, keys().NEXT_PUBLIC_APP_URL).toString();
     let delivery: "sent" | "failed" = "sent";
     try {
       await sendMail({
-        to: invitation.email,
         subject: "You have been invited to an organization",
         text: `Accept your invitation: ${acceptUrl}`,
+        to: invitation.email,
       });
     } catch (error) {
       delivery = "failed";
@@ -144,12 +144,12 @@ export const organizationsRouter = new Hono()
     return context.json(
       {
         data: {
-          id: invitation.id,
-          email: invitation.email,
-          status: invitation.status,
-          expiresAt: invitation.expiresAt,
           acceptUrl,
           delivery,
+          email: invitation.email,
+          expiresAt: invitation.expiresAt,
+          id: invitation.id,
+          status: invitation.status,
         },
       },
       201,
@@ -161,9 +161,9 @@ export const organizationsRouter = new Hono()
     await requireOrganizationPermission(user.id, organizationId, "members", "invite");
     try {
       await revokeInvitation({
-        organizationId,
-        invitationId: context.req.param("invitationId"),
         actorId: user.id,
+        invitationId: context.req.param("invitationId"),
+        organizationId,
       });
       return context.body(null, 204);
     } catch (error) {
@@ -190,10 +190,10 @@ export const organizationsRouter = new Hono()
 
     try {
       const role = await createRole({
-        organizationId,
-        name: parsed.data.name,
-        permissions: parsed.data.permissions,
         actorId: user.id,
+        name: parsed.data.name,
+        organizationId,
+        permissions: parsed.data.permissions,
         ...(parsed.data.description ? { description: parsed.data.description } : {}),
       });
       return context.json({ data: role }, 201);
@@ -221,10 +221,10 @@ export const organizationsRouter = new Hono()
 
     try {
       await updateMemberRole({
-        organizationId,
-        membershipId: context.req.param("membershipId"),
-        roleId: parsed.data.roleId,
         actorId: user.id,
+        membershipId: context.req.param("membershipId"),
+        organizationId,
+        roleId: parsed.data.roleId,
       });
       return context.body(null, 204);
     } catch (error) {

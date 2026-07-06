@@ -2,10 +2,10 @@ import { Button, EmptyState, ErrorState, Input, LoadingState } from "@repo/desig
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
-  title: "Design System/Forms and States",
   parameters: {
     layout: "centered",
   },
+  title: "Design System/Forms and States",
 } satisfies Meta;
 
 export default meta;

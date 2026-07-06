@@ -39,14 +39,14 @@ interface ApiPayload<T> {
 }
 
 const permissionOptions = [
-  { module: "organization", action: "read", label: "Read organization" },
-  { module: "organization", action: "update", label: "Update organization" },
-  { module: "members", action: "read", label: "Read members" },
-  { module: "members", action: "invite", label: "Invite members" },
-  { module: "members", action: "manage", label: "Manage members" },
-  { module: "roles", action: "read", label: "Read roles" },
-  { module: "roles", action: "manage", label: "Manage roles" },
-  { module: "audit", action: "read", label: "Read audit log" },
+  { action: "read", label: "Read organization", module: "organization" },
+  { action: "update", label: "Update organization", module: "organization" },
+  { action: "read", label: "Read members", module: "members" },
+  { action: "invite", label: "Invite members", module: "members" },
+  { action: "manage", label: "Manage members", module: "members" },
+  { action: "read", label: "Read roles", module: "roles" },
+  { action: "manage", label: "Manage roles", module: "roles" },
+  { action: "read", label: "Read audit log", module: "audit" },
 ] as const;
 
 const readPayload = async <T,>(response: Response): Promise<T> => {
@@ -106,7 +106,7 @@ export function AccessPanel() {
     () =>
       permissionOptions
         .filter((permission) => selectedPermissions.includes(permissionKey(permission)))
-        .map(({ module, action }) => ({ module, action })),
+        .map(({ module, action }) => ({ action, module })),
     [selectedPermissions],
   );
 
@@ -116,10 +116,10 @@ export function AccessPanel() {
     setIsBusy(true);
     try {
       const response = await fetch(`/api/organizations/${organizationId}/roles`, {
-        method: "POST",
+        body: JSON.stringify({ name: roleName, permissions }),
         credentials: "include",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name: roleName, permissions }),
+        method: "POST",
       });
       await readPayload<Role>(response);
       setRoleName("");
@@ -134,10 +134,10 @@ export function AccessPanel() {
   const updateMemberRole = async (membershipId: string, roleId: string) => {
     setError(null);
     const response = await fetch(`/api/organizations/${organizationId}/members/${membershipId}/role`, {
-      method: "PATCH",
+      body: JSON.stringify({ roleId }),
       credentials: "include",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ roleId }),
+      method: "PATCH",
     });
     if (!response.ok) {
       const payload = (await response.json()) as ApiPayload<never>;

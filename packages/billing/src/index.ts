@@ -17,14 +17,14 @@ export interface BillingProvider {
 }
 
 export const mockBillingProvider: BillingProvider = {
-  getCurrentPlan() {
-    return Promise.resolve({ planId: "free", status: "active" });
-  },
   createCheckout() {
     return Promise.resolve({ url: "/settings/billing" });
   },
   createPortalSession() {
     return Promise.resolve({ url: "/settings/billing" });
+  },
+  getCurrentPlan() {
+    return Promise.resolve({ planId: "free", status: "active" });
   },
   handleWebhook() {
     return Promise.resolve({ received: true });

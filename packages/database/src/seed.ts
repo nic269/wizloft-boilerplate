@@ -11,14 +11,13 @@ const defaultPermissions = [
 
 const main = async () => {
   const organization = await prisma.organization.upsert({
-    where: { slug: "default" },
     create: { name: "Default Organization", slug: "default" },
     update: {},
+    where: { slug: "default" },
   });
 
   for (const name of ["Owner", "Admin", "Member", "Viewer"]) {
     await prisma.role.upsert({
-      where: { organizationId_name: { organizationId: organization.id, name } },
       create: {
         name,
         organizationId: organization.id,
@@ -27,11 +26,12 @@ const main = async () => {
             .filter((permission) => name !== "Viewer" || permission.endsWith(":read"))
             .map((permission) => {
               const [module, action] = permission.split(":") as [string, string];
-              return { module, action };
+              return { action, module };
             }),
         },
       },
       update: {},
+      where: { organizationId_name: { name, organizationId: organization.id } },
     });
   }
 };

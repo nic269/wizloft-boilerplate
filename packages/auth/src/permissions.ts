@@ -9,8 +9,8 @@ export interface PermissionInput {
 
 export const hasPermission = async (input: PermissionInput): Promise<boolean> => {
   const user = await prisma.user.findUnique({
-    where: { id: input.userId },
     select: { isSuperAdmin: true },
+    where: { id: input.userId },
   });
 
   if (user?.isSuperAdmin) {
@@ -18,24 +18,24 @@ export const hasPermission = async (input: PermissionInput): Promise<boolean> =>
   }
 
   const membership = await prisma.membership.findUnique({
-    where: {
-      userId_organizationId: {
-        userId: input.userId,
-        organizationId: input.organizationId,
-      },
-    },
     select: {
-      status: true,
       role: {
         select: {
           permissions: {
-            where: {
-              module: input.module,
-              action: input.action,
-            },
             select: { id: true },
+            where: {
+              action: input.action,
+              module: input.module,
+            },
           },
         },
+      },
+      status: true,
+    },
+    where: {
+      userId_organizationId: {
+        organizationId: input.organizationId,
+        userId: input.userId,
       },
     },
   });
