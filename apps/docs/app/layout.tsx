@@ -1,5 +1,5 @@
-import "@repo/design-system/styles.css";
 import type { ReactNode } from "react";
+import "./styles.css";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
 	return (

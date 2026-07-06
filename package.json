@@ -25,13 +25,19 @@
 		"test:unit": "dotenv -e .env -- turbo run test:unit",
 		"test:integration": "dotenv -e .env -- turbo run test:integration",
 		"test:e2e": "dotenv -e .env -- playwright test",
+		"test:e2e:db": "node scripts/e2e-with-db.mjs",
 		"db:generate": "pnpm --filter @repo/database generate",
 		"db:push": "pnpm --filter @repo/database db:push",
 		"db:migrate:dev": "pnpm --filter @repo/database db:migrate:dev",
 		"db:migrate:deploy": "pnpm --filter @repo/database db:migrate:deploy",
 		"db:seed": "pnpm --filter @repo/database db:seed",
+		"db:studio": "pnpm --filter @repo/database db:studio",
 		"boundaries": "tsx scripts/check-boundaries.ts",
-		"clean": "git clean -xdf node_modules .turbo apps/*/.next packages/*/dist"
+		"clean": "pnpm clean:build",
+		"clean:build": "pnpm -r exec rm -rf dist .next storybook-static && pnpm exec rm -rf .turbo test-results playwright-report",
+		"clean:deps": "pnpm -r exec rm -rf node_modules && pnpm exec rm -rf node_modules",
+		"upgrade:deps": "pnpm up --latest -r && pnpm up --latest",
+		"ui:gen": "pnpm --filter @repo/design-system gen-components"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.13",

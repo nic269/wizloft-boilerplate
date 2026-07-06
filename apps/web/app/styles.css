@@ -1,0 +1,9 @@
+@import "tailwindcss";
+@import "@repo/design-system/styles.css";
+@source "./**/*.{ts,tsx}";
+@source "../../../packages/design-system/src/**/*.{ts,tsx}";
+
+/*
+ * Web-specific overrides belong here. Shared tokens and primitives stay in
+ * @repo/design-system so the marketing surface can customize only what it owns.
+ */

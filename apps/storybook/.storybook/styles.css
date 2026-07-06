@@ -1,0 +1,5 @@
+@import "tailwindcss";
+@import "@repo/design-system/styles.css";
+@source "../src/**/*.{ts,tsx}";
+@source "../.storybook/**/*.{ts,tsx}";
+@source "../../../packages/design-system/src/**/*.{ts,tsx}";

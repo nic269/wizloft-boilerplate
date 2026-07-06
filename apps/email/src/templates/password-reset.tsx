@@ -1,5 +1,7 @@
-import { PasswordResetEmail } from "@repo/mail";
+import { PasswordResetEmail } from "../../../../packages/mail/src/templates";
 
-export default function Preview() {
+export { PasswordResetEmail };
+
+export default function PasswordResetPreview() {
 	return <PasswordResetEmail appName="Wizloft" resetUrl="https://app.example.com/reset-password/token" />;
 }

@@ -1,0 +1,9 @@
+@import "tailwindcss";
+@import "@repo/design-system/styles.css";
+@source "./**/*.{ts,tsx}";
+@source "../../../packages/design-system/src/**/*.{ts,tsx}";
+
+/*
+ * Docs-specific overrides belong here. Shared tokens and primitives stay in
+ * @repo/design-system while docs layout rules stay local to this surface.
+ */

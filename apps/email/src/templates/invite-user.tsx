@@ -1,6 +1,8 @@
-import { InviteUserEmail } from "@repo/mail";
+import { InviteUserEmail } from "../../../../packages/mail/src/templates";
 
-export default function Preview() {
+export { InviteUserEmail };
+
+export default function InviteUserPreview() {
 	return (
 		<InviteUserEmail
 			inviterName="Anh Nguyen"

@@ -7,3 +7,5 @@ export * from "./components/page-header";
 export * from "./components/state";
 export * from "./icons";
 export * from "./lib/cn";
+export * from "./provider";
+export * from "./providers/theme";

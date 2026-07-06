@@ -1,4 +1,4 @@
 {
 	"extends": "@repo/typescript-config/package",
-	"include": ["src/**/*.ts", "src/**/*.tsx", ".storybook/**/*.ts", "*.d.ts"]
+	"include": ["src/**/*.ts", "src/**/*.tsx", ".storybook/**/*.ts", ".storybook/**/*.tsx", "*.d.ts"]
 }

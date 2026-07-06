@@ -53,6 +53,27 @@ pnpm test
 pnpm boundaries
 ```
 
+Maintenance commands:
+
+```bash
+pnpm clean:deps
+pnpm clean:build
+pnpm upgrade:deps
+pnpm db:studio
+pnpm ui:gen
+```
+
+For a local auth E2E smoke with automatic PostgreSQL bootstrap:
+
+```bash
+pnpm test:e2e:db
+```
+
+This starts the Docker Compose `postgres` service, picks an available host port
+starting from `POSTGRES_PORT` or `5432`, pushes the Prisma schema, then runs
+Playwright. Use `pnpm test:e2e` directly when a migrated database is already
+available.
+
 CI uses the non-mutating formatter/linter command:
 
 ```bash

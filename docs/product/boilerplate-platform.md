@@ -29,6 +29,12 @@ domain assumptions.
   tracks for base SaaS, education, dev tools, and Shopify-adjacent add-ons.
 - Production discipline with standalone Next.js outputs, per-surface start scripts, Turbo-pruned Docker builds, CI
   validation, and deployment docs.
+- Design-system provider ownership with a reusable theme provider. App, web, docs, and Storybook surfaces own local
+  Tailwind entry stylesheets, source scanning, and CSS override seams. Shared design-system globals provide reusable
+  token variables, dark tokens, base rules, and token utility classes without leaking raw Tailwind directives into app
+  output.
+- Maintenance commands separate dependency cleanup, build artifact cleanup, dependency upgrades, Prisma Studio, and
+  shadcn component generation.
 
 ## Non-Goals
 
@@ -44,3 +50,6 @@ domain assumptions.
 - `pnpm boundaries`
 - `pnpm build`
 - `pnpm test:e2e` for the auth smoke when a migrated PostgreSQL database is available.
+- `pnpm test:e2e:db` for local auth E2E with automatic Docker Compose PostgreSQL bootstrap.
+- `pnpm clean:deps`, `pnpm clean:build`, `pnpm upgrade:deps`, `pnpm db:studio`, and `pnpm ui:gen` for maintenance
+  workflows.
