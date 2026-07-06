@@ -139,6 +139,9 @@ importers:
 
   apps/docs:
     dependencies:
+      '@repo/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@repo/design-system':
         specifier: workspace:*
         version: link:../../packages/design-system

@@ -3,3 +3,4 @@ export * from "./features";
 export * from "./navigation";
 export * from "./plans";
 export * from "./routes";
+export * from "./templates";

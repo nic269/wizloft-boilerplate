@@ -1,3 +1,4 @@
+import { templateTracks } from "@repo/config/templates";
 import { ArrowRight, Card, CardContent, CardDescription, CardHeader, CardTitle, PageHeader } from "@repo/design-system";
 
 const onboardingSteps = [
@@ -76,15 +77,6 @@ const referenceSections = [
 	},
 ] as const;
 
-const templateTracks = [
-	["base", "Reusable SaaS core with auth, orgs, RBAC, audit, API, providers, and tests."],
-	["saas", "Billing, pricing, entitlements, customer portal, subscription webhooks, and analytics."],
-	["education", "Classes, lessons, assignments, attempts, media, CMS, and AI feedback extension points."],
-	["dev-tools", "File conversion jobs, upload/download flow, job progress UI, and public API key model."],
-	["shopify-addon", "OAuth helpers, webhook verification, encrypted tokens, Admin API client, and sync jobs."],
-	["shopify-public-app", "Separate Shopify app surface that reuses shared packages without entering core."],
-] as const;
-
 export default function DocsPage() {
 	return (
 		<main className="mx-auto max-w-6xl space-y-10 px-6 py-10">
@@ -135,10 +127,12 @@ export default function DocsPage() {
 					</p>
 				</div>
 				<div className="grid gap-3 md:grid-cols-2">
-					{templateTracks.map(([name, description]) => (
-						<div className="rounded-md border border-border bg-card p-4" key={name}>
-							<p className="font-mono text-xs text-muted-foreground">templates/{name}</p>
-							<p className="mt-2 text-sm">{description}</p>
+					{templateTracks.map((template) => (
+						<div className="rounded-md border border-border bg-card p-4" key={template.slug}>
+							<p className="font-mono text-xs text-muted-foreground">{template.path}</p>
+							<h3 className="mt-2 font-semibold">{template.name}</h3>
+							<p className="mt-1 text-sm text-muted-foreground">{template.summary}</p>
+							<p className="mt-3 text-sm">{template.useWhen}</p>
 						</div>
 					))}
 				</div>

@@ -9,7 +9,8 @@
 		"./features": "./src/features.ts",
 		"./navigation": "./src/navigation.ts",
 		"./routes": "./src/routes.ts",
-		"./plans": "./src/plans.ts"
+		"./plans": "./src/plans.ts",
+		"./templates": "./src/templates.ts"
 	},
 	"scripts": {
 		"check-types": "tsc --noEmit",

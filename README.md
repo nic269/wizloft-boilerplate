@@ -61,6 +61,8 @@ pnpm clean:build
 pnpm upgrade:deps
 pnpm db:studio
 pnpm ui:gen
+pnpm templates:list
+pnpm templates:validate
 ```
 
 For a local auth E2E smoke with automatic PostgreSQL bootstrap:

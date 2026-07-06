@@ -35,6 +35,8 @@ domain assumptions.
   output.
 - Maintenance commands separate dependency cleanup, build artifact cleanup, dependency upgrades, Prisma Studio, and
   shadcn component generation.
+- Template tracks are code-owned through a typed catalog, docs app rendering, and CLI validation/list commands so future
+  products can select add-ons without copying domain code into core.
 
 ## Non-Goals
 
@@ -53,3 +55,5 @@ domain assumptions.
 - `pnpm test:e2e:db` for local auth E2E with automatic Docker Compose PostgreSQL bootstrap.
 - `pnpm clean:deps`, `pnpm clean:build`, `pnpm upgrade:deps`, `pnpm db:studio`, and `pnpm ui:gen` for maintenance
   workflows.
+- `pnpm templates:list`, `pnpm templates:json`, and `pnpm templates:validate` for template track handoff and drift
+  checks.
