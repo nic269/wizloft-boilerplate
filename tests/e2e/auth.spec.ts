@@ -3,7 +3,9 @@ import { expect, test } from "@playwright/test";
 const DASHBOARD_URL_PATTERN = /\/dashboard$/;
 const SIGN_IN_URL_PATTERN = /\/sign-in$/;
 
-test("user can sign up, view dashboard session, and sign out", async ({ page }, testInfo) => {
+test("user can sign up, view dashboard session, and sign out", async ({
+  page,
+}, testInfo) => {
   const email = `auth-smoke-${testInfo.project.name}-${Date.now()}@example.com`;
   const password = "Password123!";
 

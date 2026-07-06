@@ -1,6 +1,10 @@
 import { prisma } from "@repo/database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createOrganizationForUser, listOrganizationsForUser, normalizeOrganizationSlug } from "./organizations";
+import {
+  createOrganizationForUser,
+  listOrganizationsForUser,
+  normalizeOrganizationSlug,
+} from "./organizations";
 
 vi.mock("@repo/database", () => ({
   prisma: {
@@ -13,7 +17,9 @@ describe("organization service", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("normalizes user-facing names into stable slugs", () => {
-    expect(normalizeOrganizationSlug("  Anh Nguyễn & Co.  ")).toBe("anh-nguyen-co");
+    expect(normalizeOrganizationSlug("  Anh Nguyễn & Co.  ")).toBe(
+      "anh-nguyen-co"
+    );
   });
 
   it("scopes organization queries to active memberships", async () => {
@@ -22,8 +28,10 @@ describe("organization service", () => {
 
     expect(prisma.organization.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { memberships: { some: { status: "ACTIVE", userId: "user-1" } } },
-      }),
+        where: {
+          memberships: { some: { status: "ACTIVE", userId: "user-1" } },
+        },
+      })
     );
   });
 
@@ -31,12 +39,26 @@ describe("organization service", () => {
     const transaction = {
       auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
       membership: { create: vi.fn().mockResolvedValue({ id: "membership-1" }) },
-      organization: { create: vi.fn().mockResolvedValue({ id: "org-1", name: "Acme", slug: "acme" }) },
-      role: { create: vi.fn().mockResolvedValue({ id: "role-1", name: "Owner" }) },
+      organization: {
+        create: vi
+          .fn()
+          .mockResolvedValue({ id: "org-1", name: "Acme", slug: "acme" }),
+      },
+      role: {
+        create: vi.fn().mockResolvedValue({ id: "role-1", name: "Owner" }),
+      },
     };
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(transaction as never));
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
+      callback(transaction as never)
+    );
 
-    await expect(createOrganizationForUser({ name: "Acme", slug: "Acme", userId: "user-1" })).resolves.toEqual({
+    await expect(
+      createOrganizationForUser({
+        name: "Acme",
+        slug: "Acme",
+        userId: "user-1",
+      })
+    ).resolves.toEqual({
       id: "org-1",
       name: "Acme",
       role: "Owner",

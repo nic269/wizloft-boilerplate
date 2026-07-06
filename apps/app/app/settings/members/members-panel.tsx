@@ -1,6 +1,14 @@
 "use client";
 
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from "@repo/design-system";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Input,
+} from "@repo/design-system";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 
 interface Organization {
@@ -35,13 +43,18 @@ export function MembersPanel() {
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
 
-  const loadInvitations = useCallback(async (selectedOrganizationId: string) => {
-    if (!selectedOrganizationId) {
-      return;
-    }
-    const response = await fetch(`/api/organizations/${selectedOrganizationId}/invitations`);
-    setInvitations(await readPayload<Invitation[]>(response));
-  }, []);
+  const loadInvitations = useCallback(
+    async (selectedOrganizationId: string) => {
+      if (!selectedOrganizationId) {
+        return;
+      }
+      const response = await fetch(
+        `/api/organizations/${selectedOrganizationId}/invitations`
+      );
+      setInvitations(await readPayload<Invitation[]>(response));
+    },
+    []
+  );
 
   useEffect(() => {
     fetch("/api/organizations")
@@ -52,7 +65,11 @@ export function MembersPanel() {
         setOrganizationId(first);
         return loadInvitations(first);
       })
-      .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Could not load members."));
+      .catch((cause: unknown) =>
+        setError(
+          cause instanceof Error ? cause.message : "Could not load members."
+        )
+      );
   }, [loadInvitations]);
 
   const invite = async (event: FormEvent<HTMLFormElement>) => {
@@ -61,17 +78,22 @@ export function MembersPanel() {
     setAcceptUrl(null);
     setIsBusy(true);
     try {
-      const response = await fetch(`/api/organizations/${organizationId}/invitations`, {
-        body: JSON.stringify({ email }),
-        headers: { "content-type": "application/json" },
-        method: "POST",
-      });
+      const response = await fetch(
+        `/api/organizations/${organizationId}/invitations`,
+        {
+          body: JSON.stringify({ email }),
+          headers: { "content-type": "application/json" },
+          method: "POST",
+        }
+      );
       const created = await readPayload<{ acceptUrl: string }>(response);
       setAcceptUrl(created.acceptUrl);
       setEmail("");
       await loadInvitations(organizationId);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not send invitation.");
+      setError(
+        cause instanceof Error ? cause.message : "Could not send invitation."
+      );
     } finally {
       setIsBusy(false);
     }
@@ -79,9 +101,12 @@ export function MembersPanel() {
 
   const revoke = async (invitationId: string) => {
     setError(null);
-    const response = await fetch(`/api/organizations/${organizationId}/invitations/${invitationId}`, {
-      method: "DELETE",
-    });
+    const response = await fetch(
+      `/api/organizations/${organizationId}/invitations/${invitationId}`,
+      {
+        method: "DELETE",
+      }
+    );
     if (!response.ok) {
       const payload = (await response.json()) as ApiPayload<never>;
       setError(payload.error?.message ?? "Could not revoke invitation.");
@@ -95,7 +120,9 @@ export function MembersPanel() {
       <Card>
         <CardHeader>
           <CardTitle>Invite member</CardTitle>
-          <CardDescription>Invitations expire after seven days and grant the Member role.</CardDescription>
+          <CardDescription>
+            Invitations expire after seven days and grant the Member role.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <select
@@ -126,7 +153,10 @@ export function MembersPanel() {
             </Button>
           </form>
           {acceptUrl ? (
-            <a className="block break-all font-medium text-primary text-sm hover:underline" href={acceptUrl}>
+            <a
+              className="block break-all font-medium text-primary text-sm hover:underline"
+              href={acceptUrl}
+            >
               {acceptUrl}
             </a>
           ) : null}
@@ -136,15 +166,24 @@ export function MembersPanel() {
       <Card>
         <CardHeader>
           <CardTitle>Invitations</CardTitle>
-          <CardDescription>Pending and historical invitations for this organization.</CardDescription>
+          <CardDescription>
+            Pending and historical invitations for this organization.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <ul className="divide-y rounded-md border">
             {invitations.map((invitation) => (
-              <li className="flex items-center justify-between gap-3 px-3 py-3" key={invitation.id}>
+              <li
+                className="flex items-center justify-between gap-3 px-3 py-3"
+                key={invitation.id}
+              >
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-sm">{invitation.email}</p>
-                  <p className="text-muted-foreground text-xs">{invitation.status.toLowerCase()}</p>
+                  <p className="truncate font-medium text-sm">
+                    {invitation.email}
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    {invitation.status.toLowerCase()}
+                  </p>
                 </div>
                 {invitation.status === "PENDING" ? (
                   <Button

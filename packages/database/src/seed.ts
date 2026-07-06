@@ -23,9 +23,14 @@ const main = async () => {
         organizationId: organization.id,
         permissions: {
           create: defaultPermissions
-            .filter((permission) => name !== "Viewer" || permission.endsWith(":read"))
+            .filter(
+              (permission) => name !== "Viewer" || permission.endsWith(":read")
+            )
             .map((permission) => {
-              const [module, action] = permission.split(":") as [string, string];
+              const [module, action] = permission.split(":") as [
+                string,
+                string,
+              ];
               return { action, module };
             }),
         },

@@ -13,7 +13,9 @@ export const EmptyState = ({
   <Card>
     <CardContent className="flex min-h-48 flex-col items-center justify-center gap-3 p-8 text-center">
       <h2 className="font-semibold text-lg">{title}</h2>
-      {description ? <p className="max-w-md text-muted-foreground text-sm">{description}</p> : null}
+      {description ? (
+        <p className="max-w-md text-muted-foreground text-sm">{description}</p>
+      ) : null}
       {action}
     </CardContent>
   </Card>

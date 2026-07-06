@@ -7,7 +7,9 @@ export interface PermissionInput {
   userId: string;
 }
 
-export const hasPermission = async (input: PermissionInput): Promise<boolean> => {
+export const hasPermission = async (
+  input: PermissionInput
+): Promise<boolean> => {
   const user = await prisma.user.findUnique({
     select: { isSuperAdmin: true },
     where: { id: input.userId },
@@ -40,7 +42,10 @@ export const hasPermission = async (input: PermissionInput): Promise<boolean> =>
     },
   });
 
-  return membership?.status === "ACTIVE" && Boolean(membership.role?.permissions.length);
+  return (
+    membership?.status === "ACTIVE" &&
+    Boolean(membership.role?.permissions.length)
+  );
 };
 
 export const requirePermission = async (input: PermissionInput) => {

@@ -17,11 +17,14 @@ export class InvitationError extends Error {
   }
 }
 
-export const normalizeInvitationEmail = (email: string) => email.trim().toLowerCase();
+export const normalizeInvitationEmail = (email: string) =>
+  email.trim().toLowerCase();
 
-export const hashInvitationToken = (token: string) => createHash("sha256").update(token).digest("hex");
+export const hashInvitationToken = (token: string) =>
+  createHash("sha256").update(token).digest("hex");
 
-export const createInvitationToken = () => randomBytes(32).toString("base64url");
+export const createInvitationToken = () =>
+  randomBytes(32).toString("base64url");
 
 export const listInvitations = (organizationId: string) =>
   prisma.invitation.findMany({
@@ -56,7 +59,12 @@ export const createInvitation = async (input: {
       },
       select: { id: true },
       update: {},
-      where: { organizationId_name: { name: "Member", organizationId: input.organizationId } },
+      where: {
+        organizationId_name: {
+          name: "Member",
+          organizationId: input.organizationId,
+        },
+      },
     });
 
     const pending = await transaction.invitation.findFirst({
@@ -93,14 +101,25 @@ export const createInvitation = async (input: {
   return { invitation, token };
 };
 
-export const revokeInvitation = (input: { organizationId: string; invitationId: string; actorId: string }) =>
+export const revokeInvitation = (input: {
+  organizationId: string;
+  invitationId: string;
+  actorId: string;
+}) =>
   prisma.$transaction(async (transaction) => {
     const result = await transaction.invitation.updateMany({
       data: { revokedAt: new Date(), status: "REVOKED" },
-      where: { id: input.invitationId, organizationId: input.organizationId, status: "PENDING" },
+      where: {
+        id: input.invitationId,
+        organizationId: input.organizationId,
+        status: "PENDING",
+      },
     });
     if (result.count === 0) {
-      throw new InvitationError("INVITATION_NOT_PENDING", "Pending invitation not found.");
+      throw new InvitationError(
+        "INVITATION_NOT_PENDING",
+        "Pending invitation not found."
+      );
     }
 
     await transaction.auditLog.create({
@@ -114,7 +133,12 @@ export const revokeInvitation = (input: { organizationId: string; invitationId: 
     });
   });
 
-export const acceptInvitation = (input: { token: string; userId: string; userEmail: string; now?: Date }) =>
+export const acceptInvitation = (input: {
+  token: string;
+  userId: string;
+  userEmail: string;
+  now?: Date;
+}) =>
   prisma.$transaction(async (transaction) => {
     const invitation = await transaction.invitation.findUnique({
       select: {
@@ -130,16 +154,28 @@ export const acceptInvitation = (input: { token: string; userId: string; userEma
     });
 
     if (!invitation) {
-      throw new InvitationError("INVITATION_NOT_FOUND", "Invitation not found.");
+      throw new InvitationError(
+        "INVITATION_NOT_FOUND",
+        "Invitation not found."
+      );
     }
     if (invitation.status !== "PENDING") {
-      throw new InvitationError("INVITATION_NOT_PENDING", "Invitation is no longer pending.");
+      throw new InvitationError(
+        "INVITATION_NOT_PENDING",
+        "Invitation is no longer pending."
+      );
     }
     if (invitation.expiresAt <= (input.now ?? new Date())) {
-      throw new InvitationError("INVITATION_EXPIRED", "Invitation has expired.");
+      throw new InvitationError(
+        "INVITATION_EXPIRED",
+        "Invitation has expired."
+      );
     }
     if (invitation.email !== normalizeInvitationEmail(input.userEmail)) {
-      throw new InvitationError("INVITATION_EMAIL_MISMATCH", "Sign in with the email address that was invited.");
+      throw new InvitationError(
+        "INVITATION_EMAIL_MISMATCH",
+        "Sign in with the email address that was invited."
+      );
     }
 
     const transition = await transaction.invitation.updateMany({
@@ -147,7 +183,10 @@ export const acceptInvitation = (input: { token: string; userId: string; userEma
       where: { id: invitation.id, status: "PENDING" },
     });
     if (transition.count === 0) {
-      throw new InvitationError("INVITATION_NOT_PENDING", "Invitation is no longer pending.");
+      throw new InvitationError(
+        "INVITATION_NOT_PENDING",
+        "Invitation is no longer pending."
+      );
     }
 
     await transaction.membership.upsert({
@@ -159,7 +198,10 @@ export const acceptInvitation = (input: { token: string; userId: string; userEma
       },
       update: { roleId: invitation.roleId, status: "ACTIVE" },
       where: {
-        userId_organizationId: { organizationId: invitation.organizationId, userId: input.userId },
+        userId_organizationId: {
+          organizationId: invitation.organizationId,
+          userId: input.userId,
+        },
       },
     });
 

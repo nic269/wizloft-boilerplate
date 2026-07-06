@@ -62,7 +62,11 @@ export const sanitizeObjectKeySegment = (value: string) =>
     .replace(/^[.-]+|[.-]+$/g, "")
     .slice(0, 120) || "file";
 
-export const buildTenantObjectKey = (input: { organizationId?: string; ownerId?: string; fileName: string }) => {
+export const buildTenantObjectKey = (input: {
+  organizationId?: string;
+  ownerId?: string;
+  fileName: string;
+}) => {
   let scope = "global";
   if (input.organizationId) {
     scope = `org/${sanitizeObjectKeySegment(input.organizationId)}`;

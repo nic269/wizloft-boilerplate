@@ -59,4 +59,5 @@ export type RpcProcedureOutput<TProcedureId extends RpcProcedureId> = z.infer<
   (typeof rpcContract)[TProcedureId]["response"]
 >;
 
-export const isRpcProcedureId = (value: string): value is RpcProcedureId => value in rpcContract;
+export const isRpcProcedureId = (value: string): value is RpcProcedureId =>
+  value in rpcContract;

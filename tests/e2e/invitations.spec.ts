@@ -3,7 +3,10 @@ import { expect, test } from "@playwright/test";
 const DASHBOARD_URL_PATTERN = /\/dashboard$/;
 const INVITE_URL_PATTERN = /\/invite\//;
 
-test("owner can invite a member who signs up and accepts access", async ({ browser, page }, testInfo) => {
+test("owner can invite a member who signs up and accepts access", async ({
+  browser,
+  page,
+}, testInfo) => {
   const suffix = `${testInfo.project.name}-${Date.now()}`;
   const ownerEmail = `invite-owner-${suffix}@example.com`;
   const memberEmail = `invite-member-${suffix}@example.com`;
@@ -45,7 +48,9 @@ test("owner can invite a member who signs up and accepts access", async ({ brows
 
     await memberPage.getByRole("button", { name: "Accept invitation" }).click();
     await expect(memberPage).toHaveURL(DASHBOARD_URL_PATTERN);
-    await expect(memberPage.getByText(organizationName, { exact: true })).toBeVisible();
+    await expect(
+      memberPage.getByText(organizationName, { exact: true })
+    ).toBeVisible();
   } finally {
     await memberContext.close();
   }

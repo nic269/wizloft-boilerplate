@@ -1,5 +1,13 @@
 import { templateTracks } from "@repo/config/templates";
-import { ArrowRight, Card, CardContent, CardDescription, CardHeader, CardTitle, PageHeader } from "@repo/design-system";
+import {
+  ArrowRight,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+} from "@repo/design-system";
 
 const onboardingSteps = [
   {
@@ -10,7 +18,8 @@ const onboardingSteps = [
   },
   {
     body: "Use the same checks locally and in CI so generated templates inherit a known-good contract.",
-    command: "pnpm check -> pnpm check-types -> pnpm test -> pnpm boundaries -> pnpm build",
+    command:
+      "pnpm check -> pnpm check-types -> pnpm test -> pnpm boundaries -> pnpm build",
     title: "Prove the baseline",
   },
   {
@@ -120,18 +129,27 @@ export default function DocsPage() {
       </section>
       <section className="space-y-4">
         <div>
-          <h2 className="font-semibold text-xl tracking-normal">Template Tracks</h2>
+          <h2 className="font-semibold text-xl tracking-normal">
+            Template Tracks
+          </h2>
           <p className="mt-1 text-muted-foreground text-sm">
-            Templates describe product-specific add-ons that can reuse core without pulling domain code into the base
-            boilerplate.
+            Templates describe product-specific add-ons that can reuse core
+            without pulling domain code into the base boilerplate.
           </p>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
           {templateTracks.map((template) => (
-            <div className="rounded-md border border-border bg-card p-4" key={template.slug}>
-              <p className="font-mono text-muted-foreground text-xs">{template.path}</p>
+            <div
+              className="rounded-md border border-border bg-card p-4"
+              key={template.slug}
+            >
+              <p className="font-mono text-muted-foreground text-xs">
+                {template.path}
+              </p>
               <h3 className="mt-2 font-semibold">{template.name}</h3>
-              <p className="mt-1 text-muted-foreground text-sm">{template.summary}</p>
+              <p className="mt-1 text-muted-foreground text-sm">
+                {template.summary}
+              </p>
               <p className="mt-3 text-sm">{template.useWhen}</p>
             </div>
           ))}

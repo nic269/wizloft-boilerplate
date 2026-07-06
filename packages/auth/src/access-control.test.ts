@@ -23,7 +23,9 @@ describe("access control service", () => {
 
   it("accepts only catalog permissions", () => {
     expect(isKnownPermission({ action: "manage", module: "roles" })).toBe(true);
-    expect(isKnownPermission({ action: "delete", module: "billing" })).toBe(false);
+    expect(isKnownPermission({ action: "delete", module: "billing" })).toBe(
+      false
+    );
   });
 
   it("scopes role, member, and audit queries to one organization", async () => {
@@ -35,12 +37,16 @@ describe("access control service", () => {
     await listMembers("org-1");
     await listAuditLogs("org-1");
 
-    expect(prisma.role.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { organizationId: "org-1" } }));
+    expect(prisma.role.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { organizationId: "org-1" } })
+    );
     expect(prisma.membership.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { organizationId: "org-1", status: "ACTIVE" } }),
+      expect.objectContaining({
+        where: { organizationId: "org-1", status: "ACTIVE" },
+      })
     );
     expect(prisma.auditLog.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { organizationId: "org-1" } }),
+      expect.objectContaining({ where: { organizationId: "org-1" } })
     );
   });
 
@@ -57,7 +63,9 @@ describe("access control service", () => {
         }),
       },
     };
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(transaction as never));
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
+      callback(transaction as never)
+    );
 
     await createRole({
       actorId: "owner-1",
@@ -72,12 +80,17 @@ describe("access control service", () => {
     expect(transaction.role.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          permissions: { createMany: { data: [{ action: "read", module: "members" }] } },
+          permissions: {
+            createMany: { data: [{ action: "read", module: "members" }] },
+          },
         }),
-      }),
+      })
     );
     expect(transaction.auditLog.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ action: "role.created", actorId: "owner-1" }),
+      data: expect.objectContaining({
+        action: "role.created",
+        actorId: "owner-1",
+      }),
     });
   });
 
@@ -85,9 +98,13 @@ describe("access control service", () => {
     const transaction = {
       auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
       membership: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
-      role: { findFirst: vi.fn().mockResolvedValue({ id: "role-2", name: "Manager" }) },
+      role: {
+        findFirst: vi.fn().mockResolvedValue({ id: "role-2", name: "Manager" }),
+      },
     };
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(transaction as never));
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
+      callback(transaction as never)
+    );
 
     await updateMemberRole({
       actorId: "owner-1",
@@ -101,10 +118,15 @@ describe("access control service", () => {
       where: { id: "role-2", organizationId: "org-1" },
     });
     expect(transaction.membership.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: "member-1", organizationId: "org-1", status: "ACTIVE" } }),
+      expect.objectContaining({
+        where: { id: "member-1", organizationId: "org-1", status: "ACTIVE" },
+      })
     );
     expect(transaction.auditLog.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ action: "member.role_updated", targetId: "member-1" }),
+      data: expect.objectContaining({
+        action: "member.role_updated",
+        targetId: "member-1",
+      }),
     });
   });
 });

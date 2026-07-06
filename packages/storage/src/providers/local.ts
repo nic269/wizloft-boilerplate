@@ -4,8 +4,11 @@ import type { StorageProvider } from "../provider";
 
 const PARENT_DIRECTORY_PREFIX_PATTERN = /^(\.\.(\/|\\|$))+/;
 
-export const createLocalStorageProvider = (root = ".data/storage"): StorageProvider => {
-  const resolveKey = (key: string) => join(root, normalize(key).replace(PARENT_DIRECTORY_PREFIX_PATTERN, ""));
+export const createLocalStorageProvider = (
+  root = ".data/storage"
+): StorageProvider => {
+  const resolveKey = (key: string) =>
+    join(root, normalize(key).replace(PARENT_DIRECTORY_PREFIX_PATTERN, ""));
 
   return {
     async deleteObject(input) {

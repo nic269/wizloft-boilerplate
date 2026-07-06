@@ -1,7 +1,15 @@
 "use client";
 
 import { signIn, signUp } from "@repo/auth/client";
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from "@repo/design-system";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Input,
+} from "@repo/design-system";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
@@ -34,14 +42,22 @@ const copy = {
 } satisfies Record<AuthMode, Record<string, string>>;
 
 const getErrorMessage = (error: unknown) => {
-  if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
+  if (
+    error &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
     return error.message;
   }
 
   return "Authentication failed. Check your details and try again.";
 };
 
-export const AuthForm = ({ mode, callbackUrl = "/dashboard" }: AuthFormProps) => {
+export const AuthForm = ({
+  mode,
+  callbackUrl = "/dashboard",
+}: AuthFormProps) => {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -60,7 +76,12 @@ export const AuthForm = ({ mode, callbackUrl = "/dashboard" }: AuthFormProps) =>
     try {
       const response =
         mode === "sign-up"
-          ? await signUp.email({ callbackURL: callbackUrl, email, name, password })
+          ? await signUp.email({
+              callbackURL: callbackUrl,
+              email,
+              name,
+              password,
+            })
           : await signIn.email({ callbackURL: callbackUrl, email, password });
 
       if (response.error) {
@@ -85,10 +106,25 @@ export const AuthForm = ({ mode, callbackUrl = "/dashboard" }: AuthFormProps) =>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={handleSubmit}>
-          {mode === "sign-up" ? <Input autoComplete="name" name="name" placeholder="Full name" required /> : null}
-          <Input autoComplete="email" name="email" placeholder="you@example.com" required type="email" />
+          {mode === "sign-up" ? (
+            <Input
+              autoComplete="name"
+              name="name"
+              placeholder="Full name"
+              required
+            />
+          ) : null}
           <Input
-            autoComplete={mode === "sign-up" ? "new-password" : "current-password"}
+            autoComplete="email"
+            name="email"
+            placeholder="you@example.com"
+            required
+            type="email"
+          />
+          <Input
+            autoComplete={
+              mode === "sign-up" ? "new-password" : "current-password"
+            }
             minLength={8}
             name="password"
             placeholder="Password"

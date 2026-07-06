@@ -1,4 +1,10 @@
-import { Button, EmptyState, ErrorState, Input, LoadingState } from "@repo/design-system";
+import {
+  Button,
+  EmptyState,
+  ErrorState,
+  Input,
+  LoadingState,
+} from "@repo/design-system";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
@@ -15,7 +21,11 @@ export const FormControls: StoryObj<typeof meta> = {
     <form className="w-[360px] space-y-3 rounded-md border border-border bg-background p-4">
       <label className="block space-y-1" htmlFor="storybook-invite-email">
         <span className="font-medium text-sm">Email</span>
-        <Input id="storybook-invite-email" placeholder="teammate@example.com" type="email" />
+        <Input
+          id="storybook-invite-email"
+          placeholder="teammate@example.com"
+          type="email"
+        />
       </label>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline">

@@ -1,8 +1,15 @@
 import { prisma } from "@repo/database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { acceptInvitation, createInvitation, hashInvitationToken, revokeInvitation } from "./invitations";
+import {
+  acceptInvitation,
+  createInvitation,
+  hashInvitationToken,
+  revokeInvitation,
+} from "./invitations";
 
-vi.mock("@repo/database", () => ({ prisma: { $transaction: vi.fn(), invitation: { findMany: vi.fn() } } }));
+vi.mock("@repo/database", () => ({
+  prisma: { $transaction: vi.fn(), invitation: { findMany: vi.fn() } },
+}));
 
 describe("invitation service", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -16,12 +23,16 @@ describe("invitation service", () => {
     const transaction = {
       auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
       invitation: {
-        create: vi.fn().mockImplementation(({ data }) => ({ id: "invite-1", ...data })),
+        create: vi
+          .fn()
+          .mockImplementation(({ data }) => ({ id: "invite-1", ...data })),
         findFirst: vi.fn().mockResolvedValue(null),
       },
       role: { upsert: vi.fn().mockResolvedValue({ id: "role-1" }) },
     };
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(transaction as never));
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
+      callback(transaction as never)
+    );
 
     const result = await createInvitation({
       email: " USER@example.com ",
@@ -40,7 +51,10 @@ describe("invitation service", () => {
       }),
     });
     expect(transaction.auditLog.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ action: "invitation.created", targetId: "invite-1" }),
+      data: expect.objectContaining({
+        action: "invitation.created",
+        targetId: "invite-1",
+      }),
     });
   });
 
@@ -59,7 +73,9 @@ describe("invitation service", () => {
         updateMany: vi.fn(),
       },
     };
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(transaction as never));
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
+      callback(transaction as never)
+    );
 
     await expect(
       acceptInvitation({
@@ -67,7 +83,7 @@ describe("invitation service", () => {
         token: "token",
         userEmail: "other@example.com",
         userId: "user-1",
-      }),
+      })
     ).rejects.toMatchObject({ code: "INVITATION_EMAIL_MISMATCH" });
     expect(transaction.invitation.updateMany).not.toHaveBeenCalled();
   });
@@ -89,7 +105,9 @@ describe("invitation service", () => {
       },
       membership: { upsert: vi.fn().mockResolvedValue({ id: "membership-1" }) },
     };
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(transaction as never));
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
+      callback(transaction as never)
+    );
 
     await expect(
       acceptInvitation({
@@ -97,13 +115,18 @@ describe("invitation service", () => {
         token: "token",
         userEmail: "INVITED@example.com",
         userId: "user-1",
-      }),
+      })
     ).resolves.toEqual({ id: "org-1", name: "Acme", slug: "acme" });
     expect(transaction.membership.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ update: { roleId: "role-1", status: "ACTIVE" } }),
+      expect.objectContaining({
+        update: { roleId: "role-1", status: "ACTIVE" },
+      })
     );
     expect(transaction.auditLog.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ action: "invitation.accepted", actorId: "user-1" }),
+      data: expect.objectContaining({
+        action: "invitation.accepted",
+        actorId: "user-1",
+      }),
     });
   });
 
@@ -112,11 +135,20 @@ describe("invitation service", () => {
       auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
       invitation: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
     };
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(transaction as never));
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
+      callback(transaction as never)
+    );
 
-    await revokeInvitation({ actorId: "owner-1", invitationId: "invite-1", organizationId: "org-1" });
+    await revokeInvitation({
+      actorId: "owner-1",
+      invitationId: "invite-1",
+      organizationId: "org-1",
+    });
     expect(transaction.auditLog.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ action: "invitation.revoked", actorId: "owner-1" }),
+      data: expect.objectContaining({
+        action: "invitation.revoked",
+        actorId: "owner-1",
+      }),
     });
   });
 });

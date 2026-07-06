@@ -30,10 +30,17 @@ export const listOrganizationsForUser = (userId: string) =>
     },
   });
 
-export const createOrganizationForUser = async (input: { userId: string; name: string; slug: string }) =>
+export const createOrganizationForUser = async (input: {
+  userId: string;
+  name: string;
+  slug: string;
+}) =>
   prisma.$transaction(async (transaction) => {
     const organization = await transaction.organization.create({
-      data: { name: input.name.trim(), slug: normalizeOrganizationSlug(input.slug) },
+      data: {
+        name: input.name.trim(),
+        slug: normalizeOrganizationSlug(input.slug),
+      },
       select: { id: true, name: true, slug: true },
     });
 
@@ -71,4 +78,7 @@ export const createOrganizationForUser = async (input: { userId: string; name: s
   });
 
 export const isUniqueConstraintError = (error: unknown): boolean =>
-  typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  error.code === "P2002";

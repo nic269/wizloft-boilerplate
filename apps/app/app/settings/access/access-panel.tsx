@@ -1,7 +1,21 @@
 "use client";
 
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from "@repo/design-system";
-import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Input,
+} from "@repo/design-system";
+import {
+  type FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 interface Organization {
   id: string;
@@ -57,7 +71,8 @@ const readPayload = async <T,>(response: Response): Promise<T> => {
   return payload.data;
 };
 
-const permissionKey = (permission: Permission) => `${permission.module}:${permission.action}`;
+const permissionKey = (permission: Permission) =>
+  `${permission.module}:${permission.action}`;
 
 export function AccessPanel() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -66,7 +81,10 @@ export function AccessPanel() {
   const [members, setMembers] = useState<Member[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [roleName, setRoleName] = useState("");
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>(["organization:read", "members:read"]);
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([
+    "organization:read",
+    "members:read",
+  ]);
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
 
@@ -75,15 +93,15 @@ export function AccessPanel() {
       return;
     }
     const [nextRoles, nextMembers, nextAuditLogs] = await Promise.all([
-      fetch(`/api/organizations/${selectedOrganizationId}/roles`, { credentials: "include" }).then((response) =>
-        readPayload<Role[]>(response),
-      ),
-      fetch(`/api/organizations/${selectedOrganizationId}/members`, { credentials: "include" }).then((response) =>
-        readPayload<Member[]>(response),
-      ),
-      fetch(`/api/organizations/${selectedOrganizationId}/audit-logs`, { credentials: "include" }).then((response) =>
-        readPayload<AuditLog[]>(response),
-      ),
+      fetch(`/api/organizations/${selectedOrganizationId}/roles`, {
+        credentials: "include",
+      }).then((response) => readPayload<Role[]>(response)),
+      fetch(`/api/organizations/${selectedOrganizationId}/members`, {
+        credentials: "include",
+      }).then((response) => readPayload<Member[]>(response)),
+      fetch(`/api/organizations/${selectedOrganizationId}/audit-logs`, {
+        credentials: "include",
+      }).then((response) => readPayload<AuditLog[]>(response)),
     ]);
     setRoles(nextRoles);
     setMembers(nextMembers);
@@ -99,15 +117,23 @@ export function AccessPanel() {
         setOrganizationId(first);
         return loadAccess(first);
       })
-      .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Could not load access settings."));
+      .catch((cause: unknown) =>
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "Could not load access settings."
+        )
+      );
   }, [loadAccess]);
 
   const permissions = useMemo(
     () =>
       permissionOptions
-        .filter((permission) => selectedPermissions.includes(permissionKey(permission)))
+        .filter((permission) =>
+          selectedPermissions.includes(permissionKey(permission))
+        )
         .map(({ module, action }) => ({ action, module })),
-    [selectedPermissions],
+    [selectedPermissions]
   );
 
   const createRole = async (event: FormEvent<HTMLFormElement>) => {
@@ -115,17 +141,22 @@ export function AccessPanel() {
     setError(null);
     setIsBusy(true);
     try {
-      const response = await fetch(`/api/organizations/${organizationId}/roles`, {
-        body: JSON.stringify({ name: roleName, permissions }),
-        credentials: "include",
-        headers: { "content-type": "application/json" },
-        method: "POST",
-      });
+      const response = await fetch(
+        `/api/organizations/${organizationId}/roles`,
+        {
+          body: JSON.stringify({ name: roleName, permissions }),
+          credentials: "include",
+          headers: { "content-type": "application/json" },
+          method: "POST",
+        }
+      );
       await readPayload<Role>(response);
       setRoleName("");
       await loadAccess(organizationId);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not create role.");
+      setError(
+        cause instanceof Error ? cause.message : "Could not create role."
+      );
     } finally {
       setIsBusy(false);
     }
@@ -133,12 +164,15 @@ export function AccessPanel() {
 
   const updateMemberRole = async (membershipId: string, roleId: string) => {
     setError(null);
-    const response = await fetch(`/api/organizations/${organizationId}/members/${membershipId}/role`, {
-      body: JSON.stringify({ roleId }),
-      credentials: "include",
-      headers: { "content-type": "application/json" },
-      method: "PATCH",
-    });
+    const response = await fetch(
+      `/api/organizations/${organizationId}/members/${membershipId}/role`,
+      {
+        body: JSON.stringify({ roleId }),
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+        method: "PATCH",
+      }
+    );
     if (!response.ok) {
       const payload = (await response.json()) as ApiPayload<never>;
       setError(payload.error?.message ?? "Could not update member role.");
@@ -149,7 +183,9 @@ export function AccessPanel() {
 
   const togglePermission = (key: string) => {
     setSelectedPermissions((current) =>
-      current.includes(key) ? current.filter((item) => item !== key) : [...current, key],
+      current.includes(key)
+        ? current.filter((item) => item !== key)
+        : [...current, key]
     );
   };
 
@@ -158,7 +194,9 @@ export function AccessPanel() {
       <Card>
         <CardHeader>
           <CardTitle>Organization</CardTitle>
-          <CardDescription>Select the workspace access policy to inspect.</CardDescription>
+          <CardDescription>
+            Select the workspace access policy to inspect.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <select
@@ -184,7 +222,9 @@ export function AccessPanel() {
         <Card>
           <CardHeader>
             <CardTitle>Members</CardTitle>
-            <CardDescription>Assign active members to organization-scoped roles.</CardDescription>
+            <CardDescription>
+              Assign active members to organization-scoped roles.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="divide-y rounded-md border">
@@ -194,8 +234,12 @@ export function AccessPanel() {
                   key={member.id}
                 >
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-sm">{member.user.name}</p>
-                    <p className="truncate text-muted-foreground text-xs">{member.user.email}</p>
+                    <p className="truncate font-medium text-sm">
+                      {member.user.name}
+                    </p>
+                    <p className="truncate text-muted-foreground text-xs">
+                      {member.user.email}
+                    </p>
                   </div>
                   <select
                     aria-label={`Role for ${member.user.email}`}
@@ -220,7 +264,9 @@ export function AccessPanel() {
         <Card>
           <CardHeader>
             <CardTitle>Roles</CardTitle>
-            <CardDescription>Create reusable permission sets for this organization.</CardDescription>
+            <CardDescription>
+              Create reusable permission sets for this organization.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <ul className="divide-y rounded-md border">
@@ -228,10 +274,13 @@ export function AccessPanel() {
                 <li className="space-y-1 px-3 py-3" key={role.id}>
                   <div className="flex items-center justify-between gap-3">
                     <p className="font-medium text-sm">{role.name}</p>
-                    <span className="text-muted-foreground text-xs">{role._count.memberships} members</span>
+                    <span className="text-muted-foreground text-xs">
+                      {role._count.memberships} members
+                    </span>
                   </div>
                   <p className="text-muted-foreground text-xs">
-                    {role.permissions.map(permissionKey).join(", ") || "No permissions"}
+                    {role.permissions.map(permissionKey).join(", ") ||
+                      "No permissions"}
                   </p>
                 </li>
               ))}
@@ -249,7 +298,10 @@ export function AccessPanel() {
                 {permissionOptions.map((permission) => {
                   const key = permissionKey(permission);
                   return (
-                    <label className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm" key={key}>
+                    <label
+                      className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
+                      key={key}
+                    >
                       <input
                         checked={selectedPermissions.includes(key)}
                         onChange={() => togglePermission(key)}
@@ -271,19 +323,28 @@ export function AccessPanel() {
       <Card>
         <CardHeader>
           <CardTitle>Audit log</CardTitle>
-          <CardDescription>Latest organization security and access events.</CardDescription>
+          <CardDescription>
+            Latest organization security and access events.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <ul className="divide-y rounded-md border">
             {auditLogs.map((log) => (
-              <li className="grid gap-1 px-3 py-3 sm:grid-cols-[1fr_auto]" key={log.id}>
+              <li
+                className="grid gap-1 px-3 py-3 sm:grid-cols-[1fr_auto]"
+                key={log.id}
+              >
                 <div className="min-w-0">
                   <p className="truncate font-medium text-sm">{log.action}</p>
                   <p className="truncate text-muted-foreground text-xs">
-                    {log.actor?.email ?? "System"} {log.targetType ? `on ${log.targetType}` : ""}
+                    {log.actor?.email ?? "System"}{" "}
+                    {log.targetType ? `on ${log.targetType}` : ""}
                   </p>
                 </div>
-                <time className="text-muted-foreground text-xs" dateTime={log.createdAt}>
+                <time
+                  className="text-muted-foreground text-xs"
+                  dateTime={log.createdAt}
+                >
                   {new Date(log.createdAt).toLocaleString()}
                 </time>
               </li>

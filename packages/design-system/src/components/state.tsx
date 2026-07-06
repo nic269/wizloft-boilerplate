@@ -7,7 +7,13 @@ export const LoadingState = ({ label = "Loading" }: { label?: string }) => (
   </div>
 );
 
-export const ErrorState = ({ title = "Something went wrong", message }: { title?: string; message?: string }) => (
+export const ErrorState = ({
+  title = "Something went wrong",
+  message,
+}: {
+  title?: string;
+  message?: string;
+}) => (
   <div className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm">
     <p className="font-medium text-destructive">{title}</p>
     {message ? <p className="mt-1 text-muted-foreground">{message}</p> : null}

@@ -9,16 +9,23 @@ const walk = async (directory: string): Promise<string[]> => {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = await Promise.all(
     entries
-      .filter((entry) => !["node_modules", ".next", ".turbo", "dist", "build"].includes(entry.name))
+      .filter(
+        (entry) =>
+          !["node_modules", ".next", ".turbo", "dist", "build"].includes(
+            entry.name
+          )
+      )
       .map((entry) => {
         const path = join(directory, entry.name);
         return entry.isDirectory() ? walk(path) : Promise.resolve([path]);
-      }),
+      })
   );
   return files.flat();
 };
 
-const sourceFiles = (await walk(root)).filter((file) => sourceExtensions.has(extname(file)));
+const sourceFiles = (await walk(root)).filter((file) =>
+  sourceExtensions.has(extname(file))
+);
 
 for (const file of sourceFiles) {
   const rel = relative(root, file);

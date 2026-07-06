@@ -19,7 +19,7 @@ export class ApiError extends Error {
     message: string,
     status: ContentfulStatusCode = 400,
     details?: unknown,
-    options?: ErrorOptions,
+    options?: ErrorOptions
   ) {
     super(message, options);
     this.code = code;

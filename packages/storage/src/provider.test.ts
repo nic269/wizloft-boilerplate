@@ -14,10 +14,15 @@ describe("storage provider", () => {
   });
 
   it("sanitizes tenant object keys", () => {
-    expect(sanitizeObjectKeySegment("../invoice final.pdf")).toBe("invoice-final.pdf");
-    expect(buildTenantObjectKey({ fileName: "../../debug.csv", organizationId: "../org" })).toMatch(
-      ORGANIZATION_OBJECT_KEY_PATTERN,
+    expect(sanitizeObjectKeySegment("../invoice final.pdf")).toBe(
+      "invoice-final.pdf"
     );
+    expect(
+      buildTenantObjectKey({
+        fileName: "../../debug.csv",
+        organizationId: "../org",
+      })
+    ).toMatch(ORGANIZATION_OBJECT_KEY_PATTERN);
   });
 
   it("uses local storage by default", async () => {
@@ -31,8 +36,12 @@ describe("storage provider", () => {
       key: "org/acme/file.txt",
     });
 
-    await expect(readFile(join(root, "org/acme/file.txt"), "utf8")).resolves.toBe("hello");
-    await expect(provider.getObject({ key: "org/acme/file.txt" })).resolves.toMatchObject({
+    await expect(
+      readFile(join(root, "org/acme/file.txt"), "utf8")
+    ).resolves.toBe("hello");
+    await expect(
+      provider.getObject({ key: "org/acme/file.txt" })
+    ).resolves.toMatchObject({
       key: "org/acme/file.txt",
       provider: "local",
     });
@@ -44,13 +53,17 @@ describe("storage provider", () => {
     vi.stubEnv("LOCAL_STORAGE_DIR", root);
     vi.stubEnv("S3_BUCKET", "private-files");
 
-    expect(getStorageProviderStatus()).toEqual({ configured: false, mode: "durable", provider: "s3" });
+    expect(getStorageProviderStatus()).toEqual({
+      configured: false,
+      mode: "durable",
+      provider: "s3",
+    });
     await expect(
       getStorageProvider().putObject({
         body: new TextEncoder().encode("fallback"),
         contentType: "text/plain",
         key: "global/test.txt",
-      }),
+      })
     ).resolves.toMatchObject({ provider: "local" });
   });
 
@@ -61,7 +74,7 @@ describe("storage provider", () => {
         bucket: "bucket",
         region: "auto",
         secretAccessKey: "secret",
-      }),
+      })
     ).toBe(true);
   });
 });

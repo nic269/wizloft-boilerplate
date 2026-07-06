@@ -34,7 +34,11 @@ export const getMailProviderStatus = (): MailProviderStatus => {
     return { configured: true, mode: "development", provider: "console" };
   }
 
-  return { configured: Boolean(env.RESEND_FROM_EMAIL), mode: "provider", provider: "resend" };
+  return {
+    configured: Boolean(env.RESEND_FROM_EMAIL),
+    mode: "provider",
+    provider: "resend",
+  };
 };
 
 export const getMailProvider = (): MailProvider => {
@@ -50,7 +54,9 @@ export const getMailProvider = (): MailProvider => {
       const { Resend } = await import("resend");
       const resend = new Resend(env.RESEND_API_KEY);
       const emails = resend.emails as unknown as {
-        send(input: Record<string, unknown>): Promise<{ data?: { id?: string } }>;
+        send(
+          input: Record<string, unknown>
+        ): Promise<{ data?: { id?: string } }>;
       };
       const payload = {
         from: input.from ?? env.RESEND_FROM_EMAIL ?? "noreply@example.com",
@@ -61,7 +67,10 @@ export const getMailProvider = (): MailProvider => {
       };
       const response = await emails.send(payload);
 
-      return { id: response.data?.id ?? crypto.randomUUID(), provider: "resend" };
+      return {
+        id: response.data?.id ?? crypto.randomUUID(),
+        provider: "resend",
+      };
     },
   };
 };

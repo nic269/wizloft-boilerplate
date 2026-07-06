@@ -20,7 +20,9 @@ export const env = createEnv({
   },
   server: {
     API_INTERNAL_URL: z.string().url().optional(),
-    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    NODE_ENV: z
+      .enum(["development", "test", "production"])
+      .default("development"),
   },
   skipValidation: process.env.SKIP_ENV_VALIDATION === "true",
 });

@@ -16,10 +16,14 @@ export const createApiApp = () => {
   app.use("*", requestContext);
   app.route("/", healthRouter);
   app.get("/openapi.json", (context) => context.json(openApiDocument));
-  app.get("/docs/api", (context) => context.html("<html><body><pre>/openapi.json</pre></body></html>"));
+  app.get("/docs/api", (context) =>
+    context.html("<html><body><pre>/openapi.json</pre></body></html>")
+  );
   app.route("/rpc", rpcRouter);
 
-  app.on(["GET", "POST"], "/api/auth/*", (context) => auth.handler(context.req.raw));
+  app.on(["GET", "POST"], "/api/auth/*", (context) =>
+    auth.handler(context.req.raw)
+  );
   app.route("/api/organizations", organizationsRouter);
   app.route("/api/invitations", invitationsRouter);
   app.route("/api/files", filesRouter);
@@ -34,13 +38,19 @@ export const createApiApp = () => {
           requestId: context.get("requestId"),
         },
       },
-      404,
-    ),
+      404
+    )
   );
 
   app.onError((error, context) => {
-    const apiError = error instanceof ApiError ? error : new ApiError("INTERNAL_SERVER_ERROR", error.message, 500);
-    context.get("logger").error(apiError.message, { code: apiError.code, details: apiError.details });
+    const apiError =
+      error instanceof ApiError
+        ? error
+        : new ApiError("INTERNAL_SERVER_ERROR", error.message, 500);
+    context.get("logger").error(apiError.message, {
+      code: apiError.code,
+      details: apiError.details,
+    });
 
     return context.json<ApiErrorResponse>(
       {
@@ -51,7 +61,7 @@ export const createApiApp = () => {
           requestId: context.get("requestId"),
         },
       },
-      apiError.status,
+      apiError.status
     );
   });
 

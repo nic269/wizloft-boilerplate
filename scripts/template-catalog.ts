@@ -26,13 +26,17 @@ const validate = () => {
 
   for (const slug of slugs) {
     if (!folders.includes(slug)) {
-      errors.push(`Catalog references missing template folder: templates/${slug}`);
+      errors.push(
+        `Catalog references missing template folder: templates/${slug}`
+      );
     }
   }
 
   for (const folder of folders) {
     if (!slugs.includes(folder)) {
-      errors.push(`Template folder is missing from catalog: templates/${folder}`);
+      errors.push(
+        `Template folder is missing from catalog: templates/${folder}`
+      );
     }
   }
 
@@ -68,6 +72,8 @@ switch (command) {
     validate();
     break;
   default:
-    console.error("Usage: pnpm templates:list | pnpm templates:json | pnpm templates:validate");
+    console.error(
+      "Usage: pnpm templates:list | pnpm templates:json | pnpm templates:validate"
+    );
     process.exitCode = 1;
 }

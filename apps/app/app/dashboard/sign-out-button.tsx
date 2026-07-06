@@ -17,7 +17,13 @@ export const SignOutButton = () => {
   };
 
   return (
-    <Button disabled={isPending} onClick={handleSignOut} size="sm" type="button" variant="outline">
+    <Button
+      disabled={isPending}
+      onClick={handleSignOut}
+      size="sm"
+      type="button"
+      variant="outline"
+    >
       <LogOut className="h-4 w-4" />
       {isPending ? "Signing out" : "Sign out"}
     </Button>

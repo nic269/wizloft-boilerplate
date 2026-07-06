@@ -17,7 +17,9 @@ export interface PermissionInput {
   module: string;
 }
 
-export const OWNER_PERMISSIONS = PERMISSION_CATALOG.map(({ module, action }) => ({ action, module }));
+export const OWNER_PERMISSIONS = PERMISSION_CATALOG.map(
+  ({ module, action }) => ({ action, module })
+);
 
 export const MEMBER_PERMISSIONS = [
   { action: "read", module: "organization" },
@@ -27,7 +29,9 @@ export const MEMBER_PERMISSIONS = [
 
 export const isKnownPermission = (permission: PermissionInput) =>
   PERMISSION_CATALOG.some(
-    (candidate) => candidate.module === permission.module && candidate.action === permission.action,
+    (candidate) =>
+      candidate.module === permission.module &&
+      candidate.action === permission.action
   );
 
 const normalizePermissions = (permissions: PermissionInput[]) => {
@@ -48,7 +52,10 @@ export const listRoles = (organizationId: string) =>
       description: true,
       id: true,
       name: true,
-      permissions: { orderBy: [{ module: "asc" }, { action: "asc" }], select: { action: true, module: true } },
+      permissions: {
+        orderBy: [{ module: "asc" }, { action: "asc" }],
+        select: { action: true, module: true },
+      },
     },
     where: { organizationId },
   });
@@ -74,11 +81,17 @@ export const createRole = (input: {
         description: true,
         id: true,
         name: true,
-        permissions: { orderBy: [{ module: "asc" }, { action: "asc" }], select: { action: true, module: true } },
+        permissions: {
+          orderBy: [{ module: "asc" }, { action: "asc" }],
+          select: { action: true, module: true },
+        },
       },
     });
 
-    const permissionMetadata = permissions.map(({ module, action }) => ({ action, module }));
+    const permissionMetadata = permissions.map(({ module, action }) => ({
+      action,
+      module,
+    }));
 
     await transaction.auditLog.create({
       data: {
@@ -124,7 +137,11 @@ export const updateMemberRole = (input: {
 
     const result = await transaction.membership.updateMany({
       data: { roleId: role.id },
-      where: { id: input.membershipId, organizationId: input.organizationId, status: "ACTIVE" },
+      where: {
+        id: input.membershipId,
+        organizationId: input.organizationId,
+        status: "ACTIVE",
+      },
     });
     if (result.count === 0) {
       throw new Error("MEMBERSHIP_NOT_FOUND");

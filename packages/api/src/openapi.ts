@@ -27,7 +27,10 @@ const contractPaths = Object.fromEntries(
         get: {
           operationId: `${procedure.id}.rest`,
           responses: {
-            "200": successResponse("Successful response", procedure.openapiResponse),
+            "200": successResponse(
+              "Successful response",
+              procedure.openapiResponse
+            ),
           },
           summary: procedure.summary,
         },
@@ -49,7 +52,7 @@ const contractPaths = Object.fromEntries(
         },
       },
     ],
-  ]),
+  ])
 ) as Record<string, OpenApiPathItem>;
 
 export const openApiDocument = {

@@ -25,7 +25,9 @@ export const AppShell = ({
   <div className={cn("min-h-screen bg-background text-foreground", className)}>
     <div className="grid min-h-screen md:grid-cols-[260px_1fr]">
       <aside className="hidden border-border border-r bg-muted/30 md:block">
-        <div className="flex h-16 items-center border-border border-b px-6 font-semibold text-sm">{brand}</div>
+        <div className="flex h-16 items-center border-border border-b px-6 font-semibold text-sm">
+          {brand}
+        </div>
         <nav className="space-y-1 p-3">
           {navItems?.map((item) => (
             <a
@@ -41,7 +43,9 @@ export const AppShell = ({
         {sidebar}
       </aside>
       <main>
-        <header className="flex h-16 items-center justify-between border-border border-b px-4 md:px-8">{topbar}</header>
+        <header className="flex h-16 items-center justify-between border-border border-b px-4 md:px-8">
+          {topbar}
+        </header>
         <div className="p-4 md:p-8">{children}</div>
       </main>
     </div>

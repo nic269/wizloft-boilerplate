@@ -13,7 +13,10 @@ export default async function AccessPage() {
   return (
     <AppShell brand={appConfig.name} navItems={dashboardNav}>
       <div className="space-y-6">
-        <PageHeader description="Manage organization roles, member assignments, and audit history." title="Access" />
+        <PageHeader
+          description="Manage organization roles, member assignments, and audit history."
+          title="Access"
+        />
         <AccessPanel />
       </div>
     </AppShell>

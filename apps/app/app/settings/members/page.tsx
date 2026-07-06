@@ -13,7 +13,10 @@ export default async function MembersPage() {
   return (
     <AppShell brand={appConfig.name} navItems={dashboardNav}>
       <div className="space-y-6">
-        <PageHeader description="Invite collaborators and manage pending access." title="Members" />
+        <PageHeader
+          description="Invite collaborators and manage pending access."
+          title="Members"
+        />
         <MembersPanel />
       </div>
     </AppShell>

@@ -49,14 +49,21 @@ export const getStorageProvider = () => {
   }
 
   if (env.STORAGE_PROVIDER === "s3" || env.STORAGE_PROVIDER === "r2") {
-    if (env.S3_BUCKET && env.S3_REGION && env.S3_ACCESS_KEY_ID && env.S3_SECRET_ACCESS_KEY) {
+    if (
+      env.S3_BUCKET &&
+      env.S3_REGION &&
+      env.S3_ACCESS_KEY_ID &&
+      env.S3_SECRET_ACCESS_KEY
+    ) {
       return createS3StorageProvider({
         accessKeyId: env.S3_ACCESS_KEY_ID,
         bucket: env.S3_BUCKET,
         region: env.S3_REGION,
         secretAccessKey: env.S3_SECRET_ACCESS_KEY,
         ...(env.S3_ENDPOINT ? { endpoint: env.S3_ENDPOINT } : {}),
-        ...(env.S3_FORCE_PATH_STYLE === undefined ? {} : { forcePathStyle: env.S3_FORCE_PATH_STYLE }),
+        ...(env.S3_FORCE_PATH_STYLE === undefined
+          ? {}
+          : { forcePathStyle: env.S3_FORCE_PATH_STYLE }),
       });
     }
 

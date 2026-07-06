@@ -30,7 +30,7 @@ const readDotenv = () => {
           .trim()
           .replace(QUOTE_EDGE_PATTERN, "");
         return [key, value];
-      }),
+      })
   );
 };
 
@@ -55,7 +55,9 @@ const firstOpenPort = async (start) => {
     }
   }
 
-  throw new Error(`No open PostgreSQL port found from ${start} to ${start + 49}.`);
+  throw new Error(
+    `No open PostgreSQL port found from ${start} to ${start + 49}.`
+  );
 };
 
 const waitForPort = async (port, timeoutMs = 45_000) => {
@@ -81,7 +83,9 @@ const waitForPort = async (port, timeoutMs = 45_000) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
-  throw new Error(`PostgreSQL did not accept TCP connections on localhost:${port}.`);
+  throw new Error(
+    `PostgreSQL did not accept TCP connections on localhost:${port}.`
+  );
 };
 
 const run = (command, args, commandEnv) => {
@@ -96,15 +100,22 @@ const run = (command, args, commandEnv) => {
 };
 
 const dotenv = readDotenv();
-const requestedPort = Number(process.env.POSTGRES_PORT ?? dotenv.POSTGRES_PORT ?? 5432);
-const postgresPort = await firstOpenPort(Number.isFinite(requestedPort) ? requestedPort : 5432);
+const requestedPort = Number(
+  process.env.POSTGRES_PORT ?? dotenv.POSTGRES_PORT ?? 5432
+);
+const postgresPort = await firstOpenPort(
+  Number.isFinite(requestedPort) ? requestedPort : 5432
+);
 const databaseUrl = `postgresql://postgres:postgres@localhost:${postgresPort}/personal_saas_boilerplate`;
 
 const env = {
   ...DEFAULTS,
   ...dotenv,
   ...process.env,
-  BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? dotenv.BETTER_AUTH_URL ?? `${DEFAULTS.NEXT_PUBLIC_API_URL}/api/auth`,
+  BETTER_AUTH_URL:
+    process.env.BETTER_AUTH_URL ??
+    dotenv.BETTER_AUTH_URL ??
+    `${DEFAULTS.NEXT_PUBLIC_API_URL}/api/auth`,
   DATABASE_URL: databaseUrl,
   POSTGRES_PORT: String(postgresPort),
 };

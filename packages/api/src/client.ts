@@ -5,7 +5,10 @@ export interface ApiClientOptions {
   fetch?: typeof fetch;
 }
 
-export const createApiClient = ({ baseUrl, fetch: fetcher = fetch }: ApiClientOptions) => {
+export const createApiClient = ({
+  baseUrl,
+  fetch: fetcher = fetch,
+}: ApiClientOptions) => {
   const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
     const response = await fetcher(new URL(path, baseUrl), {
       ...init,
@@ -23,10 +26,15 @@ export const createApiClient = ({ baseUrl, fetch: fetcher = fetch }: ApiClientOp
   };
 
   return {
-    openapi: () => request<typeof import("./openapi").openApiDocument>("/openapi.json"),
-    organizations: () => request<{ data: { id: string; name: string; slug: string }[] }>("/api/organizations"),
+    openapi: () =>
+      request<typeof import("./openapi").openApiDocument>("/openapi.json"),
+    organizations: () =>
+      request<{ data: { id: string; name: string; slug: string }[] }>(
+        "/api/organizations"
+      ),
     rpc: <TProcedureId extends RpcProcedureId>(procedure: TProcedureId) =>
       request<{ data: RpcProcedureOutput<TProcedureId> }>(`/rpc/${procedure}`),
-    status: () => request<{ ok: boolean; service: string; time: string }>("/status"),
+    status: () =>
+      request<{ ok: boolean; service: string; time: string }>("/status"),
   };
 };

@@ -26,9 +26,21 @@ export const ProductWorkspace: StoryObj<typeof meta> = {
     <AppShell
       brand="Wizloft"
       navItems={[
-        { href: "#dashboard", icon: <Home className="h-4 w-4" />, label: "Dashboard" },
-        { href: "#members", icon: <Users className="h-4 w-4" />, label: "Members" },
-        { href: "#settings", icon: <Settings className="h-4 w-4" />, label: "Settings" },
+        {
+          href: "#dashboard",
+          icon: <Home className="h-4 w-4" />,
+          label: "Dashboard",
+        },
+        {
+          href: "#members",
+          icon: <Users className="h-4 w-4" />,
+          label: "Members",
+        },
+        {
+          href: "#settings",
+          icon: <Settings className="h-4 w-4" />,
+          label: "Settings",
+        },
       ]}
       topbar={
         <>
@@ -42,7 +54,9 @@ export const ProductWorkspace: StoryObj<typeof meta> = {
           <Card key={label}>
             <CardHeader>
               <CardTitle>{label}</CardTitle>
-              <CardDescription>Reusable account administration summary.</CardDescription>
+              <CardDescription>
+                Reusable account administration summary.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="font-semibold text-3xl">{[12, 3, 48][index]}</p>

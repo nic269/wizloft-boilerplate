@@ -28,10 +28,14 @@ export interface JobRunRecord {
 }
 
 export interface JobQueueProvider {
-  enqueue<TPayload extends JobPayload>(input: EnqueueJobInput<TPayload>): Promise<{ runId: string }>;
+  enqueue<TPayload extends JobPayload>(
+    input: EnqueueJobInput<TPayload>
+  ): Promise<{ runId: string }>;
   getRun(runId: string): JobRunRecord | undefined;
   listRuns(): JobRunRecord[];
-  register<TPayload extends JobPayload>(definition: JobDefinition<TPayload>): void;
+  register<TPayload extends JobPayload>(
+    definition: JobDefinition<TPayload>
+  ): void;
   waitUntilIdle(): Promise<void>;
 }
 
@@ -48,9 +52,14 @@ export const createLocalJobProvider = (): JobQueueProvider => {
   const idempotency = new Map<string, string>();
   const pending = new Set<Promise<void>>();
 
-  const delay = (delayMs: number) => new Promise((resolve) => setTimeout(resolve, delayMs));
+  const delay = (delayMs: number) =>
+    new Promise((resolve) => setTimeout(resolve, delayMs));
 
-  const execute = async (runId: string, definition: JobDefinition, payload: JobPayload) => {
+  const execute = async (
+    runId: string,
+    definition: JobDefinition,
+    payload: JobPayload
+  ) => {
     const run = runs.get(runId);
     if (!run) {
       return;
@@ -69,7 +78,8 @@ export const createLocalJobProvider = (): JobQueueProvider => {
         run.error = undefined;
         return;
       } catch (error) {
-        run.error = error instanceof Error ? error.message : "Unknown job error";
+        run.error =
+          error instanceof Error ? error.message : "Unknown job error";
         if (attempt < maxAttempts) {
           await delay(definition.retry?.delayMs ?? 0);
         }
@@ -80,14 +90,22 @@ export const createLocalJobProvider = (): JobQueueProvider => {
     run.failedAt = new Date();
   };
 
-  const schedule = (runId: string, definition: JobDefinition, payload: JobPayload) => {
-    const task = execute(runId, definition, payload).finally(() => pending.delete(task));
+  const schedule = (
+    runId: string,
+    definition: JobDefinition,
+    payload: JobPayload
+  ) => {
+    const task = execute(runId, definition, payload).finally(() =>
+      pending.delete(task)
+    );
     pending.add(task);
   };
 
   return {
     enqueue(input) {
-      const key = input.idempotencyKey ? `${input.name}:${input.idempotencyKey}` : undefined;
+      const key = input.idempotencyKey
+        ? `${input.name}:${input.idempotencyKey}`
+        : undefined;
       const existingRunId = key ? idempotency.get(key) : undefined;
       if (existingRunId) {
         return Promise.resolve({ runId: existingRunId });
@@ -95,7 +113,9 @@ export const createLocalJobProvider = (): JobQueueProvider => {
 
       const definition = definitions.get(input.name);
       if (!definition) {
-        return Promise.reject(new Error(`Job definition not registered: ${input.name}`));
+        return Promise.reject(
+          new Error(`Job definition not registered: ${input.name}`)
+        );
       }
 
       const runId = crypto.randomUUID();
@@ -105,7 +125,9 @@ export const createLocalJobProvider = (): JobQueueProvider => {
         queuedAt: new Date(),
         runId,
         status: "queued",
-        ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}),
+        ...(input.idempotencyKey
+          ? { idempotencyKey: input.idempotencyKey }
+          : {}),
       });
       if (key) {
         idempotency.set(key, runId);
@@ -118,7 +140,9 @@ export const createLocalJobProvider = (): JobQueueProvider => {
       return runs.get(runId);
     },
     listRuns() {
-      return [...runs.values()].sort((left, right) => left.queuedAt.getTime() - right.queuedAt.getTime());
+      return [...runs.values()].sort(
+        (left, right) => left.queuedAt.getTime() - right.queuedAt.getTime()
+      );
     },
     register(definition) {
       definitions.set(definition.name, definition);

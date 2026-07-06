@@ -9,7 +9,9 @@ export const env = createEnv({
   runtimeEnv: process.env,
   server: {
     NEXT_PUBLIC_API_URL: z.string().url(),
-    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    NODE_ENV: z
+      .enum(["development", "test", "production"])
+      .default("development"),
   },
   skipValidation: process.env.SKIP_ENV_VALIDATION === "true",
 });

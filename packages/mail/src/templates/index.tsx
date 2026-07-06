@@ -1,4 +1,15 @@
-import { Body, Button, Container, Head, Heading, Html, Link, Preview, Section, Text } from "@react-email/components";
+import {
+  Body,
+  Button,
+  Container,
+  Head,
+  Heading,
+  Html,
+  Link,
+  Preview,
+  Section,
+  Text,
+} from "@react-email/components";
 
 const baseStyles = {
   body: {
@@ -55,49 +66,69 @@ export const InviteUserEmail = ({
           </Button>
         </Section>
         <Text style={baseStyles.muted}>
-          If the button does not work, open this link in your browser: <Link href={inviteUrl}>{inviteUrl}</Link>
+          If the button does not work, open this link in your browser:{" "}
+          <Link href={inviteUrl}>{inviteUrl}</Link>
         </Text>
       </Container>
     </Body>
   </Html>
 );
 
-export const PasswordResetEmail = ({ appName, resetUrl }: { appName: string; resetUrl: string }) => (
+export const PasswordResetEmail = ({
+  appName,
+  resetUrl,
+}: {
+  appName: string;
+  resetUrl: string;
+}) => (
   <Html>
     <Head />
     <Preview>Reset your {appName} password</Preview>
     <Body style={baseStyles.body}>
       <Container style={baseStyles.container}>
         <Heading>Reset your password</Heading>
-        <Text>Use this link to choose a new password for your {appName} account.</Text>
+        <Text>
+          Use this link to choose a new password for your {appName} account.
+        </Text>
         <Section>
           <Button href={resetUrl} style={baseStyles.button}>
             Reset password
           </Button>
         </Section>
         <Text style={baseStyles.muted}>
-          If you did not request this, you can ignore this email. Link: <Link href={resetUrl}>{resetUrl}</Link>
+          If you did not request this, you can ignore this email. Link:{" "}
+          <Link href={resetUrl}>{resetUrl}</Link>
         </Text>
       </Container>
     </Body>
   </Html>
 );
 
-export const VerificationEmail = ({ appName, verifyUrl }: { appName: string; verifyUrl: string }) => (
+export const VerificationEmail = ({
+  appName,
+  verifyUrl,
+}: {
+  appName: string;
+  verifyUrl: string;
+}) => (
   <Html>
     <Head />
     <Preview>Verify your {appName} email</Preview>
     <Body style={baseStyles.body}>
       <Container style={baseStyles.container}>
         <Heading>Verify your email</Heading>
-        <Text>Confirm this email address to finish setting up your {appName} account.</Text>
+        <Text>
+          Confirm this email address to finish setting up your {appName}{" "}
+          account.
+        </Text>
         <Section>
           <Button href={verifyUrl} style={baseStyles.button}>
             Verify email
           </Button>
         </Section>
         <Text style={baseStyles.muted}>
-          If the button does not work, open this link in your browser: <Link href={verifyUrl}>{verifyUrl}</Link>
+          If the button does not work, open this link in your browser:{" "}
+          <Link href={verifyUrl}>{verifyUrl}</Link>
         </Text>
       </Container>
     </Body>

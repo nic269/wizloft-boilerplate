@@ -9,7 +9,9 @@ describe("createAuthGuard", () => {
     const response = guard(request);
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost:3000/sign-in");
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/sign-in"
+    );
   });
 
   it("allows protected routes with a development session cookie", () => {

@@ -20,7 +20,7 @@ const redact = (value: LogContext): LogContext => {
     Object.entries(value as Record<string, unknown>).map(([key, entry]) => [
       key,
       REDACTED_KEY_PATTERN.test(key) ? "[redacted]" : entry,
-    ]),
+    ])
   );
 };
 
@@ -37,7 +37,11 @@ const getSink = (level: LogLevel) => {
 };
 
 export const createLogger = (base: LogContext = {}) => {
-  const write = (level: LogLevel, message: string, context: LogContext = {}) => {
+  const write = (
+    level: LogLevel,
+    message: string,
+    context: LogContext = {}
+  ) => {
     const payload = {
       level,
       message,
@@ -46,17 +50,24 @@ export const createLogger = (base: LogContext = {}) => {
       ...redact(context),
     };
 
-    const line = process.env.NODE_ENV === "production" ? JSON.stringify(payload) : `[${level}] ${message}`;
+    const line =
+      process.env.NODE_ENV === "production"
+        ? JSON.stringify(payload)
+        : `[${level}] ${message}`;
     const sink = getSink(level);
     sink(line, process.env.NODE_ENV === "production" ? undefined : payload);
   };
 
   return {
     child: (context: LogContext) => createLogger({ ...base, ...context }),
-    debug: (message: string, context?: LogContext) => write("debug", message, context),
-    error: (message: string, context?: LogContext) => write("error", message, context),
-    info: (message: string, context?: LogContext) => write("info", message, context),
-    warn: (message: string, context?: LogContext) => write("warn", message, context),
+    debug: (message: string, context?: LogContext) =>
+      write("debug", message, context),
+    error: (message: string, context?: LogContext) =>
+      write("error", message, context),
+    info: (message: string, context?: LogContext) =>
+      write("info", message, context),
+    warn: (message: string, context?: LogContext) =>
+      write("warn", message, context),
   };
 };
 

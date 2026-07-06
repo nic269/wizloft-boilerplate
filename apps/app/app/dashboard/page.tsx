@@ -46,7 +46,9 @@ export default async function DashboardPage() {
       topbar={
         <div className="flex items-center gap-3">
           <div className="text-right text-sm">
-            <div className="font-medium text-foreground">{session.user.name}</div>
+            <div className="font-medium text-foreground">
+              {session.user.name}
+            </div>
             <div className="text-muted-foreground">{session.user.email}</div>
           </div>
           <SignOutButton />
@@ -54,13 +56,18 @@ export default async function DashboardPage() {
       }
     >
       <div className="space-y-6">
-        <PageHeader description={`Signed in as ${session.user.email}.`} title="Dashboard" />
+        <PageHeader
+          description={`Signed in as ${session.user.email}.`}
+          title="Dashboard"
+        />
         <div className="grid gap-4 md:grid-cols-3">
           <OrganizationsPanel />
           <Card>
             <CardHeader>
               <CardTitle>API</CardTitle>
-              <CardDescription>Hono health and OpenAPI surfaces are mounted separately.</CardDescription>
+              <CardDescription>
+                Hono health and OpenAPI surfaces are mounted separately.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <a className="font-medium text-blue-600 text-sm" href="/status">
@@ -71,9 +78,13 @@ export default async function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>Providers</CardTitle>
-              <CardDescription>Mail, storage, jobs, billing, analytics, and docs are optional.</CardDescription>
+              <CardDescription>
+                Mail, storage, jobs, billing, analytics, and docs are optional.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="font-semibold text-2xl">Graceful</CardContent>
+            <CardContent className="font-semibold text-2xl">
+              Graceful
+            </CardContent>
           </Card>
         </div>
       </div>

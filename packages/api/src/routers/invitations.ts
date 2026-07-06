@@ -1,4 +1,8 @@
-import { acceptInvitation, InvitationError, type InvitationErrorCode } from "@repo/auth/invitations";
+import {
+  acceptInvitation,
+  InvitationError,
+  type InvitationErrorCode,
+} from "@repo/auth/invitations";
 import { getCurrentSession } from "@repo/auth/session";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -18,9 +22,16 @@ export const invitationsRouter = new Hono().post("/accept", async (context) => {
   if (!session) {
     throw new ApiError("UNAUTHORIZED", "Authentication required.", 401);
   }
-  const parsed = acceptInvitationSchema.safeParse(await context.req.json().catch(() => null));
+  const parsed = acceptInvitationSchema.safeParse(
+    await context.req.json().catch(() => null)
+  );
   if (!parsed.success) {
-    throw new ApiError("VALIDATION_ERROR", "Invalid invitation token.", 422, parsed.error.flatten());
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      "Invalid invitation token.",
+      422,
+      parsed.error.flatten()
+    );
   }
 
   try {
@@ -32,7 +43,13 @@ export const invitationsRouter = new Hono().post("/accept", async (context) => {
     return context.json({ data: { organization } });
   } catch (error) {
     if (error instanceof InvitationError) {
-      throw new ApiError(error.code, error.message, errorStatus[error.code], undefined, { cause: error });
+      throw new ApiError(
+        error.code,
+        error.message,
+        errorStatus[error.code],
+        undefined,
+        { cause: error }
+      );
     }
     throw error;
   }

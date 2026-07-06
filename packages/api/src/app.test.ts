@@ -1,6 +1,15 @@
-import { createRole, listAuditLogs, listMembers, listRoles, updateMemberRole } from "@repo/auth/access-control";
+import {
+  createRole,
+  listAuditLogs,
+  listMembers,
+  listRoles,
+  updateMemberRole,
+} from "@repo/auth/access-control";
 import { acceptInvitation, createInvitation } from "@repo/auth/invitations";
-import { createOrganizationForUser, listOrganizationsForUser } from "@repo/auth/organizations";
+import {
+  createOrganizationForUser,
+  listOrganizationsForUser,
+} from "@repo/auth/organizations";
 import { hasPermission } from "@repo/auth/permissions";
 import { getCurrentSession } from "@repo/auth/session";
 import { sendMail } from "@repo/mail";
@@ -8,14 +17,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApiApp } from "./app";
 
 vi.mock("@repo/auth/session", () => ({ getCurrentSession: vi.fn() }));
-vi.mock("@repo/auth/keys", () => ({ keys: () => ({ NEXT_PUBLIC_APP_URL: "http://localhost:3000" }) }));
+vi.mock("@repo/auth/keys", () => ({
+  keys: () => ({ NEXT_PUBLIC_APP_URL: "http://localhost:3000" }),
+}));
 vi.mock("@repo/auth/server", () => ({
   auth: { handler: vi.fn(() => new Response(null, { status: 204 })) },
 }));
 vi.mock("@repo/auth/organizations", () => ({
   createOrganizationForUser: vi.fn(),
   isUniqueConstraintError: (error: unknown) =>
-    typeof error === "object" && error !== null && "code" in error && error.code === "P2002",
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "P2002",
   listOrganizationsForUser: vi.fn(),
   normalizeOrganizationSlug: (value: string) =>
     value
@@ -59,10 +73,18 @@ vi.mock("@repo/auth/access-control", () => ({
 vi.mock("@repo/auth/permissions", () => ({ hasPermission: vi.fn() }));
 vi.mock("@repo/mail", () => ({ sendMail: vi.fn() }));
 vi.mock("@repo/storage", () => ({
-  getStorageProviderStatus: () => ({ configured: true, mode: "durable", provider: "local" }),
+  getStorageProviderStatus: () => ({
+    configured: true,
+    mode: "durable",
+    provider: "local",
+  }),
 }));
 vi.mock("@repo/jobs", () => ({
-  getJobProviderStatus: () => ({ configured: true, mode: "in-process", provider: "local" }),
+  getJobProviderStatus: () => ({
+    configured: true,
+    mode: "in-process",
+    provider: "local",
+  }),
 }));
 
 describe("api app", () => {
@@ -77,13 +99,17 @@ describe("api app", () => {
   it("serves typed RPC status procedure", async () => {
     const response = await createApiApp().request("/rpc/status.get");
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ data: { ok: true, service: "api" } });
+    expect(await response.json()).toMatchObject({
+      data: { ok: true, service: "api" },
+    });
   });
 
   it("returns structured errors for unknown RPC procedures", async () => {
     const response = await createApiApp().request("/rpc/missing.get");
     expect(response.status).toBe(404);
-    expect(await response.json()).toMatchObject({ error: { code: "RPC_NOT_FOUND" } });
+    expect(await response.json()).toMatchObject({
+      error: { code: "RPC_NOT_FOUND" },
+    });
   });
 
   it("publishes OpenAPI paths from the contract registry", async () => {
@@ -91,7 +117,9 @@ describe("api app", () => {
     expect(response.status).toBe(200);
     const document = await response.json();
     expect(document.paths["/status"].get.operationId).toBe("status.get.rest");
-    expect(document.paths["/rpc/status.get"].get.operationId).toBe("status.get.rpc");
+    expect(document.paths["/rpc/status.get"].get.operationId).toBe(
+      "status.get.rpc"
+    );
   });
 
   it("exposes optional provider statuses", async () => {
@@ -99,9 +127,13 @@ describe("api app", () => {
     const jobs = await createApiApp().request("/api/jobs");
 
     expect(files.status).toBe(200);
-    expect(await files.json()).toMatchObject({ data: { configured: true, provider: "local" } });
+    expect(await files.json()).toMatchObject({
+      data: { configured: true, provider: "local" },
+    });
     expect(jobs.status).toBe(200);
-    expect(await jobs.json()).toMatchObject({ data: { configured: true, provider: "local" } });
+    expect(await jobs.json()).toMatchObject({
+      data: { configured: true, provider: "local" },
+    });
   });
 
   it("rejects anonymous organization access", async () => {
@@ -109,11 +141,15 @@ describe("api app", () => {
     const response = await createApiApp().request("/api/organizations");
 
     expect(response.status).toBe(401);
-    expect(await response.json()).toMatchObject({ error: { code: "UNAUTHORIZED" } });
+    expect(await response.json()).toMatchObject({
+      error: { code: "UNAUTHORIZED" },
+    });
   });
 
   it("lists only organizations returned for the authenticated user", async () => {
-    vi.mocked(getCurrentSession).mockResolvedValue({ user: { id: "user-1" } } as never);
+    vi.mocked(getCurrentSession).mockResolvedValue({
+      user: { id: "user-1" },
+    } as never);
     vi.mocked(listOrganizationsForUser).mockResolvedValue([
       {
         id: "org-1",
@@ -132,7 +168,9 @@ describe("api app", () => {
   });
 
   it("creates an organization for the authenticated user", async () => {
-    vi.mocked(getCurrentSession).mockResolvedValue({ user: { id: "user-1" } } as never);
+    vi.mocked(getCurrentSession).mockResolvedValue({
+      user: { id: "user-1" },
+    } as never);
     vi.mocked(createOrganizationForUser).mockResolvedValue({
       id: "org-1",
       name: "Acme Studio",
@@ -155,20 +193,27 @@ describe("api app", () => {
   });
 
   it("prevents members without invite permission from creating invitations", async () => {
-    vi.mocked(getCurrentSession).mockResolvedValue({ user: { id: "user-1" } } as never);
+    vi.mocked(getCurrentSession).mockResolvedValue({
+      user: { id: "user-1" },
+    } as never);
     vi.mocked(hasPermission).mockResolvedValue(false);
 
-    const response = await createApiApp().request("/api/organizations/org-1/invitations", {
-      body: JSON.stringify({ email: "member@example.com" }),
-      headers: { "content-type": "application/json" },
-      method: "POST",
-    });
+    const response = await createApiApp().request(
+      "/api/organizations/org-1/invitations",
+      {
+        body: JSON.stringify({ email: "member@example.com" }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      }
+    );
     expect(response.status).toBe(403);
     expect(createInvitation).not.toHaveBeenCalled();
   });
 
   it("creates and delivers an invitation for an authorized owner", async () => {
-    vi.mocked(getCurrentSession).mockResolvedValue({ user: { id: "owner-1" } } as never);
+    vi.mocked(getCurrentSession).mockResolvedValue({
+      user: { id: "owner-1" },
+    } as never);
     vi.mocked(hasPermission).mockResolvedValue(true);
     vi.mocked(createInvitation).mockResolvedValue({
       invitation: {
@@ -179,20 +224,29 @@ describe("api app", () => {
       } as never,
       token: "a".repeat(43),
     });
-    vi.mocked(sendMail).mockResolvedValue({ id: "mail-1", provider: "console" });
-
-    const response = await createApiApp().request("/api/organizations/org-1/invitations", {
-      body: JSON.stringify({ email: "member@example.com" }),
-      headers: { "content-type": "application/json", origin: "http://localhost:3000" },
-      method: "POST",
+    vi.mocked(sendMail).mockResolvedValue({
+      id: "mail-1",
+      provider: "console",
     });
+
+    const response = await createApiApp().request(
+      "/api/organizations/org-1/invitations",
+      {
+        body: JSON.stringify({ email: "member@example.com" }),
+        headers: {
+          "content-type": "application/json",
+          origin: "http://localhost:3000",
+        },
+        method: "POST",
+      }
+    );
 
     expect(response.status).toBe(201);
     expect(sendMail).toHaveBeenCalledWith(
       expect.objectContaining({
         text: expect.stringContaining("http://localhost:3000/invite/"),
         to: "member@example.com",
-      }),
+      })
     );
     expect(JSON.stringify(await response.json())).not.toContain("tokenHash");
   });
@@ -201,7 +255,11 @@ describe("api app", () => {
     vi.mocked(getCurrentSession).mockResolvedValue({
       user: { email: "member@example.com", id: "user-1" },
     } as never);
-    vi.mocked(acceptInvitation).mockResolvedValue({ id: "org-1", name: "Acme", slug: "acme" });
+    vi.mocked(acceptInvitation).mockResolvedValue({
+      id: "org-1",
+      name: "Acme",
+      slug: "acme",
+    });
 
     const response = await createApiApp().request("/api/invitations/accept", {
       body: JSON.stringify({ token: "a".repeat(43) }),
@@ -218,10 +276,14 @@ describe("api app", () => {
   });
 
   it("requires role read permission before listing roles", async () => {
-    vi.mocked(getCurrentSession).mockResolvedValue({ user: { id: "user-1" } } as never);
+    vi.mocked(getCurrentSession).mockResolvedValue({
+      user: { id: "user-1" },
+    } as never);
     vi.mocked(hasPermission).mockResolvedValue(false);
 
-    const response = await createApiApp().request("/api/organizations/org-1/roles");
+    const response = await createApiApp().request(
+      "/api/organizations/org-1/roles"
+    );
 
     expect(response.status).toBe(403);
     expect(hasPermission).toHaveBeenCalledWith({
@@ -234,7 +296,9 @@ describe("api app", () => {
   });
 
   it("creates roles through catalog permissions and audit-aware service", async () => {
-    vi.mocked(getCurrentSession).mockResolvedValue({ user: { id: "owner-1" } } as never);
+    vi.mocked(getCurrentSession).mockResolvedValue({
+      user: { id: "owner-1" },
+    } as never);
     vi.mocked(hasPermission).mockResolvedValue(true);
     vi.mocked(createRole).mockResolvedValue({
       _count: { memberships: 0 },
@@ -244,14 +308,17 @@ describe("api app", () => {
       permissions: [{ action: "read", module: "members" }],
     } as never);
 
-    const response = await createApiApp().request("/api/organizations/org-1/roles", {
-      body: JSON.stringify({
-        name: "Manager",
-        permissions: [{ action: "read", module: "members" }],
-      }),
-      headers: { "content-type": "application/json" },
-      method: "POST",
-    });
+    const response = await createApiApp().request(
+      "/api/organizations/org-1/roles",
+      {
+        body: JSON.stringify({
+          name: "Manager",
+          permissions: [{ action: "read", module: "members" }],
+        }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      }
+    );
 
     expect(response.status).toBe(201);
     expect(createRole).toHaveBeenCalledWith({
@@ -263,15 +330,20 @@ describe("api app", () => {
   });
 
   it("updates member roles inside the organization boundary", async () => {
-    vi.mocked(getCurrentSession).mockResolvedValue({ user: { id: "owner-1" } } as never);
+    vi.mocked(getCurrentSession).mockResolvedValue({
+      user: { id: "owner-1" },
+    } as never);
     vi.mocked(hasPermission).mockResolvedValue(true);
     vi.mocked(updateMemberRole).mockResolvedValue(undefined);
 
-    const response = await createApiApp().request("/api/organizations/org-1/members/member-1/role", {
-      body: JSON.stringify({ roleId: "role-2" }),
-      headers: { "content-type": "application/json" },
-      method: "PATCH",
-    });
+    const response = await createApiApp().request(
+      "/api/organizations/org-1/members/member-1/role",
+      {
+        body: JSON.stringify({ roleId: "role-2" }),
+        headers: { "content-type": "application/json" },
+        method: "PATCH",
+      }
+    );
 
     expect(response.status).toBe(204);
     expect(updateMemberRole).toHaveBeenCalledWith({
@@ -283,11 +355,17 @@ describe("api app", () => {
   });
 
   it("requires audit read permission before exposing audit logs", async () => {
-    vi.mocked(getCurrentSession).mockResolvedValue({ user: { id: "user-1" } } as never);
+    vi.mocked(getCurrentSession).mockResolvedValue({
+      user: { id: "user-1" },
+    } as never);
     vi.mocked(hasPermission).mockResolvedValue(true);
-    vi.mocked(listAuditLogs).mockResolvedValue([{ action: "role.created", id: "audit-1" }] as never);
+    vi.mocked(listAuditLogs).mockResolvedValue([
+      { action: "role.created", id: "audit-1" },
+    ] as never);
 
-    const response = await createApiApp().request("/api/organizations/org-1/audit-logs");
+    const response = await createApiApp().request(
+      "/api/organizations/org-1/audit-logs"
+    );
 
     expect(response.status).toBe(200);
     expect(hasPermission).toHaveBeenCalledWith({
@@ -300,11 +378,15 @@ describe("api app", () => {
   });
 
   it("lists members through member read permission", async () => {
-    vi.mocked(getCurrentSession).mockResolvedValue({ user: { id: "user-1" } } as never);
+    vi.mocked(getCurrentSession).mockResolvedValue({
+      user: { id: "user-1" },
+    } as never);
     vi.mocked(hasPermission).mockResolvedValue(true);
     vi.mocked(listMembers).mockResolvedValue([]);
 
-    const response = await createApiApp().request("/api/organizations/org-1/members");
+    const response = await createApiApp().request(
+      "/api/organizations/org-1/members"
+    );
 
     expect(response.status).toBe(200);
     expect(listMembers).toHaveBeenCalledWith("org-1");

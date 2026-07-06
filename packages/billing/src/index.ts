@@ -12,8 +12,13 @@ export interface BillingProvider {
   createCheckout(input: BillingSubject): Promise<{ url: string }>;
   createPortalSession(input: BillingSubject): Promise<{ url: string }>;
   getCurrentPlan(input: BillingSubject): Promise<PlanState>;
-  handleWebhook(input: { payload: unknown; signature?: string }): Promise<{ received: boolean }>;
-  reportUsage?(input: BillingSubject & { metric: string; value: number }): Promise<void>;
+  handleWebhook(input: {
+    payload: unknown;
+    signature?: string;
+  }): Promise<{ received: boolean }>;
+  reportUsage?(
+    input: BillingSubject & { metric: string; value: number }
+  ): Promise<void>;
 }
 
 export const mockBillingProvider: BillingProvider = {

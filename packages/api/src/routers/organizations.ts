@@ -6,7 +6,12 @@ import {
   listRoles,
   updateMemberRole,
 } from "@repo/auth/access-control";
-import { createInvitation, InvitationError, listInvitations, revokeInvitation } from "@repo/auth/invitations";
+import {
+  createInvitation,
+  InvitationError,
+  listInvitations,
+  revokeInvitation,
+} from "@repo/auth/invitations";
 import { keys } from "@repo/auth/keys";
 import {
   createOrganizationForUser,
@@ -26,7 +31,9 @@ const createOrganizationSchema = z.object({
   slug: z.string().trim().max(80).optional(),
 });
 
-const createInvitationSchema = z.object({ email: z.string().trim().email().max(254) });
+const createInvitationSchema = z.object({
+  email: z.string().trim().email().max(254),
+});
 
 const permissionSchema = z
   .object({
@@ -56,7 +63,7 @@ const requireOrganizationPermission = async (
   organizationId: string,
   module: string,
   action: string,
-  message = "You do not have permission for this organization action.",
+  message = "You do not have permission for this organization action."
 ) => {
   if (!(await hasPermission({ action, module, organizationId, userId }))) {
     throw new ApiError("FORBIDDEN", message, 403);
@@ -81,12 +88,23 @@ export const organizationsRouter = new Hono()
     const parsed = createOrganizationSchema.safeParse(body);
 
     if (!parsed.success) {
-      throw new ApiError("VALIDATION_ERROR", "Invalid organization details.", 422, parsed.error.flatten());
+      throw new ApiError(
+        "VALIDATION_ERROR",
+        "Invalid organization details.",
+        422,
+        parsed.error.flatten()
+      );
     }
 
-    const slug = normalizeOrganizationSlug(parsed.data.slug ?? parsed.data.name);
+    const slug = normalizeOrganizationSlug(
+      parsed.data.slug ?? parsed.data.name
+    );
     if (!slug) {
-      throw new ApiError("VALIDATION_ERROR", "Organization slug must contain letters or numbers.", 422);
+      throw new ApiError(
+        "VALIDATION_ERROR",
+        "Organization slug must contain letters or numbers.",
+        422
+      );
     }
 
     try {
@@ -98,7 +116,11 @@ export const organizationsRouter = new Hono()
       return context.json({ data: organization }, 201);
     } catch (error) {
       if (isUniqueConstraintError(error)) {
-        throw new ApiError("CONFLICT", "That organization slug is already in use.", 409);
+        throw new ApiError(
+          "CONFLICT",
+          "That organization slug is already in use.",
+          409
+        );
       }
       throw error;
     }
@@ -106,16 +128,33 @@ export const organizationsRouter = new Hono()
   .get("/:organizationId/invitations", async (context) => {
     const user = await requireUser(context.req.raw.headers);
     const organizationId = context.req.param("organizationId");
-    await requireOrganizationPermission(user.id, organizationId, "members", "read");
+    await requireOrganizationPermission(
+      user.id,
+      organizationId,
+      "members",
+      "read"
+    );
     return context.json({ data: await listInvitations(organizationId) });
   })
   .post("/:organizationId/invitations", async (context) => {
     const user = await requireUser(context.req.raw.headers);
     const organizationId = context.req.param("organizationId");
-    await requireOrganizationPermission(user.id, organizationId, "members", "invite");
-    const parsed = createInvitationSchema.safeParse(await context.req.json().catch(() => null));
+    await requireOrganizationPermission(
+      user.id,
+      organizationId,
+      "members",
+      "invite"
+    );
+    const parsed = createInvitationSchema.safeParse(
+      await context.req.json().catch(() => null)
+    );
     if (!parsed.success) {
-      throw new ApiError("VALIDATION_ERROR", "Enter a valid email address.", 422, parsed.error.flatten());
+      throw new ApiError(
+        "VALIDATION_ERROR",
+        "Enter a valid email address.",
+        422,
+        parsed.error.flatten()
+      );
     }
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
@@ -125,7 +164,10 @@ export const organizationsRouter = new Hono()
       invitedById: user.id,
       organizationId,
     });
-    const acceptUrl = new URL(`/invite/${token}`, keys().NEXT_PUBLIC_APP_URL).toString();
+    const acceptUrl = new URL(
+      `/invite/${token}`,
+      keys().NEXT_PUBLIC_APP_URL
+    ).toString();
     let delivery: "sent" | "failed" = "sent";
     try {
       await sendMail({
@@ -152,13 +194,18 @@ export const organizationsRouter = new Hono()
           status: invitation.status,
         },
       },
-      201,
+      201
     );
   })
   .delete("/:organizationId/invitations/:invitationId", async (context) => {
     const user = await requireUser(context.req.raw.headers);
     const organizationId = context.req.param("organizationId");
-    await requireOrganizationPermission(user.id, organizationId, "members", "invite");
+    await requireOrganizationPermission(
+      user.id,
+      organizationId,
+      "members",
+      "invite"
+    );
     try {
       await revokeInvitation({
         actorId: user.id,
@@ -176,16 +223,33 @@ export const organizationsRouter = new Hono()
   .get("/:organizationId/roles", async (context) => {
     const user = await requireUser(context.req.raw.headers);
     const organizationId = context.req.param("organizationId");
-    await requireOrganizationPermission(user.id, organizationId, "roles", "read");
+    await requireOrganizationPermission(
+      user.id,
+      organizationId,
+      "roles",
+      "read"
+    );
     return context.json({ data: await listRoles(organizationId) });
   })
   .post("/:organizationId/roles", async (context) => {
     const user = await requireUser(context.req.raw.headers);
     const organizationId = context.req.param("organizationId");
-    await requireOrganizationPermission(user.id, organizationId, "roles", "manage");
-    const parsed = createRoleSchema.safeParse(await context.req.json().catch(() => null));
+    await requireOrganizationPermission(
+      user.id,
+      organizationId,
+      "roles",
+      "manage"
+    );
+    const parsed = createRoleSchema.safeParse(
+      await context.req.json().catch(() => null)
+    );
     if (!parsed.success) {
-      throw new ApiError("VALIDATION_ERROR", "Invalid role details.", 422, parsed.error.flatten());
+      throw new ApiError(
+        "VALIDATION_ERROR",
+        "Invalid role details.",
+        422,
+        parsed.error.flatten()
+      );
     }
 
     try {
@@ -194,12 +258,18 @@ export const organizationsRouter = new Hono()
         name: parsed.data.name,
         organizationId,
         permissions: parsed.data.permissions,
-        ...(parsed.data.description ? { description: parsed.data.description } : {}),
+        ...(parsed.data.description
+          ? { description: parsed.data.description }
+          : {}),
       });
       return context.json({ data: role }, 201);
     } catch (error) {
       if (isUniqueConstraintError(error)) {
-        throw new ApiError("CONFLICT", "That role already exists in this organization.", 409);
+        throw new ApiError(
+          "CONFLICT",
+          "That role already exists in this organization.",
+          409
+        );
       }
       throw error;
     }
@@ -207,16 +277,33 @@ export const organizationsRouter = new Hono()
   .get("/:organizationId/members", async (context) => {
     const user = await requireUser(context.req.raw.headers);
     const organizationId = context.req.param("organizationId");
-    await requireOrganizationPermission(user.id, organizationId, "members", "read");
+    await requireOrganizationPermission(
+      user.id,
+      organizationId,
+      "members",
+      "read"
+    );
     return context.json({ data: await listMembers(organizationId) });
   })
   .patch("/:organizationId/members/:membershipId/role", async (context) => {
     const user = await requireUser(context.req.raw.headers);
     const organizationId = context.req.param("organizationId");
-    await requireOrganizationPermission(user.id, organizationId, "members", "manage");
-    const parsed = updateMemberRoleSchema.safeParse(await context.req.json().catch(() => null));
+    await requireOrganizationPermission(
+      user.id,
+      organizationId,
+      "members",
+      "manage"
+    );
+    const parsed = updateMemberRoleSchema.safeParse(
+      await context.req.json().catch(() => null)
+    );
     if (!parsed.success) {
-      throw new ApiError("VALIDATION_ERROR", "Invalid member role.", 422, parsed.error.flatten());
+      throw new ApiError(
+        "VALIDATION_ERROR",
+        "Invalid member role.",
+        422,
+        parsed.error.flatten()
+      );
     }
 
     try {
@@ -228,8 +315,15 @@ export const organizationsRouter = new Hono()
       });
       return context.body(null, 204);
     } catch (error) {
-      if (error instanceof Error && ["ROLE_NOT_FOUND", "MEMBERSHIP_NOT_FOUND"].includes(error.message)) {
-        throw new ApiError("NOT_FOUND", "Role or membership not found in this organization.", 404);
+      if (
+        error instanceof Error &&
+        ["ROLE_NOT_FOUND", "MEMBERSHIP_NOT_FOUND"].includes(error.message)
+      ) {
+        throw new ApiError(
+          "NOT_FOUND",
+          "Role or membership not found in this organization.",
+          404
+        );
       }
       throw error;
     }
@@ -237,6 +331,11 @@ export const organizationsRouter = new Hono()
   .get("/:organizationId/audit-logs", async (context) => {
     const user = await requireUser(context.req.raw.headers);
     const organizationId = context.req.param("organizationId");
-    await requireOrganizationPermission(user.id, organizationId, "audit", "read");
+    await requireOrganizationPermission(
+      user.id,
+      organizationId,
+      "audit",
+      "read"
+    );
     return context.json({ data: await listAuditLogs(organizationId) });
   });
