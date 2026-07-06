@@ -68,3 +68,7 @@ When updating durable proof status, use numeric booleans:
 - Final `pnpm check:ci` passed.
 - Final `pnpm build` passed: 8/8 build tasks. Storybook emitted default asset-size warnings.
 - Docker image execution was not run because no `deploy-verification` tool is registered and this story only establishes the baseline deployment contract.
+- CI screenshot regression found missing `NEXT_PUBLIC_WEB_URL` during `@repo/web#build`; added `NEXT_PUBLIC_WEB_URL`
+  and `BETTER_AUTH_URL` to workflow env.
+- CI-like direct `next build` for `@repo/web` and `@repo/docs` passed with workflow env values and no root `.env`
+  loader.

@@ -40,8 +40,10 @@ docker run --rm -p 3000:3000 \
   -e PORT=3000 \
   -e DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:5432/personal_saas_boilerplate \
   -e NEXT_PUBLIC_APP_URL=http://localhost:3000 \
+  -e NEXT_PUBLIC_WEB_URL=http://localhost:3001 \
   -e NEXT_PUBLIC_API_URL=http://localhost:3002 \
   -e BETTER_AUTH_SECRET=replace-with-a-production-secret \
+  -e BETTER_AUTH_URL=http://localhost:3002/api/auth \
   personal-saas-app
 ```
 
