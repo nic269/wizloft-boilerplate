@@ -1,49 +1,63 @@
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
-export type LogContext = {
-	requestId?: string;
-	userId?: string;
-	organizationId?: string;
-	route?: string;
-	durationMs?: number;
-	[key: string]: unknown;
-};
+export interface LogContext {
+  durationMs?: number;
+  organizationId?: string;
+  requestId?: string;
+  route?: string;
+  userId?: string;
+  [key: string]: unknown;
+}
+
+const REDACTED_KEY_PATTERN = /(secret|token|password|key|authorization)/i;
 
 const redact = (value: LogContext): LogContext => {
-	if (!value || typeof value !== "object") {
-		return {};
-	}
+  if (!value || typeof value !== "object") {
+    return {};
+  }
 
-	return Object.fromEntries(
-		Object.entries(value as Record<string, unknown>).map(([key, entry]) => [
-			key,
-			/(secret|token|password|key|authorization)/i.test(key) ? "[redacted]" : entry,
-		]),
-	);
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(([key, entry]) => [
+      key,
+      REDACTED_KEY_PATTERN.test(key) ? "[redacted]" : entry,
+    ]),
+  );
+};
+
+const getSink = (level: LogLevel) => {
+  if (level === "error") {
+    return console.error;
+  }
+
+  if (level === "warn") {
+    return console.warn;
+  }
+
+  return console.log;
 };
 
 export const createLogger = (base: LogContext = {}) => {
-	const write = (level: LogLevel, message: string, context: LogContext = {}) => {
-		const payload = {
-			timestamp: new Date().toISOString(),
-			level,
-			message,
-			...redact(base),
-			...redact(context),
-		};
+  const write = (level: LogLevel, message: string, context: LogContext = {}) => {
+    const payload = {
+      timestamp: new Date().toISOString(),
+      level,
+      message,
+      ...redact(base),
+      ...redact(context),
+    };
 
-		const line = process.env.NODE_ENV === "production" ? JSON.stringify(payload) : `[${level}] ${message}`;
-		const sink = level === "error" ? console.error : level === "warn" ? console.warn : console.log;
-		sink(line, process.env.NODE_ENV === "production" ? undefined : payload);
-	};
+    const line = process.env.NODE_ENV === "production" ? JSON.stringify(payload) : `[${level}] ${message}`;
+    const sink = getSink(level);
+    sink(line, process.env.NODE_ENV === "production" ? undefined : payload);
+  };
 
-	return {
-		debug: (message: string, context?: LogContext) => write("debug", message, context),
-		info: (message: string, context?: LogContext) => write("info", message, context),
-		warn: (message: string, context?: LogContext) => write("warn", message, context),
-		error: (message: string, context?: LogContext) => write("error", message, context),
-		child: (context: LogContext) => createLogger({ ...base, ...context }),
-	};
+  return {
+    debug: (message: string, context?: LogContext) => write("debug", message, context),
+    info: (message: string, context?: LogContext) => write("info", message, context),
+    warn: (message: string, context?: LogContext) => write("warn", message, context),
+    error: (message: string, context?: LogContext) => write("error", message, context),
+    child: (context: LogContext) => createLogger({ ...base, ...context }),
+  };
 };
 
 export const logger = createLogger();

@@ -6,14 +6,16 @@ import { redirect } from "next/navigation";
 import { AccessPanel } from "./access-panel";
 
 export default async function AccessPage() {
-	if (!(await getCurrentSession(await headers()))) redirect("/sign-in");
+  if (!(await getCurrentSession(await headers()))) {
+    redirect("/sign-in");
+  }
 
-	return (
-		<AppShell brand={appConfig.name} navItems={dashboardNav}>
-			<div className="space-y-6">
-				<PageHeader title="Access" description="Manage organization roles, member assignments, and audit history." />
-				<AccessPanel />
-			</div>
-		</AppShell>
-	);
+  return (
+    <AppShell brand={appConfig.name} navItems={dashboardNav}>
+      <div className="space-y-6">
+        <PageHeader description="Manage organization roles, member assignments, and audit history." title="Access" />
+        <AccessPanel />
+      </div>
+    </AppShell>
+  );
 }

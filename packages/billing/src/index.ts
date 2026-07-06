@@ -1,32 +1,32 @@
-export type BillingSubject = {
-	type: "user" | "organization";
-	id: string;
-};
+export interface BillingSubject {
+  id: string;
+  type: "user" | "organization";
+}
 
-export type PlanState = {
-	planId: string;
-	status: "active" | "trialing" | "inactive";
-};
+export interface PlanState {
+  planId: string;
+  status: "active" | "trialing" | "inactive";
+}
 
-export type BillingProvider = {
-	getCurrentPlan(input: BillingSubject): Promise<PlanState>;
-	createCheckout(input: BillingSubject): Promise<{ url: string }>;
-	createPortalSession(input: BillingSubject): Promise<{ url: string }>;
-	handleWebhook(input: { payload: unknown; signature?: string }): Promise<{ received: boolean }>;
-	reportUsage?(input: BillingSubject & { metric: string; value: number }): Promise<void>;
-};
+export interface BillingProvider {
+  createCheckout(input: BillingSubject): Promise<{ url: string }>;
+  createPortalSession(input: BillingSubject): Promise<{ url: string }>;
+  getCurrentPlan(input: BillingSubject): Promise<PlanState>;
+  handleWebhook(input: { payload: unknown; signature?: string }): Promise<{ received: boolean }>;
+  reportUsage?(input: BillingSubject & { metric: string; value: number }): Promise<void>;
+}
 
 export const mockBillingProvider: BillingProvider = {
-	async getCurrentPlan() {
-		return { planId: "free", status: "active" };
-	},
-	async createCheckout() {
-		return { url: "/settings/billing" };
-	},
-	async createPortalSession() {
-		return { url: "/settings/billing" };
-	},
-	async handleWebhook() {
-		return { received: true };
-	},
+  getCurrentPlan() {
+    return Promise.resolve({ planId: "free", status: "active" });
+  },
+  createCheckout() {
+    return Promise.resolve({ url: "/settings/billing" });
+  },
+  createPortalSession() {
+    return Promise.resolve({ url: "/settings/billing" });
+  },
+  handleWebhook() {
+    return Promise.resolve({ received: true });
+  },
 };

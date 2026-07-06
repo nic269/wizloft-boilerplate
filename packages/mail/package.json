@@ -1,31 +1,31 @@
 {
-	"name": "@repo/mail",
-	"version": "0.1.0",
-	"private": true,
-	"type": "module",
-	"exports": {
-		".": "./src/index.ts",
-		"./keys": "./src/keys.ts",
-		"./templates": "./src/templates/index.tsx"
-	},
-	"scripts": {
-		"check-types": "tsc --noEmit",
-		"test": "vitest run --passWithNoTests",
-		"test:unit": "vitest run --passWithNoTests",
-		"test:integration": "echo 'mail integration tests require provider credentials'"
-	},
-	"dependencies": {
-		"@react-email/components": "^1.0.1",
-		"@t3-oss/env-core": "^0.13.10",
-		"@repo/logger": "workspace:*",
-		"react": "^19.2.0",
-		"resend": "^6.6.0",
-		"zod": "^4.3.6"
-	},
-	"devDependencies": {
-		"@repo/typescript-config": "workspace:*",
-		"@types/react": "^19.2.14",
-		"typescript": "^6.0.3",
-		"vitest": "^4.0.18"
-	}
+  "name": "@repo/mail",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./keys": "./src/keys.ts",
+    "./templates": "./src/templates/index.tsx"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:integration": "echo 'mail integration tests require provider credentials'"
+  },
+  "dependencies": {
+    "@react-email/components": "^1.0.1",
+    "@t3-oss/env-core": "^0.13.10",
+    "@repo/logger": "workspace:*",
+    "react": "^19.2.0",
+    "resend": "^6.6.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/react": "^19.2.14",
+    "typescript": "^6.0.3",
+    "vitest": "^4.0.18"
+  }
 }

@@ -39,6 +39,8 @@ domain assumptions.
   products can select add-ons without copying domain code into core.
 - CI and local release readiness both validate template catalog drift before lint, type, test, boundary, and production
   build checks.
+- Domain template tracks stay as guidance until a concrete project selects one; executable domain scaffold code should
+  be added only when the selected project can validate it.
 
 ## Non-Goals
 
@@ -60,3 +62,4 @@ domain assumptions.
 - `pnpm templates:list`, `pnpm templates:json`, and `pnpm templates:validate` for template track handoff and drift
   checks.
 - `pnpm release:check` for the local pre-release ladder matching CI's non-E2E validation contract.
+- `docs/release-readiness.md` for the final readiness audit, caveats, and template scaffold decision.

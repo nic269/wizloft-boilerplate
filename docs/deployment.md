@@ -76,6 +76,8 @@ pnpm release:check
 This command validates template catalog drift before the normal lint, type,
 test, boundary, and build checks.
 
+The final fork-readiness audit lives in `docs/release-readiness.md`.
+
 ## Follow-Ups
 
 - Add provider-specific deployment smoke checks when choosing a hosting platform.

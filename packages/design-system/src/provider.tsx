@@ -6,5 +6,5 @@ import { ThemeProvider } from "./providers/theme";
 export type DesignSystemProviderProps = ThemeProviderProps;
 
 export const DesignSystemProvider = ({ children, ...props }: DesignSystemProviderProps) => (
-	<ThemeProvider {...props}>{children}</ThemeProvider>
+  <ThemeProvider {...props}>{children}</ThemeProvider>
 );

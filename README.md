@@ -5,7 +5,7 @@ A reusable monorepo starter for Anh Nguyen's future SaaS, education, internal to
 ## Stack
 
 - pnpm 10, Node.js 22, Turborepo
-- TypeScript strict and Biome
+- TypeScript strict and Ultracite-on-Biome linting
 - Next.js App Router for app/web/docs
 - Hono API service
 - Better Auth with Prisma/PostgreSQL
@@ -72,7 +72,7 @@ Before promoting a fork or template change, run:
 pnpm release:check
 ```
 
-This mirrors the local release ladder: template drift validation, Biome,
+This mirrors the local release ladder: template drift validation, Ultracite,
 TypeScript, tests, package boundaries, and production builds.
 
 For a local auth E2E smoke with automatic PostgreSQL bootstrap:
@@ -98,6 +98,9 @@ Deployment notes live in [`docs/deployment.md`](docs/deployment.md). The root
 ```bash
 docker build --build-arg APP_SCOPE=@repo/app -t personal-saas-app .
 ```
+
+Release readiness and template scaffold guidance live in
+[`docs/release-readiness.md`](docs/release-readiness.md).
 
 ## Architecture Rules
 

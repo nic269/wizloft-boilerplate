@@ -1,72 +1,73 @@
-export type PutObjectInput = {
-	key: string;
-	body: Uint8Array;
-	contentType: string;
-	metadata?: Record<string, string>;
-};
+export interface PutObjectInput {
+  body: Uint8Array;
+  contentType: string;
+  key: string;
+  metadata?: Record<string, string>;
+}
 
-export type StoredObject = {
-	key: string;
-	sizeBytes: number;
-	contentType: string;
-	provider: string;
-};
+export interface StoredObject {
+  contentType: string;
+  key: string;
+  provider: string;
+  sizeBytes: number;
+}
 
-export type GetObjectInput = {
-	key: string;
-};
+export interface GetObjectInput {
+  key: string;
+}
 
 export type StoredObjectBody = StoredObject & {
-	body: Uint8Array;
+  body: Uint8Array;
 };
 
-export type DeleteObjectInput = {
-	key: string;
-};
+export interface DeleteObjectInput {
+  key: string;
+}
 
-export type SignedUploadInput = {
-	key: string;
-	contentType: string;
-	expiresInSeconds?: number;
-};
+export interface SignedUploadInput {
+  contentType: string;
+  expiresInSeconds?: number;
+  key: string;
+}
 
-export type SignedDownloadInput = {
-	key: string;
-	expiresInSeconds?: number;
-};
+export interface SignedDownloadInput {
+  expiresInSeconds?: number;
+  key: string;
+}
 
-export type SignedUpload = {
-	url: string;
-	headers?: Record<string, string>;
-	expiresAt: Date;
-};
+export interface SignedUpload {
+  expiresAt: Date;
+  headers?: Record<string, string>;
+  url: string;
+}
 
-export type SignedDownload = {
-	url: string;
-	expiresAt: Date;
-};
+export interface SignedDownload {
+  expiresAt: Date;
+  url: string;
+}
 
-export type StorageProvider = {
-	putObject(input: PutObjectInput): Promise<StoredObject>;
-	getObject(input: GetObjectInput): Promise<StoredObjectBody>;
-	deleteObject(input: DeleteObjectInput): Promise<void>;
-	getSignedUploadUrl?(input: SignedUploadInput): Promise<SignedUpload>;
-	getSignedDownloadUrl?(input: SignedDownloadInput): Promise<SignedDownload>;
-};
+export interface StorageProvider {
+  deleteObject(input: DeleteObjectInput): Promise<void>;
+  getObject(input: GetObjectInput): Promise<StoredObjectBody>;
+  getSignedDownloadUrl?(input: SignedDownloadInput): Promise<SignedDownload>;
+  getSignedUploadUrl?(input: SignedUploadInput): Promise<SignedUpload>;
+  putObject(input: PutObjectInput): Promise<StoredObject>;
+}
 
 export const sanitizeObjectKeySegment = (value: string) =>
-	value
-		.normalize("NFKD")
-		.replace(/[\u0300-\u036f]/g, "")
-		.replace(/[^a-zA-Z0-9._-]+/g, "-")
-		.replace(/^[.-]+|[.-]+$/g, "")
-		.slice(0, 120) || "file";
+  value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]+/g, "-")
+    .replace(/^[.-]+|[.-]+$/g, "")
+    .slice(0, 120) || "file";
 
 export const buildTenantObjectKey = (input: { organizationId?: string; ownerId?: string; fileName: string }) => {
-	const scope = input.organizationId
-		? `org/${sanitizeObjectKeySegment(input.organizationId)}`
-		: input.ownerId
-			? `user/${sanitizeObjectKeySegment(input.ownerId)}`
-			: "global";
-	return `${scope}/${crypto.randomUUID()}-${sanitizeObjectKeySegment(input.fileName)}`;
+  let scope = "global";
+  if (input.organizationId) {
+    scope = `org/${sanitizeObjectKeySegment(input.organizationId)}`;
+  } else if (input.ownerId) {
+    scope = `user/${sanitizeObjectKeySegment(input.ownerId)}`;
+  }
+  return `${scope}/${crypto.randomUUID()}-${sanitizeObjectKeySegment(input.fileName)}`;
 };

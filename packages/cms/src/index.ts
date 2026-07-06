@@ -1,8 +1,8 @@
 export * from "./keys";
 
-export type ContentDocument = {
-	slug: string;
-	title: string;
-	description?: string;
-	body: string;
-};
+export interface ContentDocument {
+  body: string;
+  description?: string;
+  slug: string;
+  title: string;
+}
