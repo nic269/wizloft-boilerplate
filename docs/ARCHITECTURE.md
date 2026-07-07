@@ -5,6 +5,12 @@ Better Auth, Prisma/PostgreSQL, and shared workspace packages. This document
 defines its dependency direction and the generic architecture rules future
 product domains must preserve.
 
+The API uses contract-first oRPC inside Hono. Browser-safe Zod contracts own
+route metadata and input/output types; server routers implement those contracts
+against auth and provider packages. `OpenAPIHandler`, `OpenAPIGenerator`, and
+`OpenAPILink` share the same contract, while Hono remains responsible for
+Better Auth, request context, logging, and unmatched routes.
+
 ## Discovery Before Shape
 
 Before proposing implementation shape, identify:

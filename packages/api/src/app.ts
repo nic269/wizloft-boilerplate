@@ -1,40 +1,79 @@
+import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { ORPCError, onError, ValidationError } from "@orpc/server";
 import { auth } from "@repo/auth/server";
 import { Hono } from "hono";
+import { z } from "zod";
 import { requestContext } from "./context";
 import { ApiError, type ApiErrorResponse } from "./errors";
 import { openApiDocument } from "./openapi";
-import { filesRouter } from "./routers/files";
-import { healthRouter } from "./routers/health";
-import { invitationsRouter } from "./routers/invitations";
-import { jobsRouter } from "./routers/jobs";
-import { organizationsRouter } from "./routers/organizations";
-import { rpcRouter } from "./rpc/router";
+import { router } from "./routers";
+
+const orpcHandler = new OpenAPIHandler(router, {
+  clientInterceptors: [
+    onError((error) => {
+      if (
+        error instanceof ORPCError &&
+        error.code === "BAD_REQUEST" &&
+        error.cause instanceof ValidationError
+      ) {
+        const zodError = new z.ZodError(
+          error.cause.issues as z.core.$ZodIssue[]
+        );
+        throw new ApiError(
+          "VALIDATION_ERROR",
+          "Invalid request details.",
+          422,
+          z.flattenError(zodError),
+          { cause: error.cause }
+        );
+      }
+    }),
+  ],
+  customErrorResponseBodyEncoder: (error) => ({
+    error: {
+      code: error.code,
+      ...(error.data === undefined ? {} : { details: error.data }),
+      message: error.message,
+    },
+  }),
+});
 
 export const createApiApp = () => {
   const app = new Hono();
 
   app.use("*", requestContext);
-  app.route("/", healthRouter);
   app.get("/openapi.json", (context) => context.json(openApiDocument));
   app.get("/docs/api", (context) =>
     context.html("<html><body><pre>/openapi.json</pre></body></html>")
   );
-  app.route("/rpc", rpcRouter);
-
   app.on(["GET", "POST"], "/api/auth/*", (context) =>
     auth.handler(context.req.raw)
   );
-  app.route("/api/organizations", organizationsRouter);
-  app.route("/api/invitations", invitationsRouter);
-  app.route("/api/files", filesRouter);
-  app.route("/api/jobs", jobsRouter);
+  app.use("*", async (context, next) => {
+    const { matched, response } = await orpcHandler.handle(context.req.raw, {
+      context: {
+        headers: context.req.raw.headers,
+        logger: context.get("logger"),
+        requestId: context.get("requestId"),
+      },
+    });
+
+    if (matched) {
+      return context.newResponse(response.body, response);
+    }
+    await next();
+  });
 
   app.notFound((context) =>
     context.json<ApiErrorResponse>(
       {
         error: {
-          code: "NOT_FOUND",
-          message: "Route not found.",
+          code: context.req.path.startsWith("/rpc/")
+            ? "RPC_NOT_FOUND"
+            : "NOT_FOUND",
+          message: context.req.path.startsWith("/rpc/")
+            ? "RPC procedure not found."
+            : "Route not found.",
           requestId: context.get("requestId"),
         },
       },
@@ -61,7 +100,7 @@ export const createApiApp = () => {
           requestId: context.get("requestId"),
         },
       },
-      apiError.status
+      apiError.status as 500
     );
   });
 

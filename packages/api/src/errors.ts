@@ -1,3 +1,4 @@
+import { ORPCError } from "@orpc/server";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
 export interface ApiErrorResponse {
@@ -9,10 +10,8 @@ export interface ApiErrorResponse {
   };
 }
 
-export class ApiError extends Error {
-  readonly code: string;
+export class ApiError extends ORPCError<string, unknown> {
   readonly details?: unknown;
-  readonly status: ContentfulStatusCode;
 
   constructor(
     code: string,
@@ -21,9 +20,12 @@ export class ApiError extends Error {
     details?: unknown,
     options?: ErrorOptions
   ) {
-    super(message, options);
-    this.code = code;
-    this.status = status;
+    super(code, {
+      data: details,
+      message,
+      status,
+      ...(options?.cause ? { cause: options.cause } : {}),
+    });
     this.details = details;
   }
 }

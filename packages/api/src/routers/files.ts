@@ -1,9 +1,9 @@
 import { getStorageProviderStatus } from "@repo/storage";
-import { Hono } from "hono";
+import { os } from "./implementer";
 
-export const filesRouter = new Hono().get("/", (context) =>
-  context.json({
+export const filesRouter = {
+  status: os.files.status.handler(() => ({
     data: getStorageProviderStatus(),
     message: "Storage providers are configured through @repo/storage.",
-  })
-);
+  })),
+};

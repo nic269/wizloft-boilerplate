@@ -192,6 +192,19 @@ describe("api app", () => {
     });
   });
 
+  it("normalizes contract input validation to the API error envelope", async () => {
+    const response = await createApiApp().request("/api/organizations", {
+      body: JSON.stringify({ name: "x" }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
+
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({
+      error: { code: "VALIDATION_ERROR" },
+    });
+  });
+
   it("prevents members without invite permission from creating invitations", async () => {
     vi.mocked(getCurrentSession).mockResolvedValue({
       user: { id: "user-1" },
@@ -360,7 +373,15 @@ describe("api app", () => {
     } as never);
     vi.mocked(hasPermission).mockResolvedValue(true);
     vi.mocked(listAuditLogs).mockResolvedValue([
-      { action: "role.created", id: "audit-1" },
+      {
+        action: "role.created",
+        actor: null,
+        createdAt: new Date("2030-01-01T00:00:00.000Z"),
+        id: "audit-1",
+        metadata: null,
+        targetId: "role-1",
+        targetType: "Role",
+      },
     ] as never);
 
     const response = await createApiApp().request(

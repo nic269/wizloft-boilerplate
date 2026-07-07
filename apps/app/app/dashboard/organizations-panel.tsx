@@ -1,5 +1,6 @@
 "use client";
 
+import { apiClient, getApiErrorMessage } from "@repo/api/client";
 import {
   Button,
   Card,
@@ -11,17 +12,9 @@ import {
 } from "@repo/design-system";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 
-interface Organization {
-  id: string;
-  name: string;
-  role: string | null;
-  slug: string;
-}
-
-interface ApiResponse {
-  data?: Organization[];
-  error?: { message?: string };
-}
+type Organization = Awaited<
+  ReturnType<typeof apiClient.organizations.list>
+>["data"][number];
 
 export function OrganizationsPanel() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -31,16 +24,8 @@ export function OrganizationsPanel() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const loadOrganizations = useCallback(async () => {
-    const response = await fetch("/api/organizations", {
-      credentials: "include",
-    });
-    const payload = (await response.json()) as ApiResponse;
-    if (!response.ok) {
-      throw new Error(
-        payload.error?.message ?? "Could not load organizations."
-      );
-    }
-    setOrganizations(payload.data ?? []);
+    const payload = await apiClient.organizations.list({});
+    setOrganizations(payload.data);
   }, []);
 
   useEffect(() => {
@@ -61,28 +46,11 @@ export function OrganizationsPanel() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/organizations", {
-        body: JSON.stringify({ name }),
-        credentials: "include",
-        headers: { "content-type": "application/json" },
-        method: "POST",
-      });
-      const payload = (await response.json()) as {
-        error?: { message?: string };
-      };
-      if (!response.ok) {
-        throw new Error(
-          payload.error?.message ?? "Could not create organization."
-        );
-      }
+      await apiClient.organizations.create({ name });
       setName("");
       await loadOrganizations();
     } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Could not create organization."
-      );
+      setError(getApiErrorMessage(cause, "Could not create organization."));
     } finally {
       setIsSubmitting(false);
     }

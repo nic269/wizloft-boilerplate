@@ -1,6 +1,11 @@
 "use client";
 
 import {
+  apiClient,
+  getApiErrorCode,
+  getApiErrorMessage,
+} from "@repo/api/client";
+import {
   Button,
   Card,
   CardContent,
@@ -24,29 +29,15 @@ export function InviteAcceptance({ token }: { token: string }) {
     setNeedsAuth(false);
     setIsPending(true);
     try {
-      const response = await fetch("/api/invitations/accept", {
-        body: JSON.stringify({ token }),
-        headers: { "content-type": "application/json" },
-        method: "POST",
-      });
-      const payload = (await response.json()) as {
-        error?: { message?: string };
-      };
-      if (response.status === 401) {
-        setNeedsAuth(true);
-        return;
-      }
-      if (!response.ok) {
-        throw new Error(
-          payload.error?.message ?? "Could not accept invitation."
-        );
-      }
+      await apiClient.invitations.accept({ token });
       router.push("/dashboard");
       router.refresh();
     } catch (cause) {
-      setError(
-        cause instanceof Error ? cause.message : "Could not accept invitation."
-      );
+      if (getApiErrorCode(cause) === "UNAUTHORIZED") {
+        setNeedsAuth(true);
+        return;
+      }
+      setError(getApiErrorMessage(cause, "Could not accept invitation."));
     } finally {
       setIsPending(false);
     }

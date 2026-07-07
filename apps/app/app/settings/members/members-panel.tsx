@@ -1,5 +1,6 @@
 "use client";
 
+import { apiClient, getApiErrorMessage } from "@repo/api/client";
 import {
   Button,
   Card,
@@ -11,28 +12,12 @@ import {
 } from "@repo/design-system";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 
-interface Organization {
-  id: string;
-  name: string;
-}
-interface Invitation {
-  email: string;
-  expiresAt: string;
-  id: string;
-  status: string;
-}
-interface ApiPayload<T> {
-  data?: T;
-  error?: { message?: string };
-}
-
-const readPayload = async <T,>(response: Response): Promise<T> => {
-  const payload = (await response.json()) as ApiPayload<T>;
-  if (!response.ok || payload.data === undefined) {
-    throw new Error(payload.error?.message ?? "Request failed.");
-  }
-  return payload.data;
-};
+type Organization = Awaited<
+  ReturnType<typeof apiClient.organizations.list>
+>["data"][number];
+type Invitation = Awaited<
+  ReturnType<typeof apiClient.organizations.invitations.list>
+>["data"][number];
 
 export function MembersPanel() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -48,17 +33,18 @@ export function MembersPanel() {
       if (!selectedOrganizationId) {
         return;
       }
-      const response = await fetch(
-        `/api/organizations/${selectedOrganizationId}/invitations`
-      );
-      setInvitations(await readPayload<Invitation[]>(response));
+      const response = await apiClient.organizations.invitations.list({
+        organizationId: selectedOrganizationId,
+      });
+      setInvitations(response.data);
     },
     []
   );
 
   useEffect(() => {
-    fetch("/api/organizations")
-      .then((response) => readPayload<Organization[]>(response))
+    apiClient.organizations
+      .list({})
+      .then((response) => response.data)
       .then((data) => {
         setOrganizations(data);
         const first = data[0]?.id ?? "";
@@ -78,22 +64,15 @@ export function MembersPanel() {
     setAcceptUrl(null);
     setIsBusy(true);
     try {
-      const response = await fetch(
-        `/api/organizations/${organizationId}/invitations`,
-        {
-          body: JSON.stringify({ email }),
-          headers: { "content-type": "application/json" },
-          method: "POST",
-        }
-      );
-      const created = await readPayload<{ acceptUrl: string }>(response);
-      setAcceptUrl(created.acceptUrl);
+      const created = await apiClient.organizations.invitations.create({
+        email,
+        organizationId,
+      });
+      setAcceptUrl(created.data.acceptUrl);
       setEmail("");
       await loadInvitations(organizationId);
     } catch (cause) {
-      setError(
-        cause instanceof Error ? cause.message : "Could not send invitation."
-      );
+      setError(getApiErrorMessage(cause, "Could not send invitation."));
     } finally {
       setIsBusy(false);
     }
@@ -101,18 +80,15 @@ export function MembersPanel() {
 
   const revoke = async (invitationId: string) => {
     setError(null);
-    const response = await fetch(
-      `/api/organizations/${organizationId}/invitations/${invitationId}`,
-      {
-        method: "DELETE",
-      }
-    );
-    if (!response.ok) {
-      const payload = (await response.json()) as ApiPayload<never>;
-      setError(payload.error?.message ?? "Could not revoke invitation.");
-      return;
+    try {
+      await apiClient.organizations.invitations.revoke({
+        invitationId,
+        organizationId,
+      });
+      await loadInvitations(organizationId);
+    } catch (cause) {
+      setError(getApiErrorMessage(cause, "Could not revoke invitation."));
     }
-    await loadInvitations(organizationId);
   };
 
   return (

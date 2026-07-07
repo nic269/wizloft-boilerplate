@@ -8,6 +8,12 @@ declare module "hono" {
   }
 }
 
+export interface ApiContext {
+  headers: Headers;
+  logger: ReturnType<typeof createLogger>;
+  requestId: string;
+}
+
 export const requestContext = async (context: Context, next: Next) => {
   const requestId = context.req.header("x-request-id") ?? crypto.randomUUID();
   const startedAt = performance.now();

@@ -1,5 +1,6 @@
 "use client";
 
+import { apiClient, getApiErrorMessage } from "@repo/api/client";
 import {
   Button,
   Card,
@@ -17,40 +18,19 @@ import {
   useState,
 } from "react";
 
-interface Organization {
-  id: string;
-  name: string;
-}
-interface Permission {
-  action: string;
-  module: string;
-}
-interface Role {
-  _count: { memberships: number };
-  description: string | null;
-  id: string;
-  name: string;
-  permissions: Permission[];
-}
-interface Member {
-  id: string;
-  role: { id: string; name: string } | null;
-  status: string;
-  user: { id: string; name: string; email: string };
-}
-interface AuditLog {
-  action: string;
-  actor: { name: string; email: string } | null;
-  createdAt: string;
-  id: string;
-  metadata: unknown;
-  targetId: string | null;
-  targetType: string | null;
-}
-interface ApiPayload<T> {
-  data?: T;
-  error?: { message?: string };
-}
+type Organization = Awaited<
+  ReturnType<typeof apiClient.organizations.list>
+>["data"][number];
+type Role = Awaited<
+  ReturnType<typeof apiClient.organizations.roles.list>
+>["data"][number];
+type Permission = Role["permissions"][number];
+type Member = Awaited<
+  ReturnType<typeof apiClient.organizations.members.list>
+>["data"][number];
+type AuditLog = Awaited<
+  ReturnType<typeof apiClient.organizations.auditLogs>
+>["data"][number];
 
 const permissionOptions = [
   { action: "read", label: "Read organization", module: "organization" },
@@ -62,14 +42,6 @@ const permissionOptions = [
   { action: "manage", label: "Manage roles", module: "roles" },
   { action: "read", label: "Read audit log", module: "audit" },
 ] as const;
-
-const readPayload = async <T,>(response: Response): Promise<T> => {
-  const payload = (await response.json()) as ApiPayload<T>;
-  if (!response.ok || payload.data === undefined) {
-    throw new Error(payload.error?.message ?? "Request failed.");
-  }
-  return payload.data;
-};
 
 const permissionKey = (permission: Permission) =>
   `${permission.module}:${permission.action}`;
@@ -93,15 +65,15 @@ export function AccessPanel() {
       return;
     }
     const [nextRoles, nextMembers, nextAuditLogs] = await Promise.all([
-      fetch(`/api/organizations/${selectedOrganizationId}/roles`, {
-        credentials: "include",
-      }).then((response) => readPayload<Role[]>(response)),
-      fetch(`/api/organizations/${selectedOrganizationId}/members`, {
-        credentials: "include",
-      }).then((response) => readPayload<Member[]>(response)),
-      fetch(`/api/organizations/${selectedOrganizationId}/audit-logs`, {
-        credentials: "include",
-      }).then((response) => readPayload<AuditLog[]>(response)),
+      apiClient.organizations.roles
+        .list({ organizationId: selectedOrganizationId })
+        .then((response) => response.data),
+      apiClient.organizations.members
+        .list({ organizationId: selectedOrganizationId })
+        .then((response) => response.data),
+      apiClient.organizations
+        .auditLogs({ organizationId: selectedOrganizationId })
+        .then((response) => response.data),
     ]);
     setRoles(nextRoles);
     setMembers(nextMembers);
@@ -109,8 +81,9 @@ export function AccessPanel() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/organizations", { credentials: "include" })
-      .then((response) => readPayload<Organization[]>(response))
+    apiClient.organizations
+      .list({})
+      .then((response) => response.data)
       .then((data) => {
         setOrganizations(data);
         const first = data[0]?.id ?? "";
@@ -141,22 +114,15 @@ export function AccessPanel() {
     setError(null);
     setIsBusy(true);
     try {
-      const response = await fetch(
-        `/api/organizations/${organizationId}/roles`,
-        {
-          body: JSON.stringify({ name: roleName, permissions }),
-          credentials: "include",
-          headers: { "content-type": "application/json" },
-          method: "POST",
-        }
-      );
-      await readPayload<Role>(response);
+      await apiClient.organizations.roles.create({
+        name: roleName,
+        organizationId,
+        permissions,
+      });
       setRoleName("");
       await loadAccess(organizationId);
     } catch (cause) {
-      setError(
-        cause instanceof Error ? cause.message : "Could not create role."
-      );
+      setError(getApiErrorMessage(cause, "Could not create role."));
     } finally {
       setIsBusy(false);
     }
@@ -164,21 +130,16 @@ export function AccessPanel() {
 
   const updateMemberRole = async (membershipId: string, roleId: string) => {
     setError(null);
-    const response = await fetch(
-      `/api/organizations/${organizationId}/members/${membershipId}/role`,
-      {
-        body: JSON.stringify({ roleId }),
-        credentials: "include",
-        headers: { "content-type": "application/json" },
-        method: "PATCH",
-      }
-    );
-    if (!response.ok) {
-      const payload = (await response.json()) as ApiPayload<never>;
-      setError(payload.error?.message ?? "Could not update member role.");
-      return;
+    try {
+      await apiClient.organizations.members.updateRole({
+        membershipId,
+        organizationId,
+        roleId,
+      });
+      await loadAccess(organizationId);
+    } catch (cause) {
+      setError(getApiErrorMessage(cause, "Could not update member role."));
     }
-    await loadAccess(organizationId);
   };
 
   const togglePermission = (key: string) => {

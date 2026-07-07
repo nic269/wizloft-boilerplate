@@ -7,7 +7,7 @@ A reusable monorepo starter for Anh Nguyen's future SaaS, education, internal to
 - pnpm 10, Node.js 22, Turborepo
 - TypeScript strict and Ultracite-on-Biome linting
 - Next.js App Router for app/web/docs
-- Hono API service
+- Hono API service with contract-first oRPC and generated OpenAPI
 - Better Auth with Prisma/PostgreSQL
 - Complete shadcn Base UI design-system package
 - Vitest and Playwright
@@ -87,6 +87,11 @@ import { Select, SelectItem } from "@repo/design-system/components/ui/select";
 
 The package provider owns theme, tooltip, and toast providers. Run
 `pnpm ui:gen <component>` when adding or refreshing a registry component.
+
+Product UI consumes internal APIs through `@repo/api/client`. Browser-safe
+contracts under `packages/api/src/contracts` drive runtime validation, OpenAPI,
+and typed browser/server clients; server implementations remain under
+`packages/api/src/routers`.
 
 Before promoting a fork or template change, run:
 

@@ -1,9 +1,9 @@
 import { getJobProviderStatus } from "@repo/jobs";
-import { Hono } from "hono";
+import { os } from "./implementer";
 
-export const jobsRouter = new Hono().get("/", (context) =>
-  context.json({
+export const jobsRouter = {
+  status: os.jobs.status.handler(() => ({
     data: getJobProviderStatus(),
     message: "Job providers are configured through @repo/jobs.",
-  })
-);
+  })),
+};
