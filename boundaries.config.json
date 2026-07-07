@@ -1,0 +1,26 @@
+{
+  "$schema": "./scripts/boundaries/boundaries.schema.json",
+  "serverOnlyPackages": {
+    "@repo/api": ["./client", "./contract", "./errors"],
+    "@repo/auth": ["./client"],
+    "@repo/database": [],
+    "@repo/jobs": [],
+    "@repo/mail": [],
+    "@repo/storage": []
+  },
+  "packageRules": {
+    "@repo/api": [
+      "@repo/auth",
+      "@repo/database",
+      "@repo/jobs",
+      "@repo/logger",
+      "@repo/mail",
+      "@repo/security",
+      "@repo/storage"
+    ],
+    "@repo/auth": ["@repo/config", "@repo/database", "@repo/logger"],
+    "@repo/config": ["@repo/helpers", "@repo/i18n"],
+    "@repo/database": [],
+    "@repo/design-system": ["@repo/config", "@repo/helpers", "@repo/i18n"]
+  }
+}

@@ -129,6 +129,10 @@ Release readiness and template scaffold guidance live in
 - `apps/*` are independently deployable.
 - `apps/*` must not import from other `apps/*`.
 - `packages/*` must not import from `apps/*`.
+- Workspace imports must be declared and use package export maps.
+- Client Components must use only configured client-safe package entrypoints.
+- Core package layers and dependency cycles are enforced by
+  `boundaries.config.json` and `pnpm boundaries`.
 - Root `.env` is the single local-development env file. Root and direct workspace commands load it through `dotenv-cli`.
 - Packages own reusable `keys.ts` contracts with `@t3-oss/env-core`.
 - Next apps compose package contracts with `@t3-oss/env-nextjs`; the Hono API uses `@t3-oss/env-core`.

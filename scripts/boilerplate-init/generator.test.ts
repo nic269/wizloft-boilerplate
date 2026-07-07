@@ -50,6 +50,12 @@ describe("boilerplate init", () => {
     await expect(
       access(join(target, "scripts", "check-boundaries.ts"))
     ).resolves.toBeUndefined();
+    await expect(
+      access(join(target, "scripts", "boundaries", "boundary-engine.ts"))
+    ).resolves.toBeUndefined();
+    await expect(
+      access(join(target, "boundaries.config.json"))
+    ).resolves.toBeUndefined();
     expect(await readFile(join(target, "README.md"), "utf8")).toContain(
       "# Learning Platform"
     );

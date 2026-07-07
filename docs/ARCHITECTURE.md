@@ -1,10 +1,9 @@
 # Architecture
 
-No application stack is selected yet.
-
-No application code exists yet. This document defines generic architecture
-questions and boundary rules that future implementation should adapt after a
-user-provided spec and stack decision exist.
+The reusable application stack is pnpm/Turborepo, TypeScript, Next.js, Hono,
+Better Auth, Prisma/PostgreSQL, and shared workspace packages. This document
+defines its dependency direction and the generic architecture rules future
+product domains must preserve.
 
 ## Discovery Before Shape
 
@@ -89,6 +88,24 @@ Inner layers must not depend on outer layers.
 | infrastructure | domain, application | interface controllers or UI |
 | interface | all backend layers | UI state or platform shell assumptions |
 | app surfaces | API contracts and app-facing clients | domain internals directly |
+
+## Workspace Guardrails
+
+`pnpm boundaries` parses source imports with the TypeScript compiler and checks
+the workspace manifest graph. `boundaries.config.json` owns the rules that vary
+by package:
+
+- Apps cannot import other app workspaces.
+- Packages cannot import app workspaces.
+- Workspace imports must be declared in the importing manifest.
+- Package subpaths must match the target package `exports` map.
+- Client Components may import only configured client-safe entrypoints from
+  server-oriented packages.
+- Core packages with an allowlist cannot import outside their approved layers.
+- Workspace dependency cycles are rejected.
+
+Keep this checker in generated projects. Update the config when introducing a
+real package boundary; do not add broad exceptions for one import.
 
 ## Parse-First Boundary Rule
 

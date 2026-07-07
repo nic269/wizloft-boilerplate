@@ -11,6 +11,9 @@ domain assumptions.
   internal boilerplate factory from clean application projects. The generator
   rewrites identity and selected app surfaces while stripping Harness, agent,
   planning, release-manifest, and domain-template artifacts.
+- Config-driven workspace guardrails enforce app isolation, public package
+  exports, declared dependencies, core package layers, Client Component safety,
+  and an acyclic workspace dependency graph.
 
 - Multi-app monorepo with independent deployable surfaces.
 - Better Auth server/client package split.
