@@ -23,6 +23,7 @@
     "test:integration": "echo 'auth integration tests require api/database'"
   },
   "dependencies": {
+    "@repo/access-control": "workspace:*",
     "@repo/database": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
     "better-auth": "^1.6.23",

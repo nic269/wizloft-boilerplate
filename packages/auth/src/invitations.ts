@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
+import { MEMBER_PERMISSIONS } from "@repo/access-control";
 import { prisma } from "@repo/database";
-import { MEMBER_PERMISSIONS } from "./access-control";
 
 export type InvitationErrorCode =
   | "INVITATION_NOT_FOUND"

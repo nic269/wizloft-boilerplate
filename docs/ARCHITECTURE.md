@@ -11,6 +11,11 @@ against auth and provider packages. `OpenAPIHandler`, `OpenAPIGenerator`, and
 `OpenAPILink` share the same contract, while Hono remains responsible for
 Better Auth, request context, logging, and unmatched routes.
 
+Static authorization policy belongs to dependency-free
+`@repo/access-control`: permission definitions, keys, guards, and baseline role
+presets. Stateful authorization belongs to `@repo/auth`, which evaluates users,
+memberships, roles, and persisted permissions through Prisma.
+
 ## Discovery Before Shape
 
 Before proposing implementation shape, identify:

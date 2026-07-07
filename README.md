@@ -135,6 +135,8 @@ Release readiness and template scaffold guidance live in
 - `apps/*` must not import from other `apps/*`.
 - `packages/*` must not import from `apps/*`.
 - Workspace imports must be declared and use package export maps.
+- Static permission policy belongs to browser-safe `@repo/access-control`;
+  database-backed authorization belongs to `@repo/auth`.
 - Client Components must use only configured client-safe package entrypoints.
 - Core package layers and dependency cycles are enforced by
   `boundaries.config.json` and `pnpm boundaries`.

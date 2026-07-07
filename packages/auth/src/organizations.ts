@@ -1,5 +1,5 @@
+import { OWNER_PERMISSIONS } from "@repo/access-control";
 import { prisma } from "@repo/database";
-import { OWNER_PERMISSIONS } from "./access-control";
 
 export const normalizeOrganizationSlug = (value: string) =>
   value

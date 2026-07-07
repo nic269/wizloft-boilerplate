@@ -29,6 +29,9 @@ domain assumptions.
   activation, revocation, and audit evidence.
 - Organization-scoped role management with a whitelist permission catalog, member role assignment, and recent audit log
   review.
+- Dependency-free `@repo/access-control` policy shared by auth, API, UI,
+  provisioning, and seed workflows; database-backed authorization remains in
+  `@repo/auth`.
 - Contract-first oRPC schemas drive Hono runtime handling, Zod input/output
   validation, generated OpenAPI, stable operation IDs, and typed browser/server
   clients. Existing REST contracts and deprecated health RPC URLs remain

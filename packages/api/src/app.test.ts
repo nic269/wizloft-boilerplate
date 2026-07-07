@@ -54,17 +54,6 @@ vi.mock("@repo/auth/invitations", () => ({
 }));
 vi.mock("@repo/auth/access-control", () => ({
   createRole: vi.fn(),
-  isKnownPermission: (permission: { module: string; action: string }) =>
-    [
-      "organization:read",
-      "organization:update",
-      "members:read",
-      "members:invite",
-      "members:manage",
-      "roles:read",
-      "roles:manage",
-      "audit:read",
-    ].includes(`${permission.module}:${permission.action}`),
   listAuditLogs: vi.fn(),
   listMembers: vi.fn(),
   listRoles: vi.fn(),

@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  CUSTOM_ROLE_DEFAULT_PERMISSION_KEYS,
+  formatPermissionKey,
+  PERMISSION_CATALOG,
+  permissionKey,
+} from "@repo/access-control";
 import { apiClient, getApiErrorMessage } from "@repo/api/client";
 import {
   Button,
@@ -24,27 +30,12 @@ type Organization = Awaited<
 type Role = Awaited<
   ReturnType<typeof apiClient.organizations.roles.list>
 >["data"][number];
-type Permission = Role["permissions"][number];
 type Member = Awaited<
   ReturnType<typeof apiClient.organizations.members.list>
 >["data"][number];
 type AuditLog = Awaited<
   ReturnType<typeof apiClient.organizations.auditLogs>
 >["data"][number];
-
-const permissionOptions = [
-  { action: "read", label: "Read organization", module: "organization" },
-  { action: "update", label: "Update organization", module: "organization" },
-  { action: "read", label: "Read members", module: "members" },
-  { action: "invite", label: "Invite members", module: "members" },
-  { action: "manage", label: "Manage members", module: "members" },
-  { action: "read", label: "Read roles", module: "roles" },
-  { action: "manage", label: "Manage roles", module: "roles" },
-  { action: "read", label: "Read audit log", module: "audit" },
-] as const;
-
-const permissionKey = (permission: Permission) =>
-  `${permission.module}:${permission.action}`;
 
 export function AccessPanel() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -54,8 +45,7 @@ export function AccessPanel() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [roleName, setRoleName] = useState("");
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([
-    "organization:read",
-    "members:read",
+    ...CUSTOM_ROLE_DEFAULT_PERMISSION_KEYS,
   ]);
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
@@ -101,11 +91,9 @@ export function AccessPanel() {
 
   const permissions = useMemo(
     () =>
-      permissionOptions
-        .filter((permission) =>
-          selectedPermissions.includes(permissionKey(permission))
-        )
-        .map(({ module, action }) => ({ action, module })),
+      PERMISSION_CATALOG.filter((permission) =>
+        selectedPermissions.includes(permissionKey(permission))
+      ).map(({ module, action }) => ({ action, module })),
     [selectedPermissions]
   );
 
@@ -240,7 +228,7 @@ export function AccessPanel() {
                     </span>
                   </div>
                   <p className="text-muted-foreground text-xs">
-                    {role.permissions.map(permissionKey).join(", ") ||
+                    {role.permissions.map(formatPermissionKey).join(", ") ||
                       "No permissions"}
                   </p>
                 </li>
@@ -256,7 +244,7 @@ export function AccessPanel() {
                 value={roleName}
               />
               <div className="grid gap-2 sm:grid-cols-2">
-                {permissionOptions.map((permission) => {
+                {PERMISSION_CATALOG.map((permission) => {
                   const key = permissionKey(permission);
                   return (
                     <label

@@ -1,48 +1,17 @@
+import {
+  normalizePermissions,
+  type PermissionInput,
+} from "@repo/access-control";
 import { prisma } from "@repo/database";
 
-export const PERMISSION_CATALOG = [
-  { action: "read", label: "Read organization", module: "organization" },
-  { action: "update", label: "Update organization", module: "organization" },
-  { action: "read", label: "Read members", module: "members" },
-  { action: "invite", label: "Invite members", module: "members" },
-  { action: "manage", label: "Manage members", module: "members" },
-  { action: "read", label: "Read roles", module: "roles" },
-  { action: "manage", label: "Manage roles", module: "roles" },
-  { action: "read", label: "Read audit log", module: "audit" },
-] as const;
-
-export type PermissionDefinition = (typeof PERMISSION_CATALOG)[number];
-export interface PermissionInput {
-  action: string;
-  module: string;
-}
-
-export const OWNER_PERMISSIONS = PERMISSION_CATALOG.map(
-  ({ module, action }) => ({ action, module })
-);
-
-export const MEMBER_PERMISSIONS = [
-  { action: "read", module: "organization" },
-  { action: "read", module: "members" },
-  { action: "read", module: "roles" },
-] as const;
-
-export const isKnownPermission = (permission: PermissionInput) =>
-  PERMISSION_CATALOG.some(
-    (candidate) =>
-      candidate.module === permission.module &&
-      candidate.action === permission.action
-  );
-
-const normalizePermissions = (permissions: PermissionInput[]) => {
-  const unique = new Map<string, PermissionInput>();
-  for (const permission of permissions) {
-    if (isKnownPermission(permission)) {
-      unique.set(`${permission.module}:${permission.action}`, permission);
-    }
-  }
-  return [...unique.values()];
-};
+export {
+  isKnownPermission,
+  MEMBER_PERMISSIONS,
+  OWNER_PERMISSIONS,
+  PERMISSION_CATALOG,
+  type PermissionDefinition,
+  type PermissionInput,
+} from "@repo/access-control";
 
 export const listRoles = (organizationId: string) =>
   prisma.role.findMany({

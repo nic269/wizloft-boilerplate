@@ -9,7 +9,9 @@
     "@repo/storage": []
   },
   "packageRules": {
+    "@repo/access-control": [],
     "@repo/api": [
+      "@repo/access-control",
       "@repo/auth",
       "@repo/database",
       "@repo/jobs",
@@ -18,9 +20,14 @@
       "@repo/security",
       "@repo/storage"
     ],
-    "@repo/auth": ["@repo/config", "@repo/database", "@repo/logger"],
+    "@repo/auth": [
+      "@repo/access-control",
+      "@repo/config",
+      "@repo/database",
+      "@repo/logger"
+    ],
     "@repo/config": ["@repo/helpers", "@repo/i18n"],
-    "@repo/database": [],
+    "@repo/database": ["@repo/access-control"],
     "@repo/design-system": ["@repo/config", "@repo/helpers", "@repo/i18n"]
   }
 }

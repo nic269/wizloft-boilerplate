@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
     ];
   },
   transpilePackages: [
+    "@repo/access-control",
     "@repo/api",
     "@repo/auth",
     "@repo/config",

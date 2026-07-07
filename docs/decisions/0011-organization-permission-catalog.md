@@ -4,7 +4,8 @@ Date: 2026-07-05
 
 ## Status
 
-Accepted
+Superseded by `0014-central-access-control-policy.md` for package ownership.
+The permission vocabulary and authorization behavior remain accepted.
 
 ## Context
 
@@ -39,4 +40,3 @@ Tradeoffs:
 ## Follow-Up
 
 - Add role editing and owner self-demotion rules when a product needs them.
-

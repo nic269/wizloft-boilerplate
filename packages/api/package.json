@@ -28,6 +28,7 @@
     "@orpc/openapi-client": "1.14.7",
     "@orpc/server": "1.14.7",
     "@orpc/zod": "1.14.7",
+    "@repo/access-control": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/jobs": "workspace:*",

@@ -1,13 +1,5 @@
+import { ROLE_PERMISSION_PRESETS } from "@repo/access-control";
 import { prisma } from "./client";
-
-const defaultPermissions = [
-  "members:read",
-  "members:invite",
-  "members:update",
-  "settings:read",
-  "settings:update",
-  "audit:read",
-] as const;
 
 const main = async () => {
   const organization = await prisma.organization.upsert({
@@ -16,23 +8,13 @@ const main = async () => {
     where: { slug: "default" },
   });
 
-  for (const name of ["Owner", "Admin", "Member", "Viewer"]) {
+  for (const [name, permissions] of Object.entries(ROLE_PERMISSION_PRESETS)) {
     await prisma.role.upsert({
       create: {
         name,
         organizationId: organization.id,
         permissions: {
-          create: defaultPermissions
-            .filter(
-              (permission) => name !== "Viewer" || permission.endsWith(":read")
-            )
-            .map((permission) => {
-              const [module, action] = permission.split(":") as [
-                string,
-                string,
-              ];
-              return { action, module };
-            }),
+          create: [...permissions],
         },
       },
       update: {},

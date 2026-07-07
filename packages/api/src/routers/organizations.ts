@@ -1,6 +1,6 @@
+import { isKnownPermission } from "@repo/access-control";
 import {
   createRole,
-  isKnownPermission,
   listAuditLogs,
   listMembers,
   listRoles,
