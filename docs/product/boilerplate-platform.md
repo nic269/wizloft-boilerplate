@@ -14,6 +14,8 @@ domain assumptions.
 - Config-driven workspace guardrails enforce app isolation, public package
   exports, declared dependencies, core package layers, Client Component safety,
   and an acyclic workspace dependency graph.
+- Strict Turborepo environment contracts hash task-relevant values while the
+  root `.env` remains the single local-development source of truth.
 
 - Multi-app monorepo with independent deployable surfaces.
 - Better Auth server/client package split.

@@ -74,6 +74,11 @@ describe("boilerplate init", () => {
     expect(
       await readFile(join(target, ".github/workflows/ci.yml"), "utf8")
     ).not.toContain("templates:validate");
+    const turbo = JSON.parse(
+      await readFile(join(target, "turbo.json"), "utf8")
+    ) as { envMode: string; globalDependencies: string[] };
+    expect(turbo.envMode).toBe("strict");
+    expect(turbo.globalDependencies).not.toContain(".env");
   }, 15_000);
 
   it("rejects removal of required app surfaces", async () => {

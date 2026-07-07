@@ -134,6 +134,8 @@ Release readiness and template scaffold guidance live in
 - Core package layers and dependency cycles are enforced by
   `boundaries.config.json` and `pnpm boundaries`.
 - Root `.env` is the single local-development env file. Root and direct workspace commands load it through `dotenv-cli`.
+- Turborepo uses strict env mode; task env declarations are validated against
+  the aggregate root `.env.example` contract.
 - Packages own reusable `keys.ts` contracts with `@t3-oss/env-core`.
 - Next apps compose package contracts with `@t3-oss/env-nextjs`; the Hono API uses `@t3-oss/env-core`.
 - Production deployments inject environment variables through their platform; they do not depend on a checked-in `.env` file.

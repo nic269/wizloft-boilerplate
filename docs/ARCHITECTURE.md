@@ -29,6 +29,10 @@ future work.
 - Next apps compose only the package contracts they consume through `@t3-oss/env-nextjs`; non-Next runtimes use `@t3-oss/env-core`.
 - Optional integrations validate as optional and disable cleanly when their variables are absent.
 - `.env.example` documents the aggregate local onboarding contract and is copied to `.env`.
+- Turborepo runs in strict environment mode. Cached tasks declare and hash the
+  env values that can affect them; `.env` itself is not a global file input.
+- `.env.example` and `.env.test.example` remain global inputs so onboarding
+  contract changes invalidate affected task caches consistently.
 
 ## Default Layering
 
