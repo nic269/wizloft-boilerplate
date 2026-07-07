@@ -71,8 +71,10 @@ domain assumptions.
 - `pnpm dev`
 - `pnpm boundaries`
 - `pnpm build`
-- `pnpm test:e2e` for the auth smoke when a migrated PostgreSQL database is available.
-- `pnpm test:e2e:db` for local auth E2E with automatic Docker Compose PostgreSQL bootstrap.
+- `pnpm test:e2e` for auth, organization tenant-isolation, and invitation
+  smoke journeys when a migrated PostgreSQL database is available.
+- `pnpm test:e2e:db` for deterministic local browser E2E with automatic Docker
+  Compose PostgreSQL bootstrap and fresh app/API processes.
 - `pnpm clean:deps`, `pnpm clean:build`, `pnpm upgrade:deps`, `pnpm db:studio`, and `pnpm ui:gen` for maintenance
   workflows.
 - `pnpm templates:list`, `pnpm templates:json`, and `pnpm templates:validate` for template track handoff and drift

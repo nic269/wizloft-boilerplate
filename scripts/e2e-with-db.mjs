@@ -3,10 +3,13 @@ import { existsSync, readFileSync } from "node:fs";
 import net from "node:net";
 
 const DEFAULTS = {
+  API_INTERNAL_URL: "http://localhost:3002",
   BETTER_AUTH_SECRET: "local-e2e-better-auth-secret-at-least-32",
+  BETTER_AUTH_URL: "http://localhost:3002/api/auth",
   NEXT_PUBLIC_API_URL: "http://localhost:3002",
   NEXT_PUBLIC_APP_URL: "http://localhost:3000",
   NEXT_PUBLIC_WEB_URL: "http://localhost:3001",
+  PLAYWRIGHT_REUSE_SERVER: "false",
 };
 
 const LINE_PATTERN = /\r?\n/;
@@ -109,13 +112,9 @@ const postgresPort = await firstOpenPort(
 const databaseUrl = `postgresql://postgres:postgres@localhost:${postgresPort}/personal_saas_boilerplate`;
 
 const env = {
-  ...DEFAULTS,
   ...dotenv,
+  ...DEFAULTS,
   ...process.env,
-  BETTER_AUTH_URL:
-    process.env.BETTER_AUTH_URL ??
-    dotenv.BETTER_AUTH_URL ??
-    `${DEFAULTS.NEXT_PUBLIC_API_URL}/api/auth`,
   DATABASE_URL: databaseUrl,
   POSTGRES_PORT: String(postgresPort),
 };

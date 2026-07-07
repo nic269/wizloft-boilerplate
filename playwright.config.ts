@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const reuseExistingServer = process.env.PLAYWRIGHT_REUSE_SERVER !== "false";
+
 export default defineConfig({
   fullyParallel: true,
   projects: [
@@ -11,10 +13,19 @@ export default defineConfig({
     baseURL: "http://localhost:3000",
     trace: "on-first-retry",
   },
-  webServer: {
-    command: "pnpm --filter @repo/api-app --filter @repo/app dev",
-    reuseExistingServer: true,
-    timeout: 120_000,
-    url: "http://localhost:3000/sign-in",
-  },
+  webServer: [
+    {
+      command: "pnpm --filter @repo/api-app dev",
+      reuseExistingServer,
+      timeout: 120_000,
+      url: "http://localhost:3002/status",
+    },
+    {
+      command: "pnpm --filter @repo/app dev",
+      reuseExistingServer,
+      timeout: 120_000,
+      url: "http://localhost:3000/sign-in",
+    },
+  ],
+  workers: 2,
 });

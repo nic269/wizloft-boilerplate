@@ -102,7 +102,8 @@ pnpm release:check
 This mirrors the local release ladder: template drift validation, Ultracite,
 TypeScript, tests, package boundaries, and production builds.
 
-For a local auth E2E smoke with automatic PostgreSQL bootstrap:
+For local auth, organization-isolation, and invitation E2E smoke coverage with
+automatic PostgreSQL bootstrap:
 
 ```bash
 pnpm test:e2e:db
@@ -110,8 +111,10 @@ pnpm test:e2e:db
 
 This starts the Docker Compose `postgres` service, picks an available host port
 starting from `POSTGRES_PORT` or `5432`, pushes the Prisma schema, then runs
-Playwright. Use `pnpm test:e2e` directly when a migrated database is already
-available.
+Playwright on desktop and mobile profiles. The bootstrap owns its local service
+URLs and starts fresh app/API servers so a running development process cannot
+silently point the suite at another database. Use `pnpm test:e2e` directly when
+a migrated database is already available.
 
 CI uses the non-mutating formatter/linter command:
 
