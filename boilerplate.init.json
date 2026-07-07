@@ -1,0 +1,51 @@
+{
+  "$schema": "./scripts/boilerplate-init/manifest.schema.json",
+  "version": 1,
+  "sourceExcludes": [
+    ".env",
+    ".git",
+    ".harness",
+    ".next",
+    ".pnpm-store",
+    ".symphony",
+    ".turbo",
+    "coverage",
+    "desktop-dist",
+    "harness.db",
+    "harness.db-shm",
+    "harness.db-wal",
+    "node_modules",
+    "playwright-report",
+    "storybook-static",
+    "test-results"
+  ],
+  "remove": [
+    ".agents",
+    ".claude",
+    ".codex",
+    ".history",
+    "AGENTS.md",
+    "docs",
+    "new-tasks.md",
+    "packages/biome-config",
+    "packages/env",
+    "plans",
+    "release-manifest.json",
+    "scripts/bin",
+    "scripts/boilerplate-init",
+    "scripts/README.md",
+    "scripts/schema",
+    "scripts/template-catalog.ts",
+    "templates"
+  ],
+  "requiredApps": ["app", "api"],
+  "defaultApps": ["app", "web", "api", "email", "storybook"],
+  "optionalApps": ["web", "docs", "email", "storybook"],
+  "validationCommands": [
+    "pnpm check:ci",
+    "pnpm check-types",
+    "pnpm test",
+    "pnpm boundaries",
+    "pnpm build"
+  ]
+}

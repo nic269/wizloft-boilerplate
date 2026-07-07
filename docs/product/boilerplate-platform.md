@@ -7,6 +7,11 @@ domain assumptions.
 
 ## Core Behaviors
 
+- Manifest-driven `pnpm boilerplate:init <target>` generation separates the
+  internal boilerplate factory from clean application projects. The generator
+  rewrites identity and selected app surfaces while stripping Harness, agent,
+  planning, release-manifest, and domain-template artifacts.
+
 - Multi-app monorepo with independent deployable surfaces.
 - Better Auth server/client package split.
 - Same-origin auth/API rewrites from `apps/app` to `apps/api`.

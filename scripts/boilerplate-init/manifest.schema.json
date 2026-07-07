@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "sourceExcludes",
+    "remove",
+    "requiredApps",
+    "defaultApps",
+    "optionalApps",
+    "validationCommands"
+  ],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "sourceExcludes": { "type": "array", "items": { "type": "string" } },
+    "remove": { "type": "array", "items": { "type": "string" } },
+    "requiredApps": { "type": "array", "items": { "type": "string" } },
+    "defaultApps": { "type": "array", "items": { "type": "string" } },
+    "optionalApps": { "type": "array", "items": { "type": "string" } },
+    "validationCommands": { "type": "array", "items": { "type": "string" } }
+  }
+}

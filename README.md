@@ -66,6 +66,17 @@ pnpm templates:list
 pnpm templates:validate
 ```
 
+Create a clean project without the source repo's Harness and agent tooling:
+
+```bash
+pnpm boilerplate:init ../my-product --name "My Product" --validate
+```
+
+The default output includes app, web, API, email, and Storybook surfaces. Add
+docs with `--with-docs`, or select an exact set with
+`--apps app,api,web`. App and API are required. This generator core is designed
+to become the implementation behind `wizloft boilerplate init` later.
+
 Shadcn components are source-owned by `@repo/design-system` and available
 through explicit subpath imports:
 

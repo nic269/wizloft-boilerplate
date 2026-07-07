@@ -1,4 +1,4 @@
-import { appConfig, marketingNav } from "@repo/config";
+import { appConfig, appSurfaces, marketingNav } from "@repo/config";
 import { ArrowRight, Button } from "@repo/design-system";
 
 export default function WebHomePage() {
@@ -39,25 +39,20 @@ export default function WebHomePage() {
             >
               Start building <ArrowRight data-icon="inline-end" />
             </Button>
-            <Button
-              nativeButton={false}
-              render={<a href="http://localhost:3003" />}
-              variant="outline"
-            >
-              Read docs
-            </Button>
+            {appSurfaces.includes("apps/docs") ? (
+              <Button
+                nativeButton={false}
+                render={<a href="http://localhost:3003" />}
+                variant="outline"
+              >
+                Read docs
+              </Button>
+            ) : null}
           </div>
         </div>
         <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
           <div className="grid gap-3 text-sm">
-            {[
-              "apps/app",
-              "apps/web",
-              "apps/api",
-              "apps/docs",
-              "apps/email",
-              "apps/storybook",
-            ].map((item) => (
+            {appSurfaces.map((item) => (
               <div
                 className="flex items-center justify-between rounded-md bg-muted p-3"
                 key={item}

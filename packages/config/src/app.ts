@@ -8,3 +8,12 @@ export const appConfig = {
   name: "Personal SaaS Boilerplate",
   supportEmail: "support@example.com",
 } as const;
+
+export const appSurfaces: readonly string[] = [
+  "apps/app",
+  "apps/web",
+  "apps/api",
+  "apps/docs",
+  "apps/email",
+  "apps/storybook",
+];
