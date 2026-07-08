@@ -24,16 +24,21 @@ file, but production environments must inject variables through the hosting plat
 
 ## Docker And Turbo Prune
 
-The root `Dockerfile` supports a pruned build context by package scope:
+The root `Dockerfile` keeps one prune/build pipeline and exposes separate
+runtime targets for app, API, and web:
 
 ```bash
-docker build --build-arg APP_SCOPE=@repo/app -t personal-saas-app .
-docker build --build-arg APP_SCOPE=@repo/api-app -t personal-saas-api .
-docker build --build-arg APP_SCOPE=@repo/web -t personal-saas-web .
-docker build --build-arg APP_SCOPE=@repo/docs -t personal-saas-docs .
+docker build --target app-runner --build-arg APP_SCOPE=@repo/app -t personal-saas-app .
+docker build --target api-runner --build-arg APP_SCOPE=@repo/api-app -t personal-saas-api .
+docker build --target web-runner --build-arg APP_SCOPE=@repo/web -t personal-saas-web .
 ```
 
-Run the container with platform-provided environment variables:
+Next.js runners copy only standalone output and static assets. The API runner
+installs only the pruned production dependency graph, copies the generated
+Prisma Client from the build stage, and starts the API's production `tsx`
+runtime directly with env injected by the platform.
+
+Run the containers with platform-provided environment variables:
 
 ```bash
 docker run --rm -p 3000:3000 \
@@ -48,6 +53,30 @@ docker run --rm -p 3000:3000 \
 ```
 
 Do not copy `.env` into production images. `.dockerignore` excludes local env files and build outputs.
+
+The API surface should receive a real `PORT` value from the platform. The
+server now prefers `PORT` for binding and explicitly listens on `0.0.0.0`,
+which is the portable container-safe behavior.
+
+## Local Runtime Validation
+
+Use one command to build and boot the app, API, and web production images on a
+temporary Docker network:
+
+```bash
+pnpm docker:validate
+```
+
+The script:
+
+- builds `api-runner`, `app-runner`, and `web-runner`
+- injects runtime env directly instead of copying `.env`
+- waits for `GET /health` on API, `GET /sign-in` on app, and `GET /` on web
+- preserves stopped containers long enough to report startup logs
+- removes temporary containers, images, and the Docker network when finished
+
+This command is the local portability proof. Hosting-provider image push,
+managed ingress, and secret delivery still belong to the deployment platform.
 
 ## CI Contract
 

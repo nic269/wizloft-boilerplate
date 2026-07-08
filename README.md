@@ -61,6 +61,7 @@ pnpm clean:deps
 pnpm clean:build
 pnpm upgrade:deps
 pnpm db:studio
+pnpm docker:validate
 pnpm ui:gen
 pnpm templates:list
 pnpm templates:validate
@@ -123,10 +124,19 @@ pnpm check:ci
 ```
 
 Deployment notes live in [`docs/deployment.md`](docs/deployment.md). The root
-`Dockerfile` supports Turbo-pruned images with `APP_SCOPE`, for example:
+`Dockerfile` supports Turbo-pruned images with surface-specific runtime targets,
+for example:
 
 ```bash
-docker build --build-arg APP_SCOPE=@repo/app -t personal-saas-app .
+docker build --target app-runner --build-arg APP_SCOPE=@repo/app -t personal-saas-app .
+docker build --target api-runner --build-arg APP_SCOPE=@repo/api-app -t personal-saas-api .
+docker build --target web-runner --build-arg APP_SCOPE=@repo/web -t personal-saas-web .
+```
+
+For a repeatable local production-runtime smoke across app, API, and web:
+
+```bash
+pnpm docker:validate
 ```
 
 Release readiness and template scaffold guidance live in

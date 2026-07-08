@@ -43,8 +43,8 @@ domain assumptions.
   stable component subpath exports, and generic helper packages.
 - Handoff surfaces for future products: docs app, React Email previews, Storybook design-system examples, and template
   tracks for base SaaS, education, dev tools, and Shopify-adjacent add-ons.
-- Production discipline with standalone Next.js outputs, per-surface start scripts, Turbo-pruned Docker builds, CI
-  validation, and deployment docs.
+- Production discipline with standalone Next.js outputs, per-surface start scripts, Turbo-pruned Docker builds, target-
+  specific runtime images for app/API/web, CI validation, and deployment docs.
 - Design-system provider ownership with reusable theme, tooltip, and toast providers. App, web, docs, and Storybook surfaces own local
   Tailwind entry stylesheets, source scanning, and CSS override seams. Shared design-system globals provide reusable
   token variables, dark tokens, base rules, and token utility classes without leaking raw Tailwind directives into app
@@ -80,4 +80,6 @@ domain assumptions.
 - `pnpm templates:list`, `pnpm templates:json`, and `pnpm templates:validate` for template track handoff and drift
   checks.
 - `pnpm release:check` for the local pre-release ladder matching CI's non-E2E validation contract.
+- `pnpm docker:validate` for local production-container build, boot, and
+  readiness validation across app, API, and web.
 - `docs/release-readiness.md` for the final readiness audit, caveats, and template scaffold decision.

@@ -26,6 +26,7 @@
     "test:integration": "dotenv -e .env -- turbo run test:integration",
     "test:e2e": "dotenv -e .env -- playwright test",
     "test:e2e:db": "node scripts/e2e-with-db.mjs",
+    "docker:validate": "node scripts/docker/validate-production-runtimes.mjs",
     "boilerplate:init": "node --disable-warning=ExperimentalWarning --experimental-strip-types scripts/boilerplate-init/cli.ts",
     "release:check": "pnpm templates:validate && pnpm check:ci && pnpm check-types && pnpm test && pnpm boundaries && pnpm build",
     "templates:list": "node --disable-warning=ExperimentalWarning --experimental-strip-types scripts/template-catalog.ts list",
