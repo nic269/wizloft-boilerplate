@@ -33,7 +33,9 @@ production dependencies.
 
 ## Design Notes
 
-- Commands: `apps/api/build.mjs` uses esbuild to compile the API entrypoint.
+- Commands: US-026 originally added an esbuild script; US-027 later replaced it
+  with `tsup` so the API artifact can compile workspace source while leaving
+  npm dependencies in the production dependency graph.
 - Runtime format: CommonJS `.cjs`, because the API dependency graph includes
   CommonJS packages that use dynamic `require`.
 - API: `/openapi.json` now resolves its generated document through a lazy async
@@ -66,8 +68,9 @@ When updating durable proof status, use numeric booleans:
 
 ## Evidence
 
-- Added `apps/api/build.mjs` and changed `@repo/api-app` production start to
-  `node dist/index.cjs`.
+- Added a compiled API artifact and changed `@repo/api-app` production start to
+  `node dist/index.cjs`. US-027 later moved the implementation from
+  `apps/api/build.mjs` to `apps/api/tsup.config.ts`.
 - Moved `tsx` to `@repo/api-app` devDependencies and kept watch mode for local
   development.
 - Updated the Docker API runner to copy `apps/api/dist` from the installer

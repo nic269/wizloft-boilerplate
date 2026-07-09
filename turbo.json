@@ -39,6 +39,11 @@
       "outputs": [
         ".next/**",
         "!.next/cache/**",
+        "!.next/dev/**",
+        "!.next/diagnostics/**",
+        "!.next/turbopack/**",
+        "!.next/trace",
+        "!.next/trace-build",
         "dist/**",
         "storybook-static/**",
         ".react-email/**"

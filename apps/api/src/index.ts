@@ -1,5 +1,5 @@
 import { serve } from "@hono/node-server";
-import { createApiApp } from "@repo/api";
+import { createApiApp } from "@repo/api/app";
 import { env } from "../env";
 
 const app = createApiApp();

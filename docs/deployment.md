@@ -33,10 +33,12 @@ docker build --target api-runner --build-arg APP_SCOPE=@repo/api-app -t personal
 docker build --target web-runner --build-arg APP_SCOPE=@repo/web -t personal-saas-web .
 ```
 
-Next.js runners copy only standalone output and static assets. The API runner
-installs only the pruned production dependency graph, copies the compiled
-`apps/api/dist` artifact from the build stage, copies the generated Prisma
-Client payload needed by the compiled runtime, and starts the API with
+Next.js runners copy only standalone output and static assets. The API build
+uses `tsup` to compile workspace source into a CommonJS service artifact while
+leaving npm packages in the pruned production dependency graph. The API runner
+installs only that production graph, copies the compiled `apps/api/dist`
+artifact from the build stage, copies the generated Prisma Client payload
+needed by the compiled runtime, and starts the API with
 `node /app/apps/api/dist/index.cjs` plus env injected by the platform.
 
 Run the containers with platform-provided environment variables:

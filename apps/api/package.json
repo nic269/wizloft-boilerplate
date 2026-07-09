@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "dotenv -e ../../.env -- tsx watch src/index.ts",
-    "build": "node build.mjs",
+    "build": "tsup",
     "start": "node dist/index.cjs",
     "check-types": "tsc --noEmit",
     "test": "echo 'api app tests live in @repo/api'",
@@ -27,7 +27,7 @@
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^26.1.0",
-    "esbuild": "^0.28.1",
+    "tsup": "^8.5.1",
     "tsx": "^4.23.0",
     "typescript": "^6.0.3"
   }

@@ -62,12 +62,25 @@ ENV NODE_ENV=production
 ENV PORT=3002
 RUN addgroup -S app && adduser -S app -G app
 COPY --from=pruner /app/out/json/ .
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --prod --frozen-lockfile \
+      --filter @repo/api-app \
+      --filter @repo/api \
+      --filter @repo/access-control \
+      --filter @repo/auth \
+      --filter @repo/database \
+      --filter @repo/jobs \
+      --filter @repo/logger \
+      --filter @repo/mail \
+      --filter @repo/storage
 COPY --from=installer --chown=app:app /app/apps/api/dist ./apps/api/dist
 RUN rm -rf packages/database/node_modules/@prisma/client
 COPY --from=installer --chown=app:app /tmp/prisma-runtime/client ./packages/database/node_modules/@prisma/client
 COPY --from=installer --chown=app:app /tmp/prisma-runtime/generated ./packages/database/node_modules/.prisma/client
 COPY --from=installer --chown=app:app /tmp/prisma-runtime/generated ./apps/api/node_modules/.prisma/client
+RUN client_dir="$(dirname "$(node -p "require.resolve('@prisma/client/default.js', { paths: ['apps/api'] })")")"; \
+      pnpm_prisma_dir="$(dirname "$(dirname "${client_dir}")")/.prisma/client"; \
+      mkdir -p "$(dirname "${pnpm_prisma_dir}")"; \
+      cp -RL ./apps/api/node_modules/.prisma/client "${pnpm_prisma_dir}"
 USER app
 EXPOSE 3002
 CMD ["node", "/app/apps/api/dist/index.cjs"]
