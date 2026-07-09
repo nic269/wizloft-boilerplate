@@ -62,11 +62,12 @@ ENV NODE_ENV=production
 ENV PORT=3002
 RUN addgroup -S app && adduser -S app -G app
 COPY --from=pruner /app/out/json/ .
-COPY --from=pruner /app/out/full/ .
 RUN pnpm install --prod --frozen-lockfile
+COPY --from=installer --chown=app:app /app/apps/api/dist ./apps/api/dist
 RUN rm -rf packages/database/node_modules/@prisma/client
 COPY --from=installer --chown=app:app /tmp/prisma-runtime/client ./packages/database/node_modules/@prisma/client
 COPY --from=installer --chown=app:app /tmp/prisma-runtime/generated ./packages/database/node_modules/.prisma/client
+COPY --from=installer --chown=app:app /tmp/prisma-runtime/generated ./apps/api/node_modules/.prisma/client
 USER app
 EXPOSE 3002
-CMD ["/app/apps/api/node_modules/.bin/tsx", "/app/apps/api/src/index.ts"]
+CMD ["node", "/app/apps/api/dist/index.cjs"]

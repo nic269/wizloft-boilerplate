@@ -34,9 +34,10 @@ docker build --target web-runner --build-arg APP_SCOPE=@repo/web -t personal-saa
 ```
 
 Next.js runners copy only standalone output and static assets. The API runner
-installs only the pruned production dependency graph, copies the generated
-Prisma Client from the build stage, and starts the API's production `tsx`
-runtime directly with env injected by the platform.
+installs only the pruned production dependency graph, copies the compiled
+`apps/api/dist` artifact from the build stage, copies the generated Prisma
+Client payload needed by the compiled runtime, and starts the API with
+`node /app/apps/api/dist/index.cjs` plus env injected by the platform.
 
 Run the containers with platform-provided environment variables:
 
@@ -57,6 +58,9 @@ Do not copy `.env` into production images. `.dockerignore` excludes local env fi
 The API surface should receive a real `PORT` value from the platform. The
 server now prefers `PORT` for binding and explicitly listens on `0.0.0.0`,
 which is the portable container-safe behavior.
+
+Local API development still uses `tsx watch`, but production images do not
+execute TypeScript source or use `tsx` as the process runtime.
 
 ## Local Runtime Validation
 

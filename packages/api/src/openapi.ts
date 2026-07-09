@@ -30,4 +30,11 @@ export const createOpenApiDocument = () =>
     },
   });
 
-export const openApiDocument = await createOpenApiDocument();
+let openApiDocumentPromise:
+  | ReturnType<typeof createOpenApiDocument>
+  | undefined;
+
+export const getOpenApiDocument = () => {
+  openApiDocumentPromise ??= createOpenApiDocument();
+  return openApiDocumentPromise;
+};

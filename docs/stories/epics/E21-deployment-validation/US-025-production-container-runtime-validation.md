@@ -94,10 +94,10 @@ When updating durable proof status, use numeric booleans:
   `apps/api/src/index.ts`, which is the required container-safe behavior.
 - Fixed a production-only ESM crash in `packages/database/src/client.ts` by
   making `Prisma` a type-only export.
-- The API runner executes its production `tsx` binary directly instead of
-  invoking pnpm as a runtime process manager. The generated Prisma Client and
-  its `.prisma/client` payload are copied from the installer stage into the
-  pruned production dependency graph.
+- The API runner executed its production `tsx` binary directly during this
+  story instead of invoking pnpm as a runtime process manager. US-026 later
+  replaced that temporary runtime with a compiled `node dist/index.cjs`
+  artifact while preserving the same Docker validation contract.
 - Runtime validation preserves failed containers long enough to include
   startup stderr in the error and removes its temporary containers, images,
   and network during cleanup.

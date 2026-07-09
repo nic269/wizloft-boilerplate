@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { contract } from "./contracts";
-import { openApiDocument } from "./openapi";
+import { getOpenApiDocument } from "./openapi";
 
 describe("openapi document", () => {
-  it("generates paths from the oRPC contract", () => {
+  it("generates paths from the oRPC contract", async () => {
+    const openApiDocument = await getOpenApiDocument();
+
     expect(openApiDocument.paths).toBeDefined();
     expect(openApiDocument.paths?.["/status"]?.get?.operationId).toBe(
       "status.get.rest"
@@ -17,7 +19,9 @@ describe("openapi document", () => {
     ).toBe("organizations.members.list");
   });
 
-  it("keeps runtime routes and generated documentation on one contract", () => {
+  it("keeps runtime routes and generated documentation on one contract", async () => {
+    const openApiDocument = await getOpenApiDocument();
+
     expect(contract.organizations.create["~orpc"].route.path).toBe(
       "/api/organizations"
     );
@@ -26,7 +30,8 @@ describe("openapi document", () => {
     ).toBe(contract.organizations.create["~orpc"].route.operationId);
   });
 
-  it("documents the same error envelope returned by the Hono adapter", () => {
+  it("documents the same error envelope returned by the Hono adapter", async () => {
+    const openApiDocument = await getOpenApiDocument();
     const response =
       openApiDocument.paths?.["/api/organizations"]?.post?.responses?.["422"];
     expect(response).toMatchObject({

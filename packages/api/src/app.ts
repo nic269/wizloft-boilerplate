@@ -5,7 +5,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { requestContext } from "./context";
 import { ApiError, type ApiErrorResponse } from "./errors";
-import { openApiDocument } from "./openapi";
+import { getOpenApiDocument } from "./openapi";
 import { router } from "./routers";
 
 const orpcHandler = new OpenAPIHandler(router, {
@@ -42,7 +42,9 @@ export const createApiApp = () => {
   const app = new Hono();
 
   app.use("*", requestContext);
-  app.get("/openapi.json", (context) => context.json(openApiDocument));
+  app.get("/openapi.json", async (context) =>
+    context.json(await getOpenApiDocument())
+  );
   app.get("/docs/api", (context) =>
     context.html("<html><body><pre>/openapi.json</pre></body></html>")
   );
