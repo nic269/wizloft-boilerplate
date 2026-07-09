@@ -2,10 +2,10 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["serverOnlyPackages", "packageRules"],
+  "required": ["clientSafeEntrypoints", "packageRules"],
   "properties": {
     "$schema": { "type": "string" },
-    "serverOnlyPackages": {
+    "clientSafeEntrypoints": {
       "type": "object",
       "additionalProperties": {
         "type": "array",

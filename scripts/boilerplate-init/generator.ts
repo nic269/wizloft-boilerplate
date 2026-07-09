@@ -44,8 +44,59 @@ playwright-report/
 # OS and editor files
 .DS_Store
 `;
+const GENERATED_DOCKERIGNORE = `.git
+.github
+.next
+.react-email
+.turbo
+coverage
+dist
+node_modules
+out
+playwright-report
+storybook-static
+test-results
+
+**/.next
+**/.react-email
+**/.turbo
+**/coverage
+**/dist
+**/node_modules
+**/out
+**/playwright-report
+**/storybook-static
+**/test-results
+
+.DS_Store
+*.log
+*.pem
+*.tsbuildinfo
+
+.env
+.env.*
+!.env.example
+`;
+const GENERATED_REPOMIXIGNORE = `dist/*
+coverage/*
+build/*
+ios/*
+android/*
+__pycache__/*
+node_modules/*
+
+.opencode/*
+.serena/*
+.pnpm-store/*
+.dart_tool/*
+.idea/*
+.husky/*
+.venv/*
+`;
 const APP_SURFACES_PATTERN =
   /export const appSurfaces: readonly string\[\] = \[[\s\S]*?\];/;
+const FEATURE_CONFIG_PATTERN =
+  /export const featureConfig = \{[\s\S]*?\} as const;/;
 const TEMPLATE_CI_STEP_PATTERN =
   /\n {6}- name: Validate templates\n {8}run: pnpm templates:validate\n/;
 const REMOVED_PACKAGE_SCRIPTS = new Set([
@@ -189,6 +240,40 @@ const rewriteBranding = async (
   }
 };
 
+const featureConfigForApps = (
+  selectedApps: string[]
+) => `export const featureConfig = {
+  analytics: false,
+  billing: false,
+  cms: false,
+  docs: ${selectedApps.includes("docs")},
+  email: ${selectedApps.includes("email")},
+  i18n: false,
+  jobs: true,
+  organizations: true,
+  storage: true,
+} as const;`;
+
+const rewriteGeneratedConfig = async (
+  target: string,
+  selectedApps: string[]
+) => {
+  const featuresPath = join(target, "packages/config/src/features.ts");
+  let features = await readFile(featuresPath, "utf8");
+  features = features.replace(
+    FEATURE_CONFIG_PATTERN,
+    featureConfigForApps(selectedApps)
+  );
+  await writeFile(featuresPath, features);
+
+  const indexPath = join(target, "packages/config/src/index.ts");
+  const index = await readFile(indexPath, "utf8");
+  await writeFile(
+    indexPath,
+    index.replace('export * from "./templates";\n', "")
+  );
+};
+
 const generatedReadme = (
   appName: string,
   selectedApps: string[]
@@ -277,7 +362,10 @@ export const generateProject = async (options: GenerateOptions) => {
 
     await rewritePackage(target, slug);
     await rewriteBranding(target, slug, appName, selectedApps);
+    await rewriteGeneratedConfig(target, selectedApps);
     await writeFile(join(target, ".gitignore"), GENERATED_GITIGNORE);
+    await writeFile(join(target, ".dockerignore"), GENERATED_DOCKERIGNORE);
+    await writeFile(join(target, ".repomixignore"), GENERATED_REPOMIXIGNORE);
     await writeFile(
       join(target, "README.md"),
       generatedReadme(appName, selectedApps)
@@ -291,6 +379,8 @@ export const generateProject = async (options: GenerateOptions) => {
 
     if (options.install) {
       await run("pnpm install", target);
+    } else {
+      await rm(join(target, "pnpm-lock.yaml"), { force: true });
     }
     if (options.validate) {
       if (!options.install) {

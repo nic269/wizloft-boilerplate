@@ -1,6 +1,6 @@
 {
   "$schema": "./scripts/boundaries/boundaries.schema.json",
-  "serverOnlyPackages": {
+  "clientSafeEntrypoints": {
     "@repo/api": ["./client", "./contract", "./errors"],
     "@repo/auth": ["./client"],
     "@repo/database": [],
@@ -10,6 +10,7 @@
   },
   "packageRules": {
     "@repo/access-control": [],
+    "@repo/analytics": [],
     "@repo/api": [
       "@repo/access-control",
       "@repo/auth",
@@ -26,8 +27,21 @@
       "@repo/database",
       "@repo/logger"
     ],
+    "@repo/billing": [],
+    "@repo/cms": [],
     "@repo/config": ["@repo/helpers", "@repo/i18n"],
     "@repo/database": ["@repo/access-control"],
-    "@repo/design-system": ["@repo/config", "@repo/helpers", "@repo/i18n"]
+    "@repo/design-system": ["@repo/config", "@repo/helpers", "@repo/i18n"],
+    "@repo/flags": [],
+    "@repo/helpers": [],
+    "@repo/i18n": [],
+    "@repo/jobs": [],
+    "@repo/logger": [],
+    "@repo/mail": ["@repo/logger"],
+    "@repo/observability": [],
+    "@repo/security": [],
+    "@repo/storage": [],
+    "@repo/test": [],
+    "@repo/typescript-config": []
   }
 }

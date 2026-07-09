@@ -1,6 +1,6 @@
-import { VerificationEmail } from "../../../../packages/mail/src/templates";
+import { VerificationEmail } from "@repo/mail/templates";
 
-export { VerificationEmail } from "../../../../packages/mail/src/templates";
+export { VerificationEmail } from "@repo/mail/templates";
 
 export default function VerificationPreview() {
   return (

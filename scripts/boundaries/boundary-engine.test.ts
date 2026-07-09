@@ -40,8 +40,8 @@ describe("boundary engine", () => {
     roots.push(root);
     const configPath = join(root, "boundaries.config.json");
     await writeJson(configPath, {
+      clientSafeEntrypoints: { "@repo/server": ["./client"] },
       packageRules: { "@repo/ui": [] },
-      serverOnlyPackages: { "@repo/server": ["./client"] },
     });
     await workspace({
       kind: "apps",
@@ -60,7 +60,7 @@ describe("boundary engine", () => {
       name: "@repo/ui",
       root,
       source:
-        '"use client";\nimport "@repo/app-b";\nimport "@repo/server/private";\n',
+        '"use client";\nimport "@repo/app-b";\nimport "@repo/server/private";\nimport "../../server/src/index";\n',
     });
     await workspace({
       dependencies: { "@repo/ui": "workspace:*" },
@@ -70,16 +70,26 @@ describe("boundary engine", () => {
       root,
       source: 'import "@repo/ui";\n',
     });
+    await workspace({
+      dependencies: { "@repo/server": "workspace:*" },
+      exports: { ".": "./src/index.ts" },
+      kind: "packages",
+      name: "@repo/loose",
+      root,
+      source: 'import "@repo/server";\n',
+    });
 
     const violations = await checkBoundaries({ configPath, root });
     expect(new Set(violations.map(({ code }) => code))).toEqual(
       new Set([
         "app-imports-app",
         "client-imports-server",
+        "cross-workspace-relative-import",
         "dependency-cycle",
         "layer-violation",
         "package-imports-app",
         "private-deep-import",
+        "unconfigured-package",
         "undeclared-workspace-dependency",
       ])
     );
@@ -90,8 +100,8 @@ describe("boundary engine", () => {
     roots.push(root);
     const configPath = join(root, "boundaries.config.json");
     await writeJson(configPath, {
+      clientSafeEntrypoints: { "@repo/server": ["./client"] },
       packageRules: { "@repo/ui": ["@repo/server"] },
-      serverOnlyPackages: { "@repo/server": ["./client"] },
     });
     await workspace({
       dependencies: { "@repo/server": "workspace:*" },

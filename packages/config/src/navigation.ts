@@ -1,7 +1,10 @@
+import { appConfig } from "./app";
+import { featureConfig } from "./features";
+
 export const marketingNav = [
   { href: "/#features", label: "Features" },
-  { href: "/docs", label: "Docs" },
-  { href: "/pricing", label: "Pricing" },
+  ...(featureConfig.docs ? [{ href: appConfig.docsUrl, label: "Docs" }] : []),
+  ...(featureConfig.billing ? [{ href: "/pricing", label: "Pricing" }] : []),
 ] as const;
 
 export const dashboardNav = [

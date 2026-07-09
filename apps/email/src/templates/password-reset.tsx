@@ -1,6 +1,6 @@
-import { PasswordResetEmail } from "../../../../packages/mail/src/templates";
+import { PasswordResetEmail } from "@repo/mail/templates";
 
-export { PasswordResetEmail } from "../../../../packages/mail/src/templates";
+export { PasswordResetEmail } from "@repo/mail/templates";
 
 export default function PasswordResetPreview() {
   return (

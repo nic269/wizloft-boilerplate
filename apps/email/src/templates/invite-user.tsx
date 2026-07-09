@@ -1,6 +1,6 @@
-import { InviteUserEmail } from "../../../../packages/mail/src/templates";
+import { InviteUserEmail } from "@repo/mail/templates";
 
-export { InviteUserEmail } from "../../../../packages/mail/src/templates";
+export { InviteUserEmail } from "@repo/mail/templates";
 
 export default function InviteUserPreview() {
   return (

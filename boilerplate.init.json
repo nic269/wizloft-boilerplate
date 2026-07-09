@@ -28,6 +28,8 @@
     "docs",
     "new-tasks.md",
     "packages/biome-config",
+    "packages/config/src/templates.test.ts",
+    "packages/config/src/templates.ts",
     "packages/env",
     "plans",
     "release-manifest.json",

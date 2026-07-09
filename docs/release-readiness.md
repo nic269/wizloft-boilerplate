@@ -23,7 +23,7 @@ code.
 | UI system | Ready | Design-system provider, shared global tokens, app-owned CSS override seams, Storybook surface. |
 | Handoff surfaces | Ready | `apps/web`, `apps/docs`, `apps/email`, `apps/storybook`. |
 | Release validation | Ready | `pnpm release:check`, CI template validation, check/type/test/boundary/build ladder. |
-| Templates | Catalog-ready | Typed catalog and README tracks exist; executable domain scaffolds are intentionally deferred. |
+| Templates | Catalog-ready | Typed catalog and README tracks exist in the source boilerplate; generated projects remove source-only catalog exports. |
 
 ## Release Checks
 
@@ -64,6 +64,9 @@ pnpm test:e2e:db
   pull request runtime budget allows browser E2E.
 - Docker prune builds are wired, but image push/runtime health checks should be
   validated against the chosen hosting platform.
+- `pnpm boilerplate:init --skip-install` now removes the copied source
+  lockfile. Run `pnpm install` in the generated project before using
+  `--frozen-lockfile`.
 
 ## Template Scaffold Decision
 

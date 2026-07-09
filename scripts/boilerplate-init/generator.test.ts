@@ -45,6 +45,12 @@ describe("boilerplate init", () => {
     await expect(access(join(target, "docs"))).rejects.toThrow();
     await expect(access(join(target, "AGENTS.md"))).rejects.toThrow();
     await expect(access(join(target, ".codex"))).rejects.toThrow();
+    await expect(
+      access(join(target, "packages/config/src/templates.ts"))
+    ).rejects.toThrow();
+    await expect(
+      access(join(target, "packages/config/src/templates.test.ts"))
+    ).rejects.toThrow();
     await expect(access(join(target, "packages", "env"))).rejects.toThrow();
     await expect(
       access(join(target, "scripts", "README.md"))
@@ -74,11 +80,30 @@ describe("boilerplate init", () => {
       await readFile(join(target, "packages/config/src/app.ts"), "utf8")
     ).toContain('  "apps/web",');
     expect(
+      await readFile(join(target, "packages/config/src/features.ts"), "utf8")
+    ).toContain("docs: false");
+    expect(
+      await readFile(join(target, "packages/config/src/features.ts"), "utf8")
+    ).toContain("email: false");
+    expect(
+      await readFile(join(target, "packages/config/src/index.ts"), "utf8")
+    ).not.toContain("./templates");
+    expect(
+      await readFile(join(target, "packages/config/src/navigation.ts"), "utf8")
+    ).toContain("featureConfig.docs");
+    expect(
       await readFile(join(target, "scripts/e2e-with-db.mjs"), "utf8")
     ).toContain("learning_platform");
     expect(
       await readFile(join(target, ".github/workflows/ci.yml"), "utf8")
     ).not.toContain("templates:validate");
+    expect(await readFile(join(target, ".dockerignore"), "utf8")).not.toContain(
+      "harness.db"
+    );
+    expect(
+      await readFile(join(target, ".repomixignore"), "utf8")
+    ).not.toContain("tests/*");
+    await expect(access(join(target, "pnpm-lock.yaml"))).rejects.toThrow();
     const turbo = JSON.parse(
       await readFile(join(target, "turbo.json"), "utf8")
     ) as { envMode: string; globalDependencies: string[] };

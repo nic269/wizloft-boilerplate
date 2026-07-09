@@ -10,10 +10,14 @@ domain assumptions.
 - Manifest-driven `pnpm boilerplate:init <target>` generation separates the
   internal boilerplate factory from clean application projects. The generator
   rewrites identity and selected app surfaces while stripping Harness, agent,
-  planning, release-manifest, and domain-template artifacts.
+  planning, release-manifest, and domain-template artifacts. Generated projects
+  also remove source-only template catalog exports, sync feature flags to the
+  selected app surfaces, and avoid carrying a stale source lockfile when
+  installation is skipped.
 - Config-driven workspace guardrails enforce app isolation, public package
   exports, declared dependencies, core package layers, Client Component safety,
-  and an acyclic workspace dependency graph.
+  explicit package policy coverage, package-name imports across workspaces, and
+  an acyclic workspace dependency graph.
 - Strict Turborepo environment contracts hash task-relevant values while the
   root `.env` remains the single local-development source of truth.
 
@@ -53,6 +57,9 @@ domain assumptions.
   shadcn component generation.
 - Template tracks are code-owned through a typed catalog, docs app rendering, and CLI validation/list commands so future
   products can select add-ons without copying domain code into core.
+- Generated projects keep tests and CI visible to review tooling through a
+  generated `.repomixignore`, and generated Docker contexts omit only runtime
+  noise rather than source Harness bookkeeping entries.
 - CI and local release readiness both validate template catalog drift before lint, type, test, boundary, and production
   build checks.
 - Domain template tracks stay as guidance until a concrete project selects one; executable domain scaffold code should

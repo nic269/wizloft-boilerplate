@@ -4,8 +4,8 @@ import { dirname, extname, join, relative, resolve, sep } from "node:path";
 import ts from "typescript";
 
 interface BoundaryConfig {
+  clientSafeEntrypoints: Record<string, string[]>;
   packageRules: Record<string, string[]>;
-  serverOnlyPackages: Record<string, string[]>;
 }
 
 interface PackageManifest {
@@ -30,10 +30,12 @@ export interface BoundaryViolation {
   code:
     | "app-imports-app"
     | "client-imports-server"
+    | "cross-workspace-relative-import"
     | "dependency-cycle"
     | "layer-violation"
     | "package-imports-app"
     | "private-deep-import"
+    | "unconfigured-package"
     | "undeclared-workspace-dependency";
   file?: string;
   message: string;
@@ -252,6 +254,46 @@ const cycleViolations = (workspaces: Workspace[]) => {
   }));
 };
 
+const packageRuleViolations = (input: {
+  config: BoundaryConfig;
+  file: string;
+  owner: Workspace;
+  relation: "depend on" | "import";
+  target: Workspace;
+}) => {
+  const { config, file, owner, relation, target } = input;
+  if (
+    owner.kind !== "package" ||
+    target.kind !== "package" ||
+    owner === target
+  ) {
+    return [];
+  }
+
+  const allowedDependencies = config.packageRules[owner.name];
+  if (!allowedDependencies) {
+    return [
+      {
+        code: "unconfigured-package",
+        file,
+        message: `${owner.name} is missing from boundaries.config.json packageRules`,
+      } satisfies BoundaryViolation,
+    ];
+  }
+
+  if (allowedDependencies.includes(target.name)) {
+    return [];
+  }
+
+  return [
+    {
+      code: "layer-violation",
+      file,
+      message: `${owner.name} is not allowed to ${relation} ${target.name}`,
+    } satisfies BoundaryViolation,
+  ];
+};
+
 const manifestViolations = (
   workspaces: Workspace[],
   config: BoundaryConfig,
@@ -282,19 +324,20 @@ const manifestViolations = (
           message: `${owner.name} must not depend on app workspace ${target.name}`,
         });
       }
-      const allowedDependencies = config.packageRules[owner.name];
       if (
         owner.kind === "package" &&
         target.kind === "package" &&
-        owner.runtimeDependencies.has(target.name) &&
-        allowedDependencies &&
-        !allowedDependencies.includes(target.name)
+        owner.runtimeDependencies.has(target.name)
       ) {
-        violations.push({
-          code: "layer-violation",
-          file,
-          message: `${owner.name} is not allowed to depend on ${target.name}`,
-        });
+        violations.push(
+          ...packageRuleViolations({
+            config,
+            file,
+            owner,
+            relation: "depend on",
+            target,
+          })
+        );
       }
     }
   }
@@ -333,6 +376,13 @@ const inspectImport = (input: {
       message: `${owner.name} imports ${target.name} without declaring it in package.json`,
     });
   }
+  if (specifier.startsWith(".") && owner !== target) {
+    violations.push({
+      code: "cross-workspace-relative-import",
+      file: filePath,
+      message: `${owner.name} imports ${target.name} through a relative path instead of the package export map`,
+    });
+  }
   if (!specifier.startsWith(".") && target.kind === "package") {
     const requested = exportSubpath(specifier, target.name);
     if (!target.exports.some((entry) => exportMatches(requested, entry))) {
@@ -342,7 +392,7 @@ const inspectImport = (input: {
         message: `${specifier} is not exported by ${target.name}`,
       });
     }
-    const clientEntrypoints = config.serverOnlyPackages[target.name];
+    const clientEntrypoints = config.clientSafeEntrypoints[target.name];
     if (
       clientComponent &&
       clientEntrypoints &&
@@ -355,20 +405,15 @@ const inspectImport = (input: {
       });
     }
   }
-  const allowedDependencies = config.packageRules[owner.name];
-  if (
-    owner.kind === "package" &&
-    target.kind === "package" &&
-    owner !== target &&
-    allowedDependencies &&
-    !allowedDependencies.includes(target.name)
-  ) {
-    violations.push({
-      code: "layer-violation",
+  violations.push(
+    ...packageRuleViolations({
+      config,
       file: filePath,
-      message: `${owner.name} is not allowed to import ${target.name}`,
-    });
-  }
+      owner,
+      relation: "import",
+      target,
+    })
+  );
   return violations;
 };
 
