@@ -18,7 +18,7 @@ Core stack:
 Reference rules:
 
 - Current Ops Hub code is only a pattern reference.
-- No DHL, Evisu, returns, preorders, Shopify workflow, brand asset, store config, or secret code belongs in core.
+- No DHL, returns, preorders, Shopify workflow, brand asset, store config, or secret code belongs in core.
 - next-forge is a structure reference for app separation and production monorepo discipline.
 - Supastarter is architectural inspiration only.
 

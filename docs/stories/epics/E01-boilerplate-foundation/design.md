@@ -39,7 +39,7 @@ type ApiErrorResponse = {
 
 ## Data Model
 
-The base schema is PostgreSQL via Prisma. It intentionally excludes Shopify, DHL, Evisu, returns, preorder, import, and
+The base schema is PostgreSQL via Prisma. It intentionally excludes Shopify, DHL, returns, preorder, import, and
 workflow-specific models.
 
 ## UI / Platform Impact

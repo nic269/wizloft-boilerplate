@@ -60,7 +60,7 @@ domain assumptions.
 
 ## Non-Goals
 
-- DHL, Evisu, preorder, return, import executor, Shopify workflow, brand asset, secret, or store-specific code in core.
+- DHL, preorder, return, import executor, Shopify workflow, brand asset, secret, or store-specific code in core.
 - A complete LMS, dev-tools, or Shopify app domain implementation in the base scaffold.
 
 ## Validation

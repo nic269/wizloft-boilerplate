@@ -25,5 +25,5 @@ catalog, list active members, update a member's role inside the same organizatio
 - Deleting roles.
 - Editing existing role permissions.
 - Cross-organization or platform-wide audit search.
-- Billing, Shopify, Evisu, or Ops Hub domain permissions.
+- Billing, Shopify, or Ops Hub domain permissions.
 

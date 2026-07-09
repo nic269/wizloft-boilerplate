@@ -29,7 +29,7 @@ the boilerplate core.
 - Docs app renders template tracks from the shared catalog instead of a local hardcoded list.
 - CLI commands can list, emit JSON, and validate template catalog drift.
 - Validation catches missing template folders, missing README files, and uncataloged folders.
-- No template adds DHL, Evisu, brand, secret, or Shopify-specific workflow code to core.
+- No template adds DHL, brand, secret, or Shopify-specific workflow code to core.
 
 ## Design Notes
 
