@@ -141,7 +141,7 @@ const rewritePackage = async (target: string, slug: string) => {
   );
   packageJson.scripts["release:check"] =
     "pnpm check:ci && pnpm check-types && pnpm test && pnpm boundaries && pnpm build";
-  packageJson.scripts.postinstall = "pnpm db:generate";
+  packageJson.scripts.postinstall = "node scripts/postinstall.mjs";
   await writeFile(path, `${JSON.stringify(packageJson, null, 2)}\n`);
 };
 

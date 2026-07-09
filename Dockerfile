@@ -25,6 +25,8 @@ ENV NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL}
 ENV NODE_ENV=production
 ENV SKIP_ENV_VALIDATION=true
 COPY --from=pruner /app/out/json/ .
+RUN mkdir -p scripts
+COPY scripts/postinstall.mjs ./scripts/postinstall.mjs
 RUN pnpm install --frozen-lockfile
 COPY --from=pruner /app/out/full/ .
 RUN pnpm turbo run build --filter="${APP_SCOPE}"
@@ -62,6 +64,8 @@ ENV NODE_ENV=production
 ENV PORT=3002
 RUN addgroup -S app && adduser -S app -G app
 COPY --from=pruner /app/out/json/ .
+RUN mkdir -p scripts
+COPY scripts/postinstall.mjs ./scripts/postinstall.mjs
 RUN pnpm install --prod --frozen-lockfile \
       --filter @repo/api-app \
       --filter @repo/api \

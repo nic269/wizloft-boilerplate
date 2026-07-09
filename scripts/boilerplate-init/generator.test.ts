@@ -37,7 +37,9 @@ describe("boilerplate init", () => {
     expect(packageJson.scripts["boilerplate:init"]).toBeUndefined();
     expect(packageJson.scripts["templates:validate"]).toBeUndefined();
     expect(packageJson.scripts["release:check"]).not.toContain("templates");
-    expect(packageJson.scripts.postinstall).toBe("pnpm db:generate");
+    expect(packageJson.scripts.postinstall).toBe(
+      "node scripts/postinstall.mjs"
+    );
     await expect(access(join(target, "apps", "docs"))).rejects.toThrow();
     await expect(access(join(target, "apps", "email"))).rejects.toThrow();
     await expect(access(join(target, "docs"))).rejects.toThrow();
@@ -49,6 +51,9 @@ describe("boilerplate init", () => {
     ).rejects.toThrow();
     await expect(
       access(join(target, "scripts", "check-boundaries.ts"))
+    ).resolves.toBeUndefined();
+    await expect(
+      access(join(target, "scripts", "postinstall.mjs"))
     ).resolves.toBeUndefined();
     await expect(
       access(join(target, "scripts", "boundaries", "boundary-engine.ts"))
