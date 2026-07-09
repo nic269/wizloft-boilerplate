@@ -40,6 +40,9 @@ domain assumptions.
   validation, generated OpenAPI, stable operation IDs, and typed browser/server
   clients. Existing REST contracts and deprecated health RPC URLs remain
   compatible.
+- API liveness and readiness are separate operational signals: `/health` is a
+  cheap process check, while `/ready` verifies database connectivity and returns
+  `503 Service Unavailable` when the API should not receive traffic.
 - Optional mail, storage, jobs, billing, analytics, CMS, and observability packages that degrade gracefully. Mail falls
   back to console delivery, storage supports local/memory/S3-compatible private objects, and jobs include a local
   in-process provider with idempotency, retry, and run status.

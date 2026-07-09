@@ -12,6 +12,7 @@ import {
 } from "@repo/auth/organizations";
 import { hasPermission } from "@repo/auth/permissions";
 import { getCurrentSession } from "@repo/auth/session";
+import { prisma } from "@repo/database";
 import { sendMail } from "@repo/mail";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApiApp } from "./app";
@@ -60,7 +61,17 @@ vi.mock("@repo/auth/access-control", () => ({
   updateMemberRole: vi.fn(),
 }));
 vi.mock("@repo/auth/permissions", () => ({ hasPermission: vi.fn() }));
-vi.mock("@repo/mail", () => ({ sendMail: vi.fn() }));
+vi.mock("@repo/database", () => ({
+  prisma: { $queryRaw: vi.fn() },
+}));
+vi.mock("@repo/mail", () => ({
+  getMailProviderStatus: () => ({
+    configured: true,
+    mode: "development",
+    provider: "console",
+  }),
+  sendMail: vi.fn(),
+}));
 vi.mock("@repo/storage", () => ({
   getStorageProviderStatus: () => ({
     configured: true,
@@ -77,7 +88,10 @@ vi.mock("@repo/jobs", () => ({
 }));
 
 describe("api app", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([{ "?column?": 1 }]);
+  });
 
   it("serves status", async () => {
     const response = await createApiApp().request("/status");
@@ -90,6 +104,37 @@ describe("api app", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
       data: { ok: true, service: "api" },
+    });
+  });
+
+  it("serves readiness when required dependencies are healthy", async () => {
+    const response = await createApiApp().request("/ready");
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      checks: { database: { healthy: true } },
+      ok: true,
+      providers: {
+        jobs: { configured: true, provider: "local" },
+        mail: { configured: true, provider: "console" },
+        storage: { configured: true, provider: "local" },
+      },
+    });
+  });
+
+  it("returns service unavailable when readiness dependencies fail", async () => {
+    vi.mocked(prisma.$queryRaw).mockRejectedValueOnce(
+      new Error("database unavailable")
+    );
+
+    const response = await createApiApp().request("/ready");
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({
+      error: {
+        code: "SERVICE_UNAVAILABLE",
+        details: { checks: { database: { healthy: false } } },
+      },
     });
   });
 

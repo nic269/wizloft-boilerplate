@@ -11,6 +11,7 @@ export const apiContract = oc.errors({
   INVITATION_NOT_FOUND: { data: apiErrorDataSchema, status: 404 },
   INVITATION_NOT_PENDING: { data: apiErrorDataSchema, status: 409 },
   NOT_FOUND: { data: apiErrorDataSchema, status: 404 },
+  SERVICE_UNAVAILABLE: { data: apiErrorDataSchema, status: 503 },
   UNAUTHORIZED: { data: apiErrorDataSchema, status: 401 },
   VALIDATION_ERROR: { data: apiErrorDataSchema, status: 422 },
 });

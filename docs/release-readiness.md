@@ -18,7 +18,7 @@ code.
 | Database | Ready | Prisma package, PostgreSQL compose service, generate/push/migrate/seed/studio scripts. |
 | Auth | Ready | Better Auth server/client package split, same-origin Next rewrites, email-password E2E coverage. |
 | Organizations and access | Ready | Organization onboarding, invitations, RBAC, member management, audit log patterns. |
-| API | Ready | Hono app, API package, health, provider status, RPC-style registry, OpenAPI handoff. |
+| API | Ready | Hono app, API package, liveness/readiness checks, provider status, RPC-style registry, OpenAPI handoff. |
 | Providers | Ready as optional core | Mail, private storage, jobs, billing, analytics, CMS, observability packages disable cleanly without credentials. |
 | UI system | Ready | Design-system provider, shared global tokens, app-owned CSS override seams, Storybook surface. |
 | Handoff surfaces | Ready | `apps/web`, `apps/docs`, `apps/email`, `apps/storybook`. |
@@ -60,6 +60,9 @@ pnpm test:e2e:db
 - Live provider smoke checks for S3, Resend/SMTP, billing, analytics, and
   observability require credentials and should be added by the project that
   chooses those providers.
+- `/ready` checks database connectivity only. Optional provider credentials are
+  still reported as diagnostics and should get provider-specific smoke checks in
+  projects that enable them.
 - `pnpm test:e2e:db` is intentionally local for now. Promote it to CI only if
   pull request runtime budget allows browser E2E.
 - Docker prune builds are wired, but image push/runtime health checks should be

@@ -2,6 +2,27 @@ import { z } from "zod";
 import { apiContract, emptyInputSchema } from "./base";
 
 export const okSchema = z.object({ ok: z.literal(true) });
+const readinessCheckSchema = z.object({
+  healthy: z.boolean(),
+  latencyMs: z.number().nonnegative(),
+  message: z.string().optional(),
+});
+const providerStatusSchema = z.object({
+  configured: z.boolean(),
+  mode: z.string(),
+  provider: z.string(),
+});
+export const readySchema = z.object({
+  checks: z.object({
+    database: readinessCheckSchema,
+  }),
+  ok: z.literal(true),
+  providers: z.object({
+    jobs: providerStatusSchema,
+    mail: providerStatusSchema,
+    storage: providerStatusSchema,
+  }),
+});
 export const statusSchema = z.object({
   ok: z.literal(true),
   service: z.literal("api"),
@@ -26,7 +47,7 @@ const ready = apiContract
     summary: "Readiness check",
   })
   .input(emptyInputSchema)
-  .output(okSchema);
+  .output(readySchema);
 
 const status = apiContract
   .route({
@@ -58,7 +79,7 @@ const legacyRpc = {
       summary: "RPC ready.get",
     })
     .input(emptyInputSchema)
-    .output(z.object({ data: okSchema })),
+    .output(z.object({ data: readySchema })),
   status: apiContract
     .route({
       deprecated: true,
