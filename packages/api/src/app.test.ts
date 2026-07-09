@@ -180,6 +180,18 @@ describe("api app", () => {
     });
   });
 
+  it("rejects users that the shared session helper treats as inactive", async () => {
+    vi.mocked(getCurrentSession).mockResolvedValue(null);
+
+    const response = await createApiApp().request(
+      "/api/organizations/org-1/roles"
+    );
+
+    expect(response.status).toBe(401);
+    expect(hasPermission).not.toHaveBeenCalled();
+    expect(listRoles).not.toHaveBeenCalled();
+  });
+
   it("lists only organizations returned for the authenticated user", async () => {
     vi.mocked(getCurrentSession).mockResolvedValue({
       user: { id: "user-1" },

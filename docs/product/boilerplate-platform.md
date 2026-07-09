@@ -26,6 +26,9 @@ domain assumptions.
 - Same-origin auth/API rewrites from `apps/app` to `apps/api`.
 - Email/password auth pages call Better Auth through same-origin `/api/auth` and protected app pages read the current
   server session.
+- Shared session and permission helpers treat only `ACTIVE` users as
+  authenticated or authorized; suspended and invited users cannot access
+  protected app/API surfaces through existing sessions.
 - Generic Prisma schema for auth, organizations, RBAC, invitations, audit, files, webhooks, jobs, integrations, and flags.
 - Membership-scoped organization onboarding that atomically provisions an Owner role, baseline permissions, creator
   membership, and an audit record.

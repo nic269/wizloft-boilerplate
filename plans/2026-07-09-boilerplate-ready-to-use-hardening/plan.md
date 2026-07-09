@@ -34,6 +34,7 @@ code.
 | Project generator consistency | Done | `US-029`; generator/boundary tests, `pnpm check:ci`, `pnpm check-types`, `pnpm boundaries`, `pnpm release:check`. |
 | API readiness signal | Done | `US-030`; `/ready` checks database and returns 503 when not ready; API tests and release ladder passed. |
 | Organization owner invariant | Done | `US-031`; role updates cannot demote the final active Owner; auth/API tests and release ladder passed. |
+| Suspended-user access invariant | Done | `US-032`; shared session and permission helpers deny non-active users; auth/API tests and release ladder passed. |
 | Release contract docs | In progress | `docs/product/boilerplate-platform.md` and `docs/release-readiness.md` have been updated by completed slices. |
 
 ## Phases
@@ -57,12 +58,13 @@ Exit criteria:
 
 ### Phase 02: Auth And Authorization Safety
 
-Status: next.
+Status: in progress.
 
 Candidate stories:
 
-- Last-owner and system-role protection.
-- Enforce `UserStatus.SUSPENDED` across session/API access.
+- Last-owner and system-role protection. Implemented as `US-031`.
+- Enforce `UserStatus.SUSPENDED` across session/API access. Implemented as
+  `US-032`.
 - Better Auth verification and password-reset flow hardening.
 
 Risk lane:

@@ -11,11 +11,15 @@ export const hasPermission = async (
   input: PermissionInput
 ): Promise<boolean> => {
   const user = await prisma.user.findUnique({
-    select: { isSuperAdmin: true },
+    select: { isSuperAdmin: true, status: true },
     where: { id: input.userId },
   });
 
-  if (user?.isSuperAdmin) {
+  if (user?.status !== "ACTIVE") {
+    return false;
+  }
+
+  if (user.isSuperAdmin) {
     return true;
   }
 

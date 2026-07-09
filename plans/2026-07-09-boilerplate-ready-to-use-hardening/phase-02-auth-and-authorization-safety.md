@@ -13,7 +13,7 @@ boilerplate starts from safe defaults before real projects add domain logic.
 
 - Last-owner and system-role protection. Implemented as `US-031`.
 - `UserStatus.SUSPENDED` enforcement across session, protected pages, and API
-  access.
+  access. Implemented as `US-032`.
 - Better Auth verification and password-reset flow hardening.
 
 ## Risk
