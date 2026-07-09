@@ -33,6 +33,7 @@ code.
 | --- | --- | --- |
 | Project generator consistency | Done | `US-029`; generator/boundary tests, `pnpm check:ci`, `pnpm check-types`, `pnpm boundaries`, `pnpm release:check`. |
 | API readiness signal | Done | `US-030`; `/ready` checks database and returns 503 when not ready; API tests and release ladder passed. |
+| Organization owner invariant | Done | `US-031`; role updates cannot demote the final active Owner; auth/API tests and release ladder passed. |
 | Release contract docs | In progress | `docs/product/boilerplate-platform.md` and `docs/release-readiness.md` have been updated by completed slices. |
 
 ## Phases

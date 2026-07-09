@@ -17,7 +17,7 @@ code.
 | Environment workflow | Ready | Root `.env.example`, root `.env` loading through `dotenv-cli`, package-level typed env contracts. |
 | Database | Ready | Prisma package, PostgreSQL compose service, generate/push/migrate/seed/studio scripts. |
 | Auth | Ready | Better Auth server/client package split, same-origin Next rewrites, email-password E2E coverage. |
-| Organizations and access | Ready | Organization onboarding, invitations, RBAC, member management, audit log patterns. |
+| Organizations and access | Ready | Organization onboarding, invitations, RBAC, member management, last-owner protection, audit log patterns. |
 | API | Ready | Hono app, API package, liveness/readiness checks, provider status, RPC-style registry, OpenAPI handoff. |
 | Providers | Ready as optional core | Mail, private storage, jobs, billing, analytics, CMS, observability packages disable cleanly without credentials. |
 | UI system | Ready | Design-system provider, shared global tokens, app-owned CSS override seams, Storybook surface. |

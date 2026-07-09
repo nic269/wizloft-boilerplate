@@ -32,7 +32,8 @@ domain assumptions.
 - Permissioned invitation lifecycle with hashed tokens, optional mail delivery, exact-email acceptance, Member role
   activation, revocation, and audit evidence.
 - Organization-scoped role management with a whitelist permission catalog, member role assignment, and recent audit log
-  review.
+  review. Role assignment preserves the ownership invariant by rejecting
+  updates that would leave an organization without an active Owner.
 - Dependency-free `@repo/access-control` policy shared by auth, API, UI,
   provisioning, and seed workflows; database-backed authorization remains in
   `@repo/auth`.

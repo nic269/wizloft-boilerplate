@@ -17,6 +17,10 @@ Organization access is membership-scoped. Creating an organization atomically cr
 baseline permissions, an active creator membership, and an `organization.created` audit record. API routes resolve the
 current Better Auth session and never accept a user id from request input.
 
+Role assignment must preserve ownership. Updating a member role is rejected when
+the update would leave the organization without at least one active membership
+linked to the `Owner` role.
+
 ## Alternatives Considered
 
 1. Use the Better Auth organization plugin as the source of truth. Deferred to keep the existing vendor-independent
@@ -29,13 +33,17 @@ Positive:
 
 - Tenant access has an explicit, testable ownership boundary.
 - New organizations cannot exist without an initial administrator.
+- Existing organizations cannot lose their final active Owner through role
+  assignment.
 - Security-sensitive creation has durable audit evidence.
 
 Tradeoffs:
 
 - The boilerplate owns organization lifecycle logic alongside Better Auth.
-- Custom roles and invitation lifecycle require later stories.
+- The boilerplate treats `Owner` as the protected baseline role name until a
+  future story introduces explicit system-role metadata.
 
 ## Follow-Up
 
-- Add invitation creation, acceptance, revocation, and member management.
+- Add explicit system-role metadata only when role deletion or permission
+  mutation requires it.

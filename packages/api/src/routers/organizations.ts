@@ -255,6 +255,13 @@ const updateOrganizationMemberRole =
           404
         );
       }
+      if (error instanceof Error && error.message === "LAST_OWNER_REQUIRED") {
+        throw new ApiError(
+          "CONFLICT",
+          "An organization must keep at least one active Owner.",
+          409
+        );
+      }
       throw error;
     }
   });

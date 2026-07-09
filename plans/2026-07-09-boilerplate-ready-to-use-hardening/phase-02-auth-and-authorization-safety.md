@@ -2,7 +2,7 @@
 
 ## Status
 
-Next.
+In progress.
 
 ## Goal
 
@@ -11,7 +11,7 @@ boilerplate starts from safe defaults before real projects add domain logic.
 
 ## Candidate Stories
 
-- Last-owner and system-role protection.
+- Last-owner and system-role protection. Implemented as `US-031`.
 - `UserStatus.SUSPENDED` enforcement across session, protected pages, and API
   access.
 - Better Auth verification and password-reset flow hardening.

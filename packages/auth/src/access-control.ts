@@ -4,6 +4,8 @@ import {
 } from "@repo/access-control";
 import { prisma } from "@repo/database";
 
+const OWNER_ROLE_NAME = "Owner";
+
 export {
   isKnownPermission,
   MEMBER_PERMISSIONS,
@@ -102,6 +104,35 @@ export const updateMemberRole = (input: {
     });
     if (!role) {
       throw new Error("ROLE_NOT_FOUND");
+    }
+
+    const membership = await transaction.membership.findFirst({
+      select: { id: true, role: { select: { name: true } } },
+      where: {
+        id: input.membershipId,
+        organizationId: input.organizationId,
+        status: "ACTIVE",
+      },
+    });
+    if (!membership) {
+      throw new Error("MEMBERSHIP_NOT_FOUND");
+    }
+
+    if (
+      membership.role?.name === OWNER_ROLE_NAME &&
+      role.name !== OWNER_ROLE_NAME
+    ) {
+      const remainingOwnerCount = await transaction.membership.count({
+        where: {
+          id: { not: input.membershipId },
+          organizationId: input.organizationId,
+          role: { name: OWNER_ROLE_NAME },
+          status: "ACTIVE",
+        },
+      });
+      if (remainingOwnerCount === 0) {
+        throw new Error("LAST_OWNER_REQUIRED");
+      }
     }
 
     const result = await transaction.membership.updateMany({

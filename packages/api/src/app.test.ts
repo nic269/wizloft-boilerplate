@@ -401,6 +401,33 @@ describe("api app", () => {
     });
   });
 
+  it("returns conflict when a role update would remove the last active owner", async () => {
+    vi.mocked(getCurrentSession).mockResolvedValue({
+      user: { id: "owner-1" },
+    } as never);
+    vi.mocked(hasPermission).mockResolvedValue(true);
+    vi.mocked(updateMemberRole).mockRejectedValue(
+      new Error("LAST_OWNER_REQUIRED")
+    );
+
+    const response = await createApiApp().request(
+      "/api/organizations/org-1/members/member-1/role",
+      {
+        body: JSON.stringify({ roleId: "role-2" }),
+        headers: { "content-type": "application/json" },
+        method: "PATCH",
+      }
+    );
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({
+      error: {
+        code: "CONFLICT",
+        message: "An organization must keep at least one active Owner.",
+      },
+    });
+  });
+
   it("requires audit read permission before exposing audit logs", async () => {
     vi.mocked(getCurrentSession).mockResolvedValue({
       user: { id: "user-1" },

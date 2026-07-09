@@ -97,7 +97,13 @@ describe("access control service", () => {
   it("updates a member role only when role and membership share the organization", async () => {
     const transaction = {
       auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
-      membership: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
+      membership: {
+        count: vi.fn(),
+        findFirst: vi
+          .fn()
+          .mockResolvedValue({ id: "member-1", role: { name: "Member" } }),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+      },
       role: {
         findFirst: vi.fn().mockResolvedValue({ id: "role-2", name: "Manager" }),
       },
@@ -117,10 +123,90 @@ describe("access control service", () => {
       select: { id: true, name: true },
       where: { id: "role-2", organizationId: "org-1" },
     });
+    expect(transaction.membership.findFirst).toHaveBeenCalledWith({
+      select: { id: true, role: { select: { name: true } } },
+      where: { id: "member-1", organizationId: "org-1", status: "ACTIVE" },
+    });
+    expect(transaction.membership.count).not.toHaveBeenCalled();
     expect(transaction.membership.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: "member-1", organizationId: "org-1", status: "ACTIVE" },
       })
+    );
+    expect(transaction.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: "member.role_updated",
+        targetId: "member-1",
+      }),
+    });
+  });
+
+  it("rejects demoting the only active owner", async () => {
+    const transaction = {
+      auditLog: { create: vi.fn() },
+      membership: {
+        count: vi.fn().mockResolvedValue(0),
+        findFirst: vi
+          .fn()
+          .mockResolvedValue({ id: "member-1", role: { name: "Owner" } }),
+        updateMany: vi.fn(),
+      },
+      role: {
+        findFirst: vi.fn().mockResolvedValue({ id: "role-2", name: "Member" }),
+      },
+    };
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
+      callback(transaction as never)
+    );
+
+    await expect(
+      updateMemberRole({
+        actorId: "owner-1",
+        membershipId: "member-1",
+        organizationId: "org-1",
+        roleId: "role-2",
+      })
+    ).rejects.toThrow("LAST_OWNER_REQUIRED");
+
+    expect(transaction.membership.count).toHaveBeenCalledWith({
+      where: {
+        id: { not: "member-1" },
+        organizationId: "org-1",
+        role: { name: "Owner" },
+        status: "ACTIVE",
+      },
+    });
+    expect(transaction.membership.updateMany).not.toHaveBeenCalled();
+    expect(transaction.auditLog.create).not.toHaveBeenCalled();
+  });
+
+  it("allows demoting an owner when another active owner remains", async () => {
+    const transaction = {
+      auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
+      membership: {
+        count: vi.fn().mockResolvedValue(1),
+        findFirst: vi
+          .fn()
+          .mockResolvedValue({ id: "member-1", role: { name: "Owner" } }),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+      },
+      role: {
+        findFirst: vi.fn().mockResolvedValue({ id: "role-2", name: "Member" }),
+      },
+    };
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
+      callback(transaction as never)
+    );
+
+    await updateMemberRole({
+      actorId: "owner-1",
+      membershipId: "member-1",
+      organizationId: "org-1",
+      roleId: "role-2",
+    });
+
+    expect(transaction.membership.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { roleId: "role-2" } })
     );
     expect(transaction.auditLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
