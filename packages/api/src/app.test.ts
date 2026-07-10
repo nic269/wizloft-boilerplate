@@ -99,7 +99,7 @@ vi.mock("@repo/storage", () => ({
 vi.mock("@repo/jobs", () => ({
   getJobProviderStatus: () => ({
     configured: true,
-    mode: "in-process",
+    mode: "ephemeral",
     provider: "local",
     state: "configured",
   }),
@@ -256,6 +256,79 @@ describe("api app", () => {
     expect(await response.json()).toMatchObject({
       error: { code: "NOT_FOUND", requestId: "req-rpc-missing" },
     });
+  });
+
+  it("does not expose unknown error details", async () => {
+    const internalMessage = "postgresql://secret-host/internal-database";
+    const errorSink = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    vi.mocked(auth.handler).mockRejectedValueOnce(new Error(internalMessage));
+
+    try {
+      const response = await createApiApp().request("/api/auth/sign-in/email", {
+        headers: { "x-request-id": "req-unhandled" },
+        method: "POST",
+      });
+      const body = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(body).toEqual({
+        error: {
+          code: "INTERNAL_SERVER_ERROR",
+          message: "An unexpected error occurred.",
+          requestId: "req-unhandled",
+        },
+      });
+      expect(JSON.stringify(body)).not.toContain(internalMessage);
+      expect(errorSink).toHaveBeenCalledWith(
+        "[error] api.unhandled_error",
+        expect.objectContaining({
+          errorMessage: internalMessage,
+          errorStack: expect.stringContaining(internalMessage),
+          message: "api.unhandled_error",
+        })
+      );
+    } finally {
+      errorSink.mockRestore();
+    }
+  });
+
+  it("does not expose unknown oRPC procedure error details", async () => {
+    const internalMessage = "postgresql://secret-host/orpc-database";
+    const errorSink = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    vi.mocked(getCurrentSession).mockRejectedValueOnce(
+      new Error(internalMessage)
+    );
+
+    try {
+      const response = await createApiApp().request("/api/organizations", {
+        headers: { "x-request-id": "req-orpc-unhandled" },
+      });
+      const body = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(body).toEqual({
+        error: {
+          code: "INTERNAL_SERVER_ERROR",
+          message: "An unexpected error occurred.",
+          requestId: "req-orpc-unhandled",
+        },
+      });
+      expect(JSON.stringify(body)).not.toContain(internalMessage);
+      expect(errorSink).toHaveBeenCalledWith(
+        "[error] api.unhandled_error",
+        expect.objectContaining({
+          errorMessage: internalMessage,
+          errorStack: expect.stringContaining(internalMessage),
+          message: "api.unhandled_error",
+        })
+      );
+    } finally {
+      errorSink.mockRestore();
+    }
   });
 
   it("publishes OpenAPI paths from the contract registry", async () => {

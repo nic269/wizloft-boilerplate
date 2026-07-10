@@ -4,12 +4,13 @@ import {
   mkdtemp,
   readFile,
   rm,
+  symlink,
   writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { generateProject, loadManifest } from "./generator.ts";
+import { assertTarget, generateProject, loadManifest } from "./generator.ts";
 
 const sourceRoot = resolve(import.meta.dirname, "../..");
 const temporaryRoots: string[] = [];
@@ -42,6 +43,68 @@ afterEach(async () => {
 });
 
 describe("boilerplate init", () => {
+  it("rejects a target inside the source before creating it", async () => {
+    const root = await mkdtemp(join(tmpdir(), "wizloft-target-"));
+    temporaryRoots.push(root);
+    const target = join(root, "generated-project");
+
+    await expect(
+      generateProject({
+        appName: "Nested",
+        install: false,
+        sourceRoot: root,
+        target,
+        validate: false,
+      })
+    ).rejects.toThrow(
+      "Target must not be inside the boilerplate source directory."
+    );
+    await expect(access(target)).rejects.toThrow();
+  });
+
+  it("allows sibling paths that only share the source name prefix", async () => {
+    const root = await mkdtemp(join(tmpdir(), "wizloft-target-prefix-"));
+    temporaryRoots.push(root);
+
+    await mkdir(join(root, "source"));
+
+    await expect(
+      assertTarget(join(root, "source"), join(root, "source-copy"))
+    ).resolves.toBeUndefined();
+  });
+
+  it("rejects a target nested through a symlinked ancestor", async () => {
+    const root = await mkdtemp(join(tmpdir(), "wizloft-target-symlink-"));
+    temporaryRoots.push(root);
+    const source = join(root, "source");
+    const sourceLink = join(root, "source-link");
+    const target = join(sourceLink, "generated-project");
+    await mkdir(source);
+
+    try {
+      await symlink(source, sourceLink, "dir");
+    } catch (error) {
+      const { code } = error as NodeJS.ErrnoException;
+      if (code === "EACCES" || code === "EPERM") {
+        return;
+      }
+      throw error;
+    }
+
+    await expect(
+      generateProject({
+        appName: "Symlink Nested",
+        install: false,
+        sourceRoot: source,
+        target,
+        validate: false,
+      })
+    ).rejects.toThrow(
+      "Target must not be inside the boilerplate source directory."
+    );
+    await expect(access(target)).rejects.toThrow();
+  });
+
   it("validates the init manifest with the tracked runtime schema", async () => {
     const root = await createManifestFixture({
       defaultApps: ["app", "api"],

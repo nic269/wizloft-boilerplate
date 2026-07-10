@@ -14,7 +14,7 @@ export const jobsContract = {
       z.object({
         data: z.object({
           configured: z.boolean(),
-          mode: z.literal("in-process"),
+          mode: z.literal("ephemeral"),
           provider: z.literal("local"),
         }),
         message: z.string(),

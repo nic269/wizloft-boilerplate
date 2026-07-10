@@ -149,7 +149,8 @@ Release readiness and template scaffold guidance live in
 
 ## Architecture Rules
 
-- `apps/*` are independently deployable.
+- Runtime apps under `apps/*` are independently deployable; email preview and
+  Storybook are workspace tooling surfaces rather than production runtimes.
 - `apps/*` must not import from other `apps/*`.
 - `packages/*` must not import from `apps/*`.
 - Workspace imports must be declared and use package export maps.
