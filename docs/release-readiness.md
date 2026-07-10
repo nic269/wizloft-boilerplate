@@ -16,7 +16,7 @@ code.
 | Monorepo tooling | Ready | pnpm, Turbo, Ultracite-on-Biome, TypeScript strict, workspace package boundaries. |
 | Environment workflow | Ready | Root `.env.example`, root `.env` loading through `dotenv-cli`, package-level typed env contracts. |
 | Database | Ready | Initial migration, PostgreSQL compose service, query indexes and provider uniqueness, invitation-role FK, scoped feature flags, catalog-reconciled system-role seed. |
-| Auth | Ready | Better Auth server/client package split, same-origin Next rewrites, email-password E2E coverage, suspended-user access enforcement, shared verification/reset email delivery. |
+| Auth | Ready | Better Auth server/client package split, same-origin Next rewrites, email-password E2E coverage, suspended-user access enforcement, shared verification/reset email delivery, browser reset-password and verify/resend screens. |
 | Organizations and access | Ready | Organization onboarding, invitations, RBAC, member management, last-owner protection, audit log patterns. |
 | API | Ready | Hono app, API package, liveness/readiness checks, provider status, RPC-style registry, OpenAPI handoff. |
 | Providers | Ready as optional core | Mail and storage disable/fallback cleanly when absent, report explicit states, and fail production API startup when a selected Resend/SMTP/S3/R2 provider is incomplete. |
@@ -55,9 +55,10 @@ pnpm test:e2e:db
 
 - `apps/email` is a development preview surface; it intentionally does not have
   a production app build.
-- Email verification messages are sent on sign-up, but verified-email
-  enforcement before sign-in is not enabled by default yet. Enable it in a
-  project-specific story when the onboarding UX includes verify/resend states.
+- Email verification messages are sent on sign-up and the app has verify/resend
+  screens, but verified-email enforcement before sign-in is not enabled by
+  default yet. Enable it in a project-specific story when that onboarding
+  behavior is desired.
 - Storybook build can emit bundle-size warnings. These are acceptable for a
   design-system review surface, not product runtime warnings.
 - Live delivery/storage smoke checks still require real S3, Resend, or SMTP

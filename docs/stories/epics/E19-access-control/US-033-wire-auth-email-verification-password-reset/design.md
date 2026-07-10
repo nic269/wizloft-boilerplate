@@ -18,12 +18,17 @@ the shared mail provider and template surface.
 5. Better Auth invokes `emailAndPassword.sendResetPassword`.
 6. `@repo/auth` renders `PasswordResetEmail` from `@repo/mail` and sends it
    through `sendMail`.
+7. `/forgot-password` posts to Better Auth `requestPasswordReset`.
+8. `/reset-password?token=...` posts the new password and token to Better Auth
+   `resetPassword`.
+9. `/verify-email?token=...` verifies the token through Better Auth
+   `verifyEmail`; `/verify-email` without a token sends a new verification email
+   for the submitted address.
 
 ## Interface Contract
 
 The Better Auth same-origin `/api/auth/*` route remains the public interface.
-This story configures Better Auth callbacks; it does not add a new Hono API
-contract or app page.
+The browser app uses `@repo/auth/client`; no new Hono API contract is added.
 
 ## Data Model
 
@@ -32,9 +37,10 @@ No schema changes. Better Auth already owns the `Verification` model and user
 
 ## UI / Platform Impact
 
-No new UI in this slice. Local development uses console mail when provider
-credentials are absent. Production delivery uses the existing `@repo/mail`
-provider selection.
+The authenticated app adds compact auth recovery screens under the existing
+auth route group. Local development uses console mail when provider credentials
+are absent. Production delivery uses the existing `@repo/mail` provider
+selection.
 
 ## Observability
 

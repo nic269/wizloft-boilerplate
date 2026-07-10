@@ -99,13 +99,18 @@ describe("access control service", () => {
       auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
       membership: {
         count: vi.fn(),
-        findFirst: vi
-          .fn()
-          .mockResolvedValue({ id: "member-1", role: { name: "Member" } }),
+        findFirst: vi.fn().mockResolvedValue({
+          id: "member-1",
+          role: { isSystem: true, name: "Member" },
+        }),
         updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       },
       role: {
-        findFirst: vi.fn().mockResolvedValue({ id: "role-2", name: "Manager" }),
+        findFirst: vi.fn().mockResolvedValue({
+          id: "role-2",
+          isSystem: false,
+          name: "Manager",
+        }),
       },
     };
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
@@ -120,11 +125,11 @@ describe("access control service", () => {
     });
 
     expect(transaction.role.findFirst).toHaveBeenCalledWith({
-      select: { id: true, name: true },
+      select: { id: true, isSystem: true, name: true },
       where: { id: "role-2", organizationId: "org-1" },
     });
     expect(transaction.membership.findFirst).toHaveBeenCalledWith({
-      select: { id: true, role: { select: { name: true } } },
+      select: { id: true, role: { select: { isSystem: true, name: true } } },
       where: { id: "member-1", organizationId: "org-1", status: "ACTIVE" },
     });
     expect(transaction.membership.count).not.toHaveBeenCalled();
@@ -146,13 +151,16 @@ describe("access control service", () => {
       auditLog: { create: vi.fn() },
       membership: {
         count: vi.fn().mockResolvedValue(0),
-        findFirst: vi
-          .fn()
-          .mockResolvedValue({ id: "member-1", role: { name: "Owner" } }),
+        findFirst: vi.fn().mockResolvedValue({
+          id: "member-1",
+          role: { isSystem: true, name: "Owner" },
+        }),
         updateMany: vi.fn(),
       },
       role: {
-        findFirst: vi.fn().mockResolvedValue({ id: "role-2", name: "Member" }),
+        findFirst: vi
+          .fn()
+          .mockResolvedValue({ id: "role-2", isSystem: true, name: "Member" }),
       },
     };
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
@@ -172,7 +180,7 @@ describe("access control service", () => {
       where: {
         id: { not: "member-1" },
         organizationId: "org-1",
-        role: { name: "Owner" },
+        role: { isSystem: true, name: "Owner" },
         status: "ACTIVE",
       },
     });
@@ -185,13 +193,16 @@ describe("access control service", () => {
       auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
       membership: {
         count: vi.fn().mockResolvedValue(1),
-        findFirst: vi
-          .fn()
-          .mockResolvedValue({ id: "member-1", role: { name: "Owner" } }),
+        findFirst: vi.fn().mockResolvedValue({
+          id: "member-1",
+          role: { isSystem: true, name: "Owner" },
+        }),
         updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       },
       role: {
-        findFirst: vi.fn().mockResolvedValue({ id: "role-2", name: "Member" }),
+        findFirst: vi
+          .fn()
+          .mockResolvedValue({ id: "role-2", isSystem: true, name: "Member" }),
       },
     };
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
@@ -214,5 +225,39 @@ describe("access control service", () => {
         targetId: "member-1",
       }),
     });
+  });
+
+  it("does not treat a custom role named Owner as the protected system owner", async () => {
+    const transaction = {
+      auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
+      membership: {
+        count: vi.fn(),
+        findFirst: vi.fn().mockResolvedValue({
+          id: "member-1",
+          role: { isSystem: false, name: "Owner" },
+        }),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+      },
+      role: {
+        findFirst: vi
+          .fn()
+          .mockResolvedValue({ id: "role-2", isSystem: true, name: "Member" }),
+      },
+    };
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
+      callback(transaction as never)
+    );
+
+    await updateMemberRole({
+      actorId: "owner-1",
+      membershipId: "member-1",
+      organizationId: "org-1",
+      roleId: "role-2",
+    });
+
+    expect(transaction.membership.count).not.toHaveBeenCalled();
+    expect(transaction.membership.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { roleId: "role-2" } })
+    );
   });
 });

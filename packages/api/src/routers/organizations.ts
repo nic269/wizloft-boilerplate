@@ -26,6 +26,13 @@ import type { ApiContext } from "../context";
 import { ApiError } from "../errors";
 import { os } from "./implementer";
 
+const invitationErrorStatus = {
+  INVITATION_EMAIL_MISMATCH: 403,
+  INVITATION_EXPIRED: 410,
+  INVITATION_NOT_FOUND: 404,
+  INVITATION_NOT_PENDING: 409,
+} as const;
+
 const requireUser = async (headers: Headers) => {
   const session = await getCurrentSession(headers);
   if (!session) {
@@ -157,7 +164,11 @@ const revokeOrganizationInvitation =
       });
     } catch (error) {
       if (error instanceof InvitationError) {
-        throw new ApiError("INVITATION_NOT_FOUND", error.message, 404);
+        throw new ApiError(
+          error.code,
+          error.message,
+          invitationErrorStatus[error.code]
+        );
       }
       throw error;
     }

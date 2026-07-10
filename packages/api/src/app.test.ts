@@ -5,7 +5,12 @@ import {
   listRoles,
   updateMemberRole,
 } from "@repo/auth/access-control";
-import { acceptInvitation, createInvitation } from "@repo/auth/invitations";
+import {
+  acceptInvitation,
+  createInvitation,
+  InvitationError,
+  revokeInvitation,
+} from "@repo/auth/invitations";
 import {
   createOrganizationForUser,
   listOrganizationsForUser,
@@ -42,7 +47,7 @@ vi.mock("@repo/auth/organizations", () => ({
 vi.mock("@repo/auth/invitations", () => ({
   acceptInvitation: vi.fn(),
   createInvitation: vi.fn(),
-  InvitationError: class InvitationError extends Error {
+  InvitationError: class MockInvitationError extends Error {
     code: string;
 
     constructor(code: string, message: string) {
@@ -144,10 +149,12 @@ describe("api app", () => {
   });
 
   it("returns structured errors for unknown RPC procedures", async () => {
-    const response = await createApiApp().request("/rpc/missing.get");
+    const response = await createApiApp().request("/rpc/missing.get", {
+      headers: { "x-request-id": "req-rpc-missing" },
+    });
     expect(response.status).toBe(404);
     expect(await response.json()).toMatchObject({
-      error: { code: "RPC_NOT_FOUND" },
+      error: { code: "RPC_NOT_FOUND", requestId: "req-rpc-missing" },
     });
   });
 
@@ -246,13 +253,16 @@ describe("api app", () => {
   it("normalizes contract input validation to the API error envelope", async () => {
     const response = await createApiApp().request("/api/organizations", {
       body: JSON.stringify({ name: "x" }),
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        "x-request-id": "req-validation",
+      },
       method: "POST",
     });
 
     expect(response.status).toBe(422);
     expect(await response.json()).toMatchObject({
-      error: { code: "VALIDATION_ERROR" },
+      error: { code: "VALIDATION_ERROR", requestId: "req-validation" },
     });
   });
 
@@ -313,6 +323,36 @@ describe("api app", () => {
       })
     );
     expect(JSON.stringify(await response.json())).not.toContain("tokenHash");
+  });
+
+  it("returns conflict when revoking an invitation that is not pending", async () => {
+    vi.mocked(getCurrentSession).mockResolvedValue({
+      user: { id: "owner-1" },
+    } as never);
+    vi.mocked(hasPermission).mockResolvedValue(true);
+    vi.mocked(revokeInvitation).mockRejectedValue(
+      new InvitationError(
+        "INVITATION_NOT_PENDING",
+        "Only pending invitations can be revoked."
+      )
+    );
+
+    const response = await createApiApp().request(
+      "/api/organizations/org-1/invitations/invite-1",
+      {
+        headers: { "x-request-id": "req-revoke" },
+        method: "DELETE",
+      }
+    );
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({
+      error: {
+        code: "INVITATION_NOT_PENDING",
+        message: "Only pending invitations can be revoked.",
+        requestId: "req-revoke",
+      },
+    });
   });
 
   it("binds invitation acceptance to the authenticated user", async () => {

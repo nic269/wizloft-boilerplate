@@ -38,6 +38,47 @@ const orpcHandler = new OpenAPIHandler(router, {
   }),
 });
 
+const withRequestId = async (response: Response, requestId: string) => {
+  if (response.status < 400) {
+    return response;
+  }
+
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    return response;
+  }
+
+  const body = await response
+    .clone()
+    .json()
+    .catch(() => null);
+  if (
+    !body ||
+    typeof body !== "object" ||
+    !("error" in body) ||
+    !body.error ||
+    typeof body.error !== "object"
+  ) {
+    return response;
+  }
+
+  const headers = new Headers(response.headers);
+  headers.delete("content-length");
+  headers.set("content-type", "application/json");
+
+  return new Response(
+    JSON.stringify({
+      ...body,
+      error: { ...body.error, requestId },
+    }),
+    {
+      headers,
+      status: response.status,
+      statusText: response.statusText,
+    }
+  );
+};
+
 export const createApiApp = () => {
   const app = new Hono();
 
@@ -61,7 +102,8 @@ export const createApiApp = () => {
     });
 
     if (matched) {
-      return context.newResponse(response.body, response);
+      const requestId = context.get("requestId");
+      return withRequestId(response, requestId);
     }
     await next();
   });

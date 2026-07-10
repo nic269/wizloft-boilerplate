@@ -6,6 +6,9 @@ import { prisma } from "@repo/database";
 
 const OWNER_ROLE_NAME = "Owner";
 
+const isSystemOwnerRole = (role?: { isSystem: boolean; name: string } | null) =>
+  role?.isSystem === true && role.name === OWNER_ROLE_NAME;
+
 export {
   isKnownPermission,
   MEMBER_PERMISSIONS,
@@ -99,7 +102,7 @@ export const updateMemberRole = (input: {
 }) =>
   prisma.$transaction(async (transaction) => {
     const role = await transaction.role.findFirst({
-      select: { id: true, name: true },
+      select: { id: true, isSystem: true, name: true },
       where: { id: input.roleId, organizationId: input.organizationId },
     });
     if (!role) {
@@ -107,7 +110,7 @@ export const updateMemberRole = (input: {
     }
 
     const membership = await transaction.membership.findFirst({
-      select: { id: true, role: { select: { name: true } } },
+      select: { id: true, role: { select: { isSystem: true, name: true } } },
       where: {
         id: input.membershipId,
         organizationId: input.organizationId,
@@ -118,15 +121,12 @@ export const updateMemberRole = (input: {
       throw new Error("MEMBERSHIP_NOT_FOUND");
     }
 
-    if (
-      membership.role?.name === OWNER_ROLE_NAME &&
-      role.name !== OWNER_ROLE_NAME
-    ) {
+    if (isSystemOwnerRole(membership.role) && !isSystemOwnerRole(role)) {
       const remainingOwnerCount = await transaction.membership.count({
         where: {
           id: { not: input.membershipId },
           organizationId: input.organizationId,
-          role: { name: OWNER_ROLE_NAME },
+          role: { isSystem: true, name: OWNER_ROLE_NAME },
           status: "ACTIVE",
         },
       });

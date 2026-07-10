@@ -139,6 +139,16 @@ export const AuthForm = ({
           <Button className="w-full" disabled={isPending} type="submit">
             {isPending ? "Please wait..." : text.submit}
           </Button>
+          {mode === "sign-in" ? (
+            <p className="text-center text-muted-foreground text-sm">
+              <Link
+                className="font-medium text-primary hover:underline"
+                href="/forgot-password"
+              >
+                Forgot password?
+              </Link>
+            </p>
+          ) : null}
           <p className="text-center text-muted-foreground text-sm">
             {text.switchLabel}{" "}
             <Link

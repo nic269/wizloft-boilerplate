@@ -24,9 +24,11 @@ domain assumptions.
 - Multi-app monorepo with independent deployable surfaces.
 - Better Auth server/client package split.
 - Same-origin auth/API rewrites from `apps/app` to `apps/api`.
-- Email/password auth pages call Better Auth through same-origin `/api/auth` and protected app pages read the current
-  server session. Better Auth verification and password-reset delivery use the
-  shared `@repo/mail` provider and React Email templates.
+- Email/password auth pages call Better Auth through same-origin `/api/auth` and
+  protected app pages read the current server session. Browser reset-password
+  and verify/resend screens call Better Auth through the same client boundary.
+  Better Auth verification and password-reset delivery use the shared
+  `@repo/mail` provider and React Email templates.
 - Shared session and permission helpers treat only `ACTIVE` users as
   authenticated or authorized; suspended and invited users cannot access
   protected app/API surfaces through existing sessions.
@@ -41,13 +43,15 @@ domain assumptions.
   activation, revocation, and audit evidence.
 - Organization-scoped role management with a whitelist permission catalog, member role assignment, and recent audit log
   review. Role assignment preserves the ownership invariant by rejecting
-  updates that would leave an organization without an active Owner.
+  updates that would leave an organization without an active seeded system
+  Owner.
 - Dependency-free `@repo/access-control` policy shared by auth, API, UI,
   provisioning, and seed workflows; database-backed authorization remains in
   `@repo/auth`.
 - Contract-first oRPC schemas drive Hono runtime handling, Zod input/output
   validation, generated OpenAPI, stable operation IDs, and typed browser/server
-  clients. Existing REST contracts and deprecated health RPC URLs remain
+  clients. API error envelopes include the request ID in both Hono and oRPC
+  responses. Existing REST contracts and deprecated health RPC URLs remain
   compatible.
 - API liveness and readiness are separate operational signals: `/health` is a
   cheap process check, while `/ready` verifies database connectivity and returns
