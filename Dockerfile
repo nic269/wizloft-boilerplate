@@ -48,6 +48,7 @@ ENV PORT=3000
 EXPOSE 3000
 COPY --from=installer --chown=app:app /app/apps/app/.next/standalone ./
 COPY --from=installer --chown=app:app /app/apps/app/.next/static ./apps/app/.next/static
+COPY --from=installer --chown=app:app /app/apps/app/public ./apps/app/public
 USER app
 CMD ["node", "apps/app/server.js"]
 
@@ -56,6 +57,7 @@ ENV PORT=3001
 EXPOSE 3001
 COPY --from=installer --chown=app:app /app/apps/web/.next/standalone ./
 COPY --from=installer --chown=app:app /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=installer --chown=app:app /app/apps/web/public ./apps/web/public
 USER app
 CMD ["node", "apps/web/server.js"]
 

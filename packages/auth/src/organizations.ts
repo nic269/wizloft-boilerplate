@@ -47,6 +47,7 @@ export const createOrganizationForUser = async (input: {
     const ownerRole = await transaction.role.create({
       data: {
         description: "Full access to organization settings and members.",
+        isSystem: true,
         name: "Owner",
         organizationId: organization.id,
         permissions: { createMany: { data: [...OWNER_PERMISSIONS] } },

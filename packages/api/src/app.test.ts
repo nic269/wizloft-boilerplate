@@ -65,18 +65,22 @@ vi.mock("@repo/database", () => ({
   prisma: { $queryRaw: vi.fn() },
 }));
 vi.mock("@repo/mail", () => ({
+  assertMailProviderConfiguration: vi.fn(),
   getMailProviderStatus: () => ({
-    configured: true,
+    configured: false,
     mode: "development",
     provider: "console",
+    state: "disabled",
   }),
   sendMail: vi.fn(),
 }));
 vi.mock("@repo/storage", () => ({
+  assertStorageProviderConfiguration: vi.fn(),
   getStorageProviderStatus: () => ({
     configured: true,
     mode: "durable",
     provider: "local",
+    state: "configured",
   }),
 }));
 vi.mock("@repo/jobs", () => ({
@@ -84,6 +88,7 @@ vi.mock("@repo/jobs", () => ({
     configured: true,
     mode: "in-process",
     provider: "local",
+    state: "configured",
   }),
 }));
 
@@ -116,7 +121,7 @@ describe("api app", () => {
       ok: true,
       providers: {
         jobs: { configured: true, provider: "local" },
-        mail: { configured: true, provider: "console" },
+        mail: { configured: false, provider: "console", state: "disabled" },
         storage: { configured: true, provider: "local" },
       },
     });

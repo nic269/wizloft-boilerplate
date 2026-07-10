@@ -12,6 +12,7 @@
     "./context": "./src/context.ts",
     "./contract": "./src/contracts/index.ts",
     "./errors": "./src/errors.ts",
+    "./health": "./src/health.ts",
     "./openapi": "./src/openapi.ts"
   },
   "scripts": {

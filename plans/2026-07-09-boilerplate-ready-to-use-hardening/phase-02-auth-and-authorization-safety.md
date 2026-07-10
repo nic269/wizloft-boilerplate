@@ -2,7 +2,7 @@
 
 ## Status
 
-In progress.
+Completed through `US-031`, `US-032`, and `US-033`.
 
 ## Goal
 

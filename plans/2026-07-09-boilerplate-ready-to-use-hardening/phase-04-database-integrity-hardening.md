@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned.
+Implemented as `US-035`.
 
 ## Goal
 
@@ -46,3 +46,12 @@ and existing data semantics.
   role snapshot, or both.
 - Confirm migration expectations before changing constraints that could affect
   existing local data.
+
+## Outcome
+
+- Global and organization feature flags use required `scopeId` uniqueness.
+- Invitation roles have a nullable foreign-key relation with safe delete
+  semantics.
+- System-role seed runs reconcile permission rows with the policy catalog.
+- Initial migration, query indexes, and provider idempotency constraints are
+  checked in and validated against PostgreSQL.

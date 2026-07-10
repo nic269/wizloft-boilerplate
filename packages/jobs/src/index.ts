@@ -44,6 +44,7 @@ export const getJobProviderStatus = () =>
     configured: true,
     mode: "in-process",
     provider: "local",
+    state: "configured",
   }) as const;
 
 export const createLocalJobProvider = (): JobQueueProvider => {

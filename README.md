@@ -159,4 +159,6 @@ Release readiness and template scaffold guidance live in
 - Packages own reusable `keys.ts` contracts with `@t3-oss/env-core`.
 - Next apps compose package contracts with `@t3-oss/env-nextjs`; the Hono API uses `@t3-oss/env-core`.
 - Production deployments inject environment variables through their platform; they do not depend on a checked-in `.env` file.
-- Optional integrations must not crash the app when env vars are missing.
+- Optional integrations do not crash when env vars are absent. Explicitly
+  selected production mail or S3-compatible providers fail startup when their
+  required configuration is incomplete.

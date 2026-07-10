@@ -53,12 +53,13 @@ export const createInvitation = async (input: {
     const memberRole = await transaction.role.upsert({
       create: {
         description: "Standard organization member access.",
+        isSystem: true,
         name: "Member",
         organizationId: input.organizationId,
         permissions: { createMany: { data: [...MEMBER_PERMISSIONS] } },
       },
       select: { id: true },
-      update: {},
+      update: { isSystem: true },
       where: {
         organizationId_name: {
           name: "Member",

@@ -153,12 +153,14 @@ model Role {
   organizationId String
   name           String
   description    String?
+  isSystem       Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   permissions  RolePermission[]
   memberships  Membership[]
+  invitations  Invitation[]
 
   @@unique([organizationId, name])
   @@map("role")
@@ -193,8 +195,10 @@ model Invitation {
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   invitedBy    User?        @relation("InvitationInviter", fields: [invitedById], references: [id], onDelete: SetNull)
+  role         Role?        @relation(fields: [roleId], references: [id], onDelete: SetNull)
 
   @@index([organizationId, email])
+  @@index([status, expiresAt])
   @@map("invitation")
 }
 
@@ -251,7 +255,9 @@ model WebhookEvent {
   processedAt  DateTime?
   errorMessage String?
 
+  @@unique([provider, externalId])
   @@index([provider, eventType, receivedAt])
+  @@index([status, receivedAt])
   @@map("webhook_event")
 }
 
@@ -274,6 +280,7 @@ model JobRun {
 
   @@unique([name, idempotencyKey])
   @@index([organizationId, createdAt])
+  @@index([status, createdAt])
   @@map("job_run")
 }
 
@@ -302,19 +309,20 @@ model IntegrationConnection {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  @@unique([organizationId, provider, externalId])
   @@index([organizationId, provider])
   @@map("integration_connection")
 }
 
 model FeatureFlag {
-  id             String   @id @default(cuid())
-  organizationId String?
-  key            String
-  enabled        Boolean  @default(false)
-  payload        Json?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id        String   @id @default(cuid())
+  scopeId   String   @default("global")
+  key       String
+  enabled   Boolean  @default(false)
+  payload   Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@unique([organizationId, key])
+  @@unique([scopeId, key])
   @@map("feature_flag")
 }

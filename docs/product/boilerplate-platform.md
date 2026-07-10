@@ -30,7 +30,11 @@ domain assumptions.
 - Shared session and permission helpers treat only `ACTIVE` users as
   authenticated or authorized; suspended and invited users cannot access
   protected app/API surfaces through existing sessions.
-- Generic Prisma schema for auth, organizations, RBAC, invitations, audit, files, webhooks, jobs, integrations, and flags.
+- Generic Prisma schema for auth, organizations, RBAC, invitations, audit,
+  files, webhooks, jobs, integrations, and globally or organization-scoped
+  flags. The schema ships with an initial production migration, query indexes,
+  provider idempotency constraints, invitation-role integrity, and catalog-
+  reconciled system-role seed data.
 - Membership-scoped organization onboarding that atomically provisions an Owner role, baseline permissions, creator
   membership, and an audit record.
 - Permissioned invitation lifecycle with hashed tokens, optional mail delivery, exact-email acceptance, Member role
@@ -48,9 +52,14 @@ domain assumptions.
 - API liveness and readiness are separate operational signals: `/health` is a
   cheap process check, while `/ready` verifies database connectivity and returns
   `503 Service Unavailable` when the API should not receive traffic.
-- Optional mail, storage, jobs, billing, analytics, CMS, and observability packages that degrade gracefully. Mail falls
-  back to console delivery, storage supports local/memory/S3-compatible private objects, and jobs include a local
-  in-process provider with idempotency, retry, and run status.
+- Optional mail, storage, jobs, billing, analytics, CMS, and observability
+  packages that degrade gracefully when disabled. Mail supports console,
+  Resend, and SMTP delivery; storage supports local, memory, S3, and R2 private
+  objects; jobs include a local in-process provider with idempotency, retry,
+  and run status. Provider diagnostics distinguish disabled, configured, and
+  misconfigured states without exposing credentials. Explicitly selected mail
+  or S3-compatible providers fail production API startup when required values
+  are missing instead of silently falling back.
 - A source-owned design-system with the complete shadcn Base UI component set,
   stable component subpath exports, and generic helper packages.
 - Handoff surfaces for future products: docs app, React Email previews, Storybook design-system examples, and template
@@ -89,12 +98,14 @@ domain assumptions.
 - `pnpm test:e2e` for auth, organization tenant-isolation, and invitation
   smoke journeys when a migrated PostgreSQL database is available.
 - `pnpm test:e2e:db` for deterministic local browser E2E with automatic Docker
-  Compose PostgreSQL bootstrap and fresh app/API processes.
+  Compose PostgreSQL bootstrap, isolated project/volume cleanup, forced schema
+  reset, and fresh app/API processes.
 - `pnpm clean:deps`, `pnpm clean:build`, `pnpm upgrade:deps`, `pnpm db:studio`, and `pnpm ui:gen` for maintenance
   workflows.
 - `pnpm templates:list`, `pnpm templates:json`, and `pnpm templates:validate` for template track handoff and drift
   checks.
 - `pnpm release:check` for the local pre-release ladder matching CI's non-E2E validation contract.
 - `pnpm docker:validate` for local production-container build, boot, and
-  readiness validation across app, API, and web.
+  readiness validation across app, API, and web, including provider fail-fast
+  behavior and Next public assets.
 - `docs/release-readiness.md` for the final readiness audit, caveats, and template scaffold decision.

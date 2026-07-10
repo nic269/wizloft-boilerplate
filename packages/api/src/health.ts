@@ -1,12 +1,23 @@
 import { prisma } from "@repo/database";
 import { getJobProviderStatus } from "@repo/jobs";
-import { getMailProviderStatus } from "@repo/mail";
-import { getStorageProviderStatus } from "@repo/storage";
+import {
+  assertMailProviderConfiguration,
+  getMailProviderStatus,
+} from "@repo/mail";
+import {
+  assertStorageProviderConfiguration,
+  getStorageProviderStatus,
+} from "@repo/storage";
 
 export const getStatusPayload = () =>
   ({ ok: true, service: "api", time: new Date().toISOString() }) as const;
 
 export const getHealthPayload = () => ({ ok: true }) as const;
+
+export const assertApiProviderConfiguration = () => {
+  assertMailProviderConfiguration();
+  assertStorageProviderConfiguration();
+};
 
 const checkDatabase = async () => {
   const startedAt = performance.now();

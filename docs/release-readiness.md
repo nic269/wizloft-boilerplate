@@ -15,14 +15,14 @@ code.
 | --- | --- | --- |
 | Monorepo tooling | Ready | pnpm, Turbo, Ultracite-on-Biome, TypeScript strict, workspace package boundaries. |
 | Environment workflow | Ready | Root `.env.example`, root `.env` loading through `dotenv-cli`, package-level typed env contracts. |
-| Database | Ready | Prisma package, PostgreSQL compose service, generate/push/migrate/seed/studio scripts. |
+| Database | Ready | Initial migration, PostgreSQL compose service, query indexes and provider uniqueness, invitation-role FK, scoped feature flags, catalog-reconciled system-role seed. |
 | Auth | Ready | Better Auth server/client package split, same-origin Next rewrites, email-password E2E coverage, suspended-user access enforcement, shared verification/reset email delivery. |
 | Organizations and access | Ready | Organization onboarding, invitations, RBAC, member management, last-owner protection, audit log patterns. |
 | API | Ready | Hono app, API package, liveness/readiness checks, provider status, RPC-style registry, OpenAPI handoff. |
-| Providers | Ready as optional core | Mail, private storage, jobs, billing, analytics, CMS, observability packages disable cleanly without credentials. |
+| Providers | Ready as optional core | Mail and storage disable/fallback cleanly when absent, report explicit states, and fail production API startup when a selected Resend/SMTP/S3/R2 provider is incomplete. |
 | UI system | Ready | Design-system provider, shared global tokens, app-owned CSS override seams, Storybook surface. |
 | Handoff surfaces | Ready | `apps/web`, `apps/docs`, `apps/email`, `apps/storybook`. |
-| Release validation | Ready | `pnpm release:check`, CI template validation, check/type/test/boundary/build ladder. |
+| Release validation | Ready | `pnpm release:check`, deterministic six-journey browser E2E, and production Docker proof for fail-fast, public assets, and app/API/web readiness. |
 | Templates | Catalog-ready | Typed catalog and README tracks exist in the source boilerplate; generated projects remove source-only catalog exports. |
 
 ## Release Checks
@@ -60,16 +60,16 @@ pnpm test:e2e:db
   project-specific story when the onboarding UX includes verify/resend states.
 - Storybook build can emit bundle-size warnings. These are acceptable for a
   design-system review surface, not product runtime warnings.
-- Live provider smoke checks for S3, Resend/SMTP, billing, analytics, and
-  observability require credentials and should be added by the project that
-  chooses those providers.
+- Live delivery/storage smoke checks still require real S3, Resend, or SMTP
+  credentials and should be added by the project that selects those providers.
 - `/ready` checks database connectivity only. Optional provider credentials are
   still reported as diagnostics and should get provider-specific smoke checks in
   projects that enable them.
-- `pnpm test:e2e:db` is intentionally local for now. Promote it to CI only if
-  pull request runtime budget allows browser E2E.
-- Docker prune builds are wired, but image push/runtime health checks should be
-  validated against the chosen hosting platform.
+- `pnpm test:e2e:db` uses an isolated Compose project, force-resets its dedicated
+  schema, and removes its volume after each run. It remains local-only until a
+  project accepts the browser runtime cost in pull-request CI.
+- Portable Docker image build/start/readiness is locally proven; image push and
+  provider-specific hosting checks remain deployment-platform responsibilities.
 - `pnpm boilerplate:init --skip-install` now removes the copied source
   lockfile. Run `pnpm install` in the generated project before using
   `--frozen-lockfile`.

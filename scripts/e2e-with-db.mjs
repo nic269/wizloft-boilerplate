@@ -1,5 +1,4 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
 import net from "node:net";
 
 const DEFAULTS = {
@@ -10,31 +9,6 @@ const DEFAULTS = {
   NEXT_PUBLIC_APP_URL: "http://localhost:3000",
   NEXT_PUBLIC_WEB_URL: "http://localhost:3001",
   PLAYWRIGHT_REUSE_SERVER: "false",
-};
-
-const LINE_PATTERN = /\r?\n/;
-const QUOTE_EDGE_PATTERN = /^['"]|['"]$/g;
-
-const readDotenv = () => {
-  if (!existsSync(".env")) {
-    return {};
-  }
-
-  return Object.fromEntries(
-    readFileSync(".env", "utf8")
-      .split(LINE_PATTERN)
-      .map((line) => line.trim())
-      .filter((line) => line && !line.startsWith("#") && line.includes("="))
-      .map((line) => {
-        const index = line.indexOf("=");
-        const key = line.slice(0, index).trim();
-        const value = line
-          .slice(index + 1)
-          .trim()
-          .replace(QUOTE_EDGE_PATTERN, "");
-        return [key, value];
-      })
-  );
 };
 
 const isPortInUse = (port) =>
@@ -98,31 +72,80 @@ const run = (command, args, commandEnv) => {
   });
 
   if (result.status !== 0) {
-    process.exit(result.status ?? 1);
+    throw new Error(
+      `${command} ${args.join(" ")} failed with exit code ${result.status ?? 1}`
+    );
   }
 };
 
-const dotenv = readDotenv();
-const requestedPort = Number(
-  process.env.POSTGRES_PORT ?? dotenv.POSTGRES_PORT ?? 5432
-);
+const requestedPort = Number(process.env.POSTGRES_PORT ?? 5432);
 const postgresPort = await firstOpenPort(
   Number.isFinite(requestedPort) ? requestedPort : 5432
 );
 const databaseUrl = `postgresql://postgres:postgres@localhost:${postgresPort}/personal_saas_boilerplate`;
 
 const env = {
-  ...dotenv,
   ...DEFAULTS,
   ...process.env,
   DATABASE_URL: databaseUrl,
   POSTGRES_PORT: String(postgresPort),
 };
+const composeProject = `wizloft-e2e-${process.pid}`;
 
 console.log(`Using PostgreSQL on localhost:${postgresPort}`);
 
-run("docker", ["compose", "up", "-d", "postgres"], env);
-await waitForPort(postgresPort);
-run("pnpm", ["db:generate"], env);
-run("pnpm", ["db:push"], env);
-run("pnpm", ["test:e2e"], env);
+let primaryError;
+let cleanupError;
+try {
+  run(
+    "docker",
+    ["compose", "--project-name", composeProject, "up", "-d", "postgres"],
+    env
+  );
+  await waitForPort(postgresPort);
+  run("pnpm", ["db:generate"], env);
+  run(
+    "pnpm",
+    [
+      "--filter",
+      "@repo/database",
+      "exec",
+      "prisma",
+      "db",
+      "push",
+      "--force-reset",
+      "--accept-data-loss",
+    ],
+    env
+  );
+  run("pnpm", ["test:e2e"], env);
+} catch (error) {
+  primaryError = error;
+} finally {
+  try {
+    run(
+      "docker",
+      [
+        "compose",
+        "--project-name",
+        composeProject,
+        "down",
+        "--volumes",
+        "--remove-orphans",
+      ],
+      env
+    );
+  } catch (error) {
+    cleanupError = error;
+  }
+}
+
+if (primaryError) {
+  if (cleanupError) {
+    console.error("E2E database cleanup also failed:", cleanupError);
+  }
+  throw primaryError;
+}
+if (cleanupError) {
+  throw cleanupError;
+}

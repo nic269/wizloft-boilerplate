@@ -111,10 +111,22 @@ pnpm release:check
 This command validates template catalog drift before the normal lint, type,
 test, boundary, and build checks.
 
+Production deployments should use `pnpm db:migrate:deploy` before promoting
+application traffic. The checked-in initial migration supports clean project
+forks; existing databases created with `db:push` must be baselined deliberately
+before adopting migration deploy.
+
+Optional providers follow one deployment rule: absent integrations stay
+disabled or local, while explicitly selected `resend`, `smtp`, `s3`, or `r2`
+providers must have all required variables. The API exits before listening when
+production provider configuration is incomplete. `/ready` reports provider
+state diagnostics but keeps optional providers separate from database
+readiness.
+
 The final fork-readiness audit lives in `docs/release-readiness.md`.
 
 ## Follow-Ups
 
 - Add provider-specific deployment smoke checks when choosing a hosting platform.
-- Add live mail, storage, and job provider checks only in environments with credentials.
+- Add live mail, storage, and job delivery checks only in environments with credentials.
 - Promote `pnpm test:e2e:db` into CI when pull request runtime budget allows a browser smoke.

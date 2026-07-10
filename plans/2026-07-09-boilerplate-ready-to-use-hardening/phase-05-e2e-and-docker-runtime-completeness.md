@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned.
+Implemented as `US-036`.
 
 ## Goal
 
@@ -42,3 +42,12 @@ behavior, deployment images, or validation requirements change broadly.
   checks.
 - Confirm the target deployment platform before adding platform-specific image
   assertions.
+
+## Outcome
+
+- E2E uses an isolated Compose project, force-reset schema, and guaranteed
+  container/volume cleanup.
+- App and web standalone builds trace from the monorepo root and copy public
+  assets into runner images.
+- Browser E2E stays local-only; portable Docker validation covers app/API/web
+  without choosing a hosting platform.

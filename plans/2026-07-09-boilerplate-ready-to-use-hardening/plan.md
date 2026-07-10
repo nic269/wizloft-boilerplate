@@ -36,7 +36,10 @@ code.
 | Organization owner invariant | Done | `US-031`; role updates cannot demote the final active Owner; auth/API tests and release ladder passed. |
 | Suspended-user access invariant | Done | `US-032`; shared session and permission helpers deny non-active users; auth/API tests and release ladder passed. |
 | Auth email delivery | Done | `US-033`; Better Auth verification and password-reset callbacks send through shared mail templates; release ladder passed. |
-| Release contract docs | In progress | `docs/product/boilerplate-platform.md` and `docs/release-readiness.md` have been updated by completed slices. |
+| Provider runtime safety | Done | `US-034`; explicit production providers fail fast, diagnostics expose safe states, and Docker startup smoke passed. |
+| Database integrity | Done | `US-035`; initial migration, indexes/uniques, invitation-role FK, feature-flag scope, and idempotent system-role seed proof. |
+| E2E and Docker runtime | Done | `US-036`; isolated E2E lifecycle, six browser journeys, tracing roots, public assets, and three-image runtime smoke. |
+| Release contract docs | Done | Product, deployment, release-readiness, phase, and story evidence match the implemented baseline. |
 
 ## Phases
 
@@ -59,7 +62,7 @@ Exit criteria:
 
 ### Phase 02: Auth And Authorization Safety
 
-Status: in progress.
+Status: done.
 
 Candidate stories:
 
@@ -93,7 +96,7 @@ Pause points:
 
 ### Phase 03: Provider Runtime Fail-Fast And Diagnostics
 
-Status: planned.
+Status: done.
 
 Candidate stories:
 
@@ -101,6 +104,8 @@ Candidate stories:
 - Production fail-fast for partially configured Resend or SMTP mail.
 - Provider status diagnostics that distinguish disabled, configured, and broken
   provider states.
+
+Implemented as `US-034`.
 
 Risk lane:
 
@@ -117,16 +122,18 @@ Validation:
 
 ### Phase 04: Database Integrity Hardening
 
-Status: planned.
+Status: done.
 
 Candidate stories:
 
 - Add missing indexes and uniqueness constraints where query patterns and domain
   invariants need them.
-- Make `FeatureFlag` globally unique only if the product contract confirms that
-  flags are global.
+- Enforce uniqueness for both global and organization-scoped feature flags.
 - Reconcile invitation role relations with the accepted RBAC model.
 - Reconcile seed data with the access-control catalog.
+
+Implemented as `US-035`. Feature flags support global and organization scopes
+through required `scopeId`; invitation roles use a foreign-key relation.
 
 Risk lane:
 
@@ -150,7 +157,7 @@ Pause points:
 
 ### Phase 05: E2E And Docker Runtime Completeness
 
-Status: planned.
+Status: done.
 
 Candidate stories:
 
@@ -158,6 +165,9 @@ Candidate stories:
   drift appears.
 - Validate Docker public assets and Next output tracing roots.
 - Promote browser E2E into CI only if runtime budget allows it.
+
+Implemented as `US-036`. Browser E2E remains local-only until a consuming
+project accepts the CI runtime budget.
 
 Risk lane:
 
@@ -193,15 +203,11 @@ Validation:
 
 ## Next Recommended Slice
 
-Finish `US-033`, then move to Phase 03 provider runtime fail-fast and
-diagnostics.
+The hardening plan is complete. Start the first product fork or create a new
+plan from project-specific requirements rather than adding speculative core
+features.
 
-## Open Questions
+## Future Product Decision
 
-- Should suspended users be blocked from all API access even if an existing
-  Better Auth session remains valid?
 - Should a future story require verified email before sign-in and add matching
   browser resend/reset states?
-- Should feature flags be global, organization-scoped, or support both models?
-- Should production fail-fast apply only when a provider is explicitly selected,
-  or also when partial credentials are present?

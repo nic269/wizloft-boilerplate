@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned.
+Implemented as `US-034`.
 
 ## Goal
 
@@ -46,3 +46,11 @@ semantics, and production readiness signals.
   or whenever partial credentials are present.
 - Confirm if local development should always degrade gracefully, even with
   partial credentials.
+
+## Outcome
+
+- Absent providers remain optional.
+- Explicit or inferred partial mail/S3-compatible configuration is reported as
+  `misconfigured` and fails production API startup.
+- Resend and SMTP are both implemented mail providers.
+- `pnpm docker:validate` proves S3 and Resend startup rejection.

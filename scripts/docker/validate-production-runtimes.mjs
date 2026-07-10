@@ -123,6 +123,43 @@ const describeContainerFailure = async (containerName) => {
   }
 };
 
+const assertContainerRejectsConfiguration = async ({
+  containerName,
+  env,
+  expectedMessage,
+  imageTag,
+}) => {
+  await removeIfExists("container", containerName);
+  await run("docker", [
+    "run",
+    "--detach",
+    "--name",
+    containerName,
+    ...env.flatMap((entry) => ["--env", entry]),
+    imageTag,
+  ]);
+  let logs = "";
+  let status = "unknown";
+  try {
+    await delay(1500);
+    status = await runQuiet("docker", [
+      "inspect",
+      "--format",
+      "{{.State.Status}}",
+      containerName,
+    ]);
+    logs = await runQuiet("docker", ["logs", containerName]).catch(() => "");
+  } finally {
+    await removeIfExists("container", containerName);
+  }
+
+  if (status !== "exited" || !logs.includes(expectedMessage)) {
+    throw new Error(
+      `${containerName} did not reject invalid provider configuration. status=${status}\n${logs}`
+    );
+  }
+};
+
 const removeIfExists = async (kind, name) => {
   try {
     await run("docker", [kind, "rm", "-f", name], { stdio: "ignore" });
@@ -204,6 +241,7 @@ const surfaces = [
     imageTag: `${imagePrefix}:app`,
     name: "app",
     networkAlias: "app",
+    publicAssetPath: "/robots.txt",
     scope: "@repo/app",
     target: "app-runner",
   },
@@ -221,6 +259,7 @@ const surfaces = [
     imageTag: `${imagePrefix}:web`,
     name: "web",
     networkAlias: "web",
+    publicAssetPath: "/robots.txt",
     scope: "@repo/web",
     target: "web-runner",
   },
@@ -252,6 +291,32 @@ try {
   }
 
   const [apiSurface] = surfaces;
+  await assertContainerRejectsConfiguration({
+    containerName: `${imagePrefix}-invalid-storage`,
+    env: [
+      ...apiSurface.env,
+      "MAIL_PROVIDER=console",
+      "STORAGE_PROVIDER=s3",
+      "S3_BUCKET=private-files",
+      "S3_REGION=",
+      "S3_ACCESS_KEY_ID=",
+      "S3_SECRET_ACCESS_KEY=",
+    ],
+    expectedMessage: "s3 storage configuration is missing",
+    imageTag: apiSurface.imageTag,
+  });
+  await assertContainerRejectsConfiguration({
+    containerName: `${imagePrefix}-invalid-mail`,
+    env: [
+      ...apiSurface.env,
+      "MAIL_PROVIDER=resend",
+      "RESEND_API_KEY=test-key",
+      "RESEND_FROM_EMAIL=",
+    ],
+    expectedMessage: "resend mail configuration is missing",
+    imageTag: apiSurface.imageTag,
+  });
+
   await removeIfExists("container", apiSurface.containerName);
   await run("docker", [
     "run",
@@ -300,6 +365,17 @@ try {
       await waitForHttp(
         `${surface.name === "web" ? urls.web : urls.app}${surface.healthPath}`
       );
+      const assetResponse = await fetch(
+        `${surface.name === "web" ? urls.web : urls.app}${surface.publicAssetPath}`
+      );
+      if (
+        !(
+          assetResponse.ok &&
+          (await assetResponse.text()).includes("User-agent")
+        )
+      ) {
+        throw new Error(`${surface.name} public assets are unavailable.`);
+      }
     } catch (error) {
       const details = await describeContainerFailure(surface.containerName);
       throw new Error(

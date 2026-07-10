@@ -9,8 +9,10 @@ const readinessCheckSchema = z.object({
 });
 const providerStatusSchema = z.object({
   configured: z.boolean(),
+  message: z.string().optional(),
   mode: z.string(),
   provider: z.string(),
+  state: z.enum(["configured", "disabled", "misconfigured"]),
 });
 export const readySchema = z.object({
   checks: z.object({

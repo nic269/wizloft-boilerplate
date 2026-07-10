@@ -2,7 +2,12 @@ import { mkdtemp, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getStorageProvider, getStorageProviderStatus } from ".";
+import {
+  assertStorageProviderConfiguration,
+  getStorageProvider,
+  getStorageProviderStatus,
+  StorageConfigurationError,
+} from ".";
 import { buildTenantObjectKey, sanitizeObjectKeySegment } from "./provider";
 import { isS3StorageConfigured } from "./providers/s3";
 
@@ -55,8 +60,11 @@ describe("storage provider", () => {
 
     expect(getStorageProviderStatus()).toEqual({
       configured: false,
+      message:
+        "s3 storage configuration is missing: S3_REGION, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY.",
       mode: "durable",
       provider: "s3",
+      state: "misconfigured",
     });
     await expect(
       getStorageProvider().putObject({
@@ -65,6 +73,16 @@ describe("storage provider", () => {
         key: "global/test.txt",
       })
     ).resolves.toMatchObject({ provider: "local" });
+  });
+
+  it("fails fast on partial s3 configuration in production", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("STORAGE_PROVIDER", "s3");
+    vi.stubEnv("S3_BUCKET", "private-files");
+
+    expect(() => assertStorageProviderConfiguration()).toThrow(
+      StorageConfigurationError
+    );
   });
 
   it("detects complete s3 configuration", () => {
