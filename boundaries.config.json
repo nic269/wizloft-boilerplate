@@ -25,7 +25,8 @@
       "@repo/access-control",
       "@repo/config",
       "@repo/database",
-      "@repo/logger"
+      "@repo/logger",
+      "@repo/mail"
     ],
     "@repo/billing": [],
     "@repo/cms": [],

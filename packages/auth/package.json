@@ -25,6 +25,7 @@
   "dependencies": {
     "@repo/access-control": "workspace:*",
     "@repo/database": "workspace:*",
+    "@repo/mail": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
     "better-auth": "^1.6.23",
     "zod": "^4.4.3"

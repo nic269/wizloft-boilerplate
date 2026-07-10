@@ -16,7 +16,7 @@ code.
 | Monorepo tooling | Ready | pnpm, Turbo, Ultracite-on-Biome, TypeScript strict, workspace package boundaries. |
 | Environment workflow | Ready | Root `.env.example`, root `.env` loading through `dotenv-cli`, package-level typed env contracts. |
 | Database | Ready | Prisma package, PostgreSQL compose service, generate/push/migrate/seed/studio scripts. |
-| Auth | Ready | Better Auth server/client package split, same-origin Next rewrites, email-password E2E coverage, suspended-user access enforcement. |
+| Auth | Ready | Better Auth server/client package split, same-origin Next rewrites, email-password E2E coverage, suspended-user access enforcement, shared verification/reset email delivery. |
 | Organizations and access | Ready | Organization onboarding, invitations, RBAC, member management, last-owner protection, audit log patterns. |
 | API | Ready | Hono app, API package, liveness/readiness checks, provider status, RPC-style registry, OpenAPI handoff. |
 | Providers | Ready as optional core | Mail, private storage, jobs, billing, analytics, CMS, observability packages disable cleanly without credentials. |
@@ -55,6 +55,9 @@ pnpm test:e2e:db
 
 - `apps/email` is a development preview surface; it intentionally does not have
   a production app build.
+- Email verification messages are sent on sign-up, but verified-email
+  enforcement before sign-in is not enabled by default yet. Enable it in a
+  project-specific story when the onboarding UX includes verify/resend states.
 - Storybook build can emit bundle-size warnings. These are acceptable for a
   design-system review surface, not product runtime warnings.
 - Live provider smoke checks for S3, Resend/SMTP, billing, analytics, and

@@ -25,7 +25,8 @@ domain assumptions.
 - Better Auth server/client package split.
 - Same-origin auth/API rewrites from `apps/app` to `apps/api`.
 - Email/password auth pages call Better Auth through same-origin `/api/auth` and protected app pages read the current
-  server session.
+  server session. Better Auth verification and password-reset delivery use the
+  shared `@repo/mail` provider and React Email templates.
 - Shared session and permission helpers treat only `ACTIVE` users as
   authenticated or authorized; suspended and invited users cannot access
   protected app/API surfaces through existing sessions.

@@ -35,6 +35,7 @@ code.
 | API readiness signal | Done | `US-030`; `/ready` checks database and returns 503 when not ready; API tests and release ladder passed. |
 | Organization owner invariant | Done | `US-031`; role updates cannot demote the final active Owner; auth/API tests and release ladder passed. |
 | Suspended-user access invariant | Done | `US-032`; shared session and permission helpers deny non-active users; auth/API tests and release ladder passed. |
+| Auth email delivery | Done | `US-033`; Better Auth verification and password-reset callbacks send through shared mail templates; release ladder passed. |
 | Release contract docs | In progress | `docs/product/boilerplate-platform.md` and `docs/release-readiness.md` have been updated by completed slices. |
 
 ## Phases
@@ -65,7 +66,8 @@ Candidate stories:
 - Last-owner and system-role protection. Implemented as `US-031`.
 - Enforce `UserStatus.SUSPENDED` across session/API access. Implemented as
   `US-032`.
-- Better Auth verification and password-reset flow hardening.
+- Better Auth verification and password-reset flow hardening. Implemented as
+  `US-033`.
 
 Risk lane:
 
@@ -191,14 +193,15 @@ Validation:
 
 ## Next Recommended Slice
 
-Start Phase 02 with last-owner and system-role protection. It is the highest
-severity remaining gap because it protects organization ownership and
-authorization invariants before provider or schema polish.
+Finish `US-033`, then move to Phase 03 provider runtime fail-fast and
+diagnostics.
 
 ## Open Questions
 
 - Should suspended users be blocked from all API access even if an existing
   Better Auth session remains valid?
+- Should a future story require verified email before sign-in and add matching
+  browser resend/reset states?
 - Should feature flags be global, organization-scoped, or support both models?
 - Should production fail-fast apply only when a provider is explicitly selected,
   or also when partial credentials are present?
