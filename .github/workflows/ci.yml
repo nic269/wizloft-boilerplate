@@ -35,6 +35,7 @@ jobs:
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       NEXT_PUBLIC_WEB_URL: http://localhost:3001
       NEXT_PUBLIC_API_URL: http://localhost:3002
+      NEXT_PUBLIC_DOCS_URL: http://localhost:3003
       BETTER_AUTH_SECRET: ci-better-auth-secret-at-least-32-chars
       BETTER_AUTH_URL: http://localhost:3002/api/auth
       SKIP_ENV_VALIDATION: "false"
@@ -58,8 +59,8 @@ jobs:
       - name: Generate database client
         run: pnpm db:generate
 
-      - name: Push database schema
-        run: pnpm db:push
+      - name: Deploy database migrations
+        run: pnpm db:migrate:deploy
 
       - name: Validate templates
         run: pnpm templates:validate

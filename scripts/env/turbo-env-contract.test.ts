@@ -54,5 +54,7 @@ describe("Turbo environment contract", () => {
     expect([...(turbo.tasks.dev?.env ?? [])].sort()).toEqual(taskRelevantKeys);
     expect(turbo.tasks.generate?.env).toEqual(["DATABASE_URL"]);
     expect(turbo.tasks["db:push"]?.env).toEqual(["DATABASE_URL"]);
+    expect(turbo.tasks["db:migrate:dev"]?.env).toEqual(["DATABASE_URL"]);
+    expect(turbo.tasks["db:migrate:deploy"]?.env).toEqual(["DATABASE_URL"]);
   });
 });

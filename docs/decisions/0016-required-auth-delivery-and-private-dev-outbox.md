@@ -19,6 +19,11 @@ delivery persists text content to a private filesystem outbox and never exposes
 tokens through a public endpoint. Successful verification resumes a safe
 callback with automatic sign-in.
 
+The auth capability booleans are behavior switches: disabling verification,
+password reset, or organization invitations disables the matching server
+callback, API/page behavior, and UI entry points while keeping stable compiled
+API contracts.
+
 ## Alternatives Considered
 
 1. Optional verification leaves the existing UX claim unenforced.

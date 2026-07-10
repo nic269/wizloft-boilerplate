@@ -22,9 +22,10 @@ import {
 } from "@repo/auth/organizations";
 import { hasPermission } from "@repo/auth/permissions";
 import { getCurrentSession } from "@repo/auth/session";
-import { sendMail } from "@repo/mail";
+import { sendInvitationMail } from "@repo/mail";
 import type { ApiContext } from "../context";
 import { ApiError } from "../errors";
+import { requireOrganizationInvitationsEnabled } from "../feature-guards";
 import { os } from "./implementer";
 
 const invitationErrorStatus = {
@@ -33,6 +34,18 @@ const invitationErrorStatus = {
   INVITATION_NOT_FOUND: 404,
   INVITATION_NOT_PENDING: 409,
 } as const;
+
+const getDomainErrorCode = (error: unknown) => {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof error.code === "string"
+  ) {
+    return error.code;
+  }
+  return error instanceof Error ? error.message : undefined;
+};
 
 const requireUser = async (headers: Headers) => {
   const session = await getCurrentSession(headers);
@@ -100,6 +113,7 @@ const createOrganization = os.organizations.create.handler(
 
 const listOrganizationInvitations = os.organizations.invitations.list.handler(
   async ({ context, input }) => {
+    requireOrganizationInvitationsEnabled();
     const user = await requireUser(context.headers);
     await requireOrganizationPermission(
       user.id,
@@ -120,6 +134,7 @@ const listOrganizationInvitations = os.organizations.invitations.list.handler(
 
 const createOrganizationInvitation =
   os.organizations.invitations.create.handler(async ({ context, input }) => {
+    requireOrganizationInvitationsEnabled();
     const user = await requireUser(context.headers);
     await requireOrganizationPermission(
       user.id,
@@ -129,7 +144,7 @@ const createOrganizationInvitation =
     );
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    const { invitation, token } = await createInvitation({
+    const { invitation, organizationName, token } = await createInvitation({
       email: input.email,
       expiresAt,
       invitedById: user.id,
@@ -141,9 +156,10 @@ const createOrganizationInvitation =
     ).toString();
     let delivery: "sent" | "failed" = "sent";
     try {
-      await sendMail({
-        subject: "You have been invited to an organization",
-        text: `Accept your invitation: ${acceptUrl}`,
+      await sendInvitationMail({
+        inviterName: user.name,
+        inviteUrl: acceptUrl,
+        organizationName,
         to: invitation.email,
       });
     } catch (error) {
@@ -161,13 +177,14 @@ const createOrganizationInvitation =
         email: invitation.email,
         expiresAt: invitation.expiresAt,
         id: invitation.id,
-        status: invitation.status,
+        status: "PENDING" as const,
       },
     };
   });
 
 const revokeOrganizationInvitation =
   os.organizations.invitations.revoke.handler(async ({ context, input }) => {
+    requireOrganizationInvitationsEnabled();
     const user = await requireUser(context.headers);
     await requireOrganizationPermission(
       user.id,
@@ -268,7 +285,13 @@ const listOrganizationMembers = os.organizations.members.list.handler(
         organizationId: input.organizationId,
       })
     );
-    return { data: page.items, pageInfo: { nextCursor: page.nextCursor } };
+    return {
+      data: page.items.map((member) => ({
+        ...member,
+        status: "ACTIVE" as const,
+      })),
+      pageInfo: { nextCursor: page.nextCursor },
+    };
   }
 );
 
@@ -289,9 +312,9 @@ const updateOrganizationMemberRole =
         roleId: input.roleId,
       });
     } catch (error) {
+      const errorCode = getDomainErrorCode(error);
       if (
-        error instanceof Error &&
-        ["ROLE_NOT_FOUND", "MEMBERSHIP_NOT_FOUND"].includes(error.message)
+        ["ROLE_NOT_FOUND", "MEMBERSHIP_NOT_FOUND"].includes(errorCode ?? "")
       ) {
         throw new ApiError(
           "NOT_FOUND",
@@ -299,10 +322,24 @@ const updateOrganizationMemberRole =
           404
         );
       }
-      if (error instanceof Error && error.message === "LAST_OWNER_REQUIRED") {
+      if (errorCode === "LAST_OWNER_REQUIRED") {
         throw new ApiError(
           "CONFLICT",
           "An organization must keep at least one active Owner.",
+          409
+        );
+      }
+      if (errorCode === "OWNER_ROLE_REQUIRES_OWNER") {
+        throw new ApiError(
+          "FORBIDDEN",
+          "Only an Owner or super admin can assign or remove the Owner role.",
+          403
+        );
+      }
+      if (errorCode === "OWNER_UPDATE_CONFLICT") {
+        throw new ApiError(
+          "CONFLICT",
+          "The Owner role changed concurrently. Please retry.",
           409
         );
       }

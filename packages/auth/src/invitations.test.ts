@@ -9,7 +9,10 @@ import {
 } from "./invitations";
 
 vi.mock("@repo/database", () => ({
-  prisma: { $transaction: vi.fn(), invitation: { findMany: vi.fn() } },
+  prisma: {
+    $transaction: vi.fn(),
+    invitation: { findMany: vi.fn(), updateMany: vi.fn() },
+  },
   syncSystemRoles: vi.fn(),
 }));
 
@@ -23,6 +26,7 @@ describe("invitation service", () => {
 
   it("bounds invitation history with deterministic pagination", async () => {
     vi.mocked(prisma.invitation.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.invitation.updateMany).mockResolvedValue({ count: 0 });
 
     await listInvitations({ limit: 20, organizationId: "org-1" });
 
@@ -33,6 +37,14 @@ describe("invitation service", () => {
         where: { organizationId: "org-1" },
       })
     );
+    expect(prisma.invitation.updateMany).toHaveBeenCalledWith({
+      data: { status: "EXPIRED" },
+      where: {
+        expiresAt: { lte: expect.any(Date) },
+        organizationId: "org-1",
+        status: "PENDING",
+      },
+    });
   });
 
   it("creates a Member invitation and audit record transactionally", async () => {
@@ -43,6 +55,9 @@ describe("invitation service", () => {
           .fn()
           .mockImplementation(({ data }) => ({ id: "invite-1", ...data })),
         findFirst: vi.fn().mockResolvedValue(null),
+      },
+      organization: {
+        findUniqueOrThrow: vi.fn().mockResolvedValue({ name: "Acme" }),
       },
       role: {
         findUnique: vi.fn().mockResolvedValue({ id: "role-1" }),
@@ -60,6 +75,7 @@ describe("invitation service", () => {
     });
 
     expect(result.token).toHaveLength(43);
+    expect(result.organizationName).toBe("Acme");
     expect(transaction.invitation.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         email: "user@example.com",
@@ -84,6 +100,9 @@ describe("invitation service", () => {
           .fn()
           .mockImplementation(({ data }) => ({ id: "invite-1", ...data })),
         findFirst: vi.fn().mockResolvedValue(null),
+      },
+      organization: {
+        findUniqueOrThrow: vi.fn().mockResolvedValue({ name: "Legacy" }),
       },
       role: { findUnique: vi.fn().mockResolvedValue(null) },
     };
@@ -120,6 +139,9 @@ describe("invitation service", () => {
           status: "PENDING",
           ...data,
         })),
+      },
+      organization: {
+        findUniqueOrThrow: vi.fn().mockResolvedValue({ name: "Acme" }),
       },
       role: {
         findUnique: vi.fn().mockResolvedValue({ id: "role-1" }),
@@ -173,6 +195,44 @@ describe("invitation service", () => {
       })
     ).rejects.toMatchObject({ code: "INVITATION_EMAIL_MISMATCH" });
     expect(transaction.invitation.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("commits an expired transition before returning the domain error", async () => {
+    const transaction = {
+      invitation: {
+        findUnique: vi.fn().mockResolvedValue({
+          email: "invited@example.com",
+          expiresAt: new Date("2028-01-01T00:00:00.000Z"),
+          id: "invite-1",
+          organization: { name: "Acme", slug: "acme" },
+          organizationId: "org-1",
+          roleId: "role-1",
+          status: "PENDING",
+        }),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+      },
+    };
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
+      callback(transaction as never)
+    );
+
+    await expect(
+      acceptInvitation({
+        now: new Date("2029-01-01T00:00:00.000Z"),
+        token: "token",
+        userEmail: "invited@example.com",
+        userId: "user-1",
+      })
+    ).rejects.toMatchObject({ code: "INVITATION_EXPIRED" });
+
+    expect(transaction.invitation.updateMany).toHaveBeenCalledWith({
+      data: { status: "EXPIRED" },
+      where: {
+        expiresAt: { lte: new Date("2029-01-01T00:00:00.000Z") },
+        id: "invite-1",
+        status: "PENDING",
+      },
+    });
   });
 
   it("activates membership and records acceptance", async () => {

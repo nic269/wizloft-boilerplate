@@ -11,16 +11,19 @@ domain assumptions.
   internal boilerplate factory from clean application projects. The generator
   rewrites identity and selected app surfaces while stripping Harness, agent,
   planning, release-manifest, and domain-template artifacts. Generated projects
-  also remove source-only template catalog exports, sync feature flags to the
-  selected app surfaces, and avoid carrying a stale source lockfile when
-  installation is skipped.
+  also remove source-only template catalog exports, record selected deployable
+  surfaces independently from product feature flags, and avoid carrying a stale
+  source lockfile when installation is skipped.
 - Config-driven workspace guardrails enforce app isolation, public package
   exports, declared dependencies, core package layers, Client Component safety,
   explicit package policy coverage, package-name imports across workspaces, and
   an acyclic workspace dependency graph.
 - Strict Turborepo environment contracts hash task-relevant values while the
   root `.env` remains the single local-development source of truth.
-
+- Checked-in migrations are the database lifecycle source of truth for fresh
+  local setup, CI, isolated E2E, and production. Schema push remains available
+  only for disposable prototyping because it cannot reproduce raw SQL migration
+  contracts.
 - Multi-app monorepo with independent deployable surfaces.
 - Better Auth server/client package split.
 - Same-origin auth/API rewrites from `apps/app` to `apps/api`.
@@ -35,16 +38,17 @@ domain assumptions.
 - Generic Prisma schema for auth, organizations, RBAC, invitations, audit,
   files, webhooks, jobs, integrations, and globally or organization-scoped
   flags. The schema ships with an initial production migration, query indexes,
-  provider idempotency constraints, invitation-role integrity, and catalog-
-  reconciled system-role seed data.
+  provider idempotency constraints, organization-owned integration integrity,
+  invitation-role integrity, and catalog-reconciled system-role seed data.
 - Membership-scoped organization onboarding that atomically provisions an Owner role, baseline permissions, creator
   membership, and an audit record.
-- Permissioned invitation lifecycle with hashed tokens, optional mail delivery, exact-email acceptance, Member role
-  activation, revocation, and audit evidence.
+- Permissioned invitation lifecycle with hashed tokens, feature-gated mail delivery, exact-email acceptance, durable
+  expiry, Member role activation, revocation, and audit evidence.
 - Organization-scoped role management with a whitelist permission catalog, member role assignment, and recent audit log
   review. Role assignment preserves the ownership invariant by rejecting
   updates that would leave an organization without an active seeded system
-  Owner.
+  Owner. Owner-boundary mutations use Serializable retries and require an
+  active system Owner or active super admin.
 - Dependency-free `@repo/access-control` policy shared by auth, API, UI,
   provisioning, and seed workflows; database-backed authorization remains in
   `@repo/auth`.
@@ -106,8 +110,8 @@ domain assumptions.
 - `pnpm test:e2e` for auth, organization tenant-isolation, and invitation
   smoke journeys when a migrated PostgreSQL database is available.
 - `pnpm test:e2e:db` for deterministic local browser E2E with automatic Docker
-  Compose PostgreSQL bootstrap, isolated project/volume cleanup, forced schema
-  reset, and fresh app/API processes.
+  Compose PostgreSQL bootstrap, checked-in migration deployment, isolated
+  project/volume cleanup, and fresh app/API processes.
 - `pnpm clean:deps`, `pnpm clean:build`, `pnpm upgrade:deps`, `pnpm db:studio`, and `pnpm ui:gen` for maintenance
   workflows.
 - `pnpm templates:list`, `pnpm templates:json`, and `pnpm templates:validate` for template track handoff and drift

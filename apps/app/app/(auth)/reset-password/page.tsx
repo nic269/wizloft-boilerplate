@@ -1,3 +1,5 @@
+import { authFeatureConfig } from "@repo/config";
+import { notFound } from "next/navigation";
 import { ResetPasswordForm } from "./reset-password-form";
 
 export default async function ResetPasswordPage({
@@ -5,6 +7,10 @@ export default async function ResetPasswordPage({
 }: {
   searchParams: Promise<{ token?: string }>;
 }) {
+  if (!authFeatureConfig.passwordReset) {
+    notFound();
+  }
+
   const { token } = await searchParams;
 
   return (

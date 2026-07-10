@@ -29,6 +29,14 @@ export const createInvitationToken = () =>
 export const listInvitations = async (input: PageInput) => {
   const cursor = decodeCursor(input.cursor, "invitations");
   const cursorCreatedAt = cursor ? cursorDate(cursor.sort) : undefined;
+  await prisma.invitation.updateMany({
+    data: { status: "EXPIRED" },
+    where: {
+      expiresAt: { lte: new Date() },
+      organizationId: input.organizationId,
+      status: "PENDING",
+    },
+  });
   const rows = await prisma.invitation.findMany({
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     select: {
@@ -70,6 +78,10 @@ export const createInvitation = async (input: {
 
   const persistInvitation = () =>
     prisma.$transaction(async (transaction) => {
+      const organization = await transaction.organization.findUniqueOrThrow({
+        select: { name: true },
+        where: { id: input.organizationId },
+      });
       let memberRole = await transaction.role.findUnique({
         select: { id: true },
         where: {
@@ -119,17 +131,17 @@ export const createInvitation = async (input: {
         },
       });
 
-      return created;
+      return { invitation: created, organizationName: organization.name };
     });
 
-  const invitation = await persistInvitation().catch((error: unknown) => {
+  const result = await persistInvitation().catch((error: unknown) => {
     if (!isUniqueConstraintError(error)) {
       throw error;
     }
     return persistInvitation();
   });
 
-  return { invitation, token };
+  return { ...result, token };
 };
 
 const isUniqueConstraintError = (error: unknown) =>
@@ -170,13 +182,14 @@ export const revokeInvitation = (input: {
     });
   });
 
-export const acceptInvitation = (input: {
+export const acceptInvitation = async (input: {
   token: string;
   userId: string;
   userEmail: string;
   now?: Date;
-}) =>
-  prisma.$transaction(async (transaction) => {
+}) => {
+  const now = input.now ?? new Date();
+  const result = await prisma.$transaction(async (transaction) => {
     const invitation = await transaction.invitation.findUnique({
       select: {
         email: true,
@@ -196,17 +209,37 @@ export const acceptInvitation = (input: {
         "Invitation not found."
       );
     }
+    if (invitation.status === "EXPIRED") {
+      return { kind: "expired" as const };
+    }
     if (invitation.status !== "PENDING") {
       throw new InvitationError(
         "INVITATION_NOT_PENDING",
         "Invitation is no longer pending."
       );
     }
-    if (invitation.expiresAt <= (input.now ?? new Date())) {
-      throw new InvitationError(
-        "INVITATION_EXPIRED",
-        "Invitation has expired."
-      );
+    if (invitation.expiresAt <= now) {
+      const transition = await transaction.invitation.updateMany({
+        data: { status: "EXPIRED" },
+        where: {
+          expiresAt: { lte: now },
+          id: invitation.id,
+          status: "PENDING",
+        },
+      });
+      if (transition.count === 0) {
+        const current = await transaction.invitation.findUnique({
+          select: { status: true },
+          where: { id: invitation.id },
+        });
+        if (current?.status !== "EXPIRED") {
+          throw new InvitationError(
+            "INVITATION_NOT_PENDING",
+            "Invitation is no longer pending."
+          );
+        }
+      }
+      return { kind: "expired" as const };
     }
     if (invitation.email !== normalizeInvitationEmail(input.userEmail)) {
       throw new InvitationError(
@@ -216,7 +249,7 @@ export const acceptInvitation = (input: {
     }
 
     const transition = await transaction.invitation.updateMany({
-      data: { acceptedAt: input.now ?? new Date(), status: "ACCEPTED" },
+      data: { acceptedAt: now, status: "ACCEPTED" },
       where: { id: invitation.id, status: "PENDING" },
     });
     if (transition.count === 0) {
@@ -253,5 +286,17 @@ export const acceptInvitation = (input: {
       },
     });
 
-    return { id: invitation.organizationId, ...invitation.organization };
+    return {
+      kind: "accepted" as const,
+      organization: {
+        id: invitation.organizationId,
+        ...invitation.organization,
+      },
+    };
   });
+
+  if (result.kind === "expired") {
+    throw new InvitationError("INVITATION_EXPIRED", "Invitation has expired.");
+  }
+  return result.organization;
+};

@@ -127,9 +127,13 @@ describe("boilerplate init", () => {
     await expect(
       access(join(target, "boundaries.config.json"))
     ).resolves.toBeUndefined();
-    expect(await readFile(join(target, "README.md"), "utf8")).toContain(
-      "# Learning Platform"
+    const generatedReadmeContents = await readFile(
+      join(target, "README.md"),
+      "utf8"
     );
+    expect(generatedReadmeContents).toContain("# Learning Platform");
+    expect(generatedReadmeContents).toContain("pnpm db:migrate:deploy");
+    expect(generatedReadmeContents).not.toContain("pnpm db:push");
     expect(await readFile(join(target, "SPEC.md"), "utf8")).not.toContain(
       "apps/docs"
     );
@@ -141,16 +145,16 @@ describe("boilerplate init", () => {
     ).toContain('  "apps/web",');
     expect(
       await readFile(join(target, "packages/config/src/features.ts"), "utf8")
-    ).toContain("docs: false");
-    expect(
-      await readFile(join(target, "packages/config/src/features.ts"), "utf8")
-    ).toContain("email: false");
+    ).not.toContain("email:");
     expect(
       await readFile(join(target, "packages/config/src/index.ts"), "utf8")
     ).not.toContain("./templates");
     expect(
-      await readFile(join(target, "packages/config/src/navigation.ts"), "utf8")
-    ).toContain("featureConfig.docs");
+      await readFile(join(target, "packages/config/src/app.ts"), "utf8")
+    ).not.toContain("apps/docs");
+    expect(
+      await readFile(join(target, "apps/web/app/page.tsx"), "utf8")
+    ).toContain('appSurfaces.includes("apps/docs")');
     expect(
       await readFile(join(target, "scripts/e2e-with-db.mjs"), "utf8")
     ).toContain("learning_platform");

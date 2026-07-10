@@ -98,8 +98,6 @@ node_modules/*
 `;
 const APP_SURFACES_PATTERN =
   /export const appSurfaces: readonly string\[\] = \[[\s\S]*?\];/;
-const FEATURE_CONFIG_PATTERN =
-  /export const featureConfig = \{[\s\S]*?\} as const;/;
 const TEMPLATE_CI_STEP_PATTERN =
   /\n {6}- name: Validate templates\n {8}run: pnpm templates:validate\n/;
 const REMOVED_PACKAGE_SCRIPTS = new Set([
@@ -272,32 +270,7 @@ const rewriteBranding = async (
   }
 };
 
-const featureConfigForApps = (
-  selectedApps: string[]
-) => `export const featureConfig = {
-  analytics: false,
-  billing: false,
-  cms: false,
-  docs: ${selectedApps.includes("docs")},
-  email: ${selectedApps.includes("email")},
-  i18n: false,
-  jobs: true,
-  organizations: true,
-  storage: true,
-} as const;`;
-
-const rewriteGeneratedConfig = async (
-  target: string,
-  selectedApps: string[]
-) => {
-  const featuresPath = join(target, "packages/config/src/features.ts");
-  let features = await readFile(featuresPath, "utf8");
-  features = features.replace(
-    FEATURE_CONFIG_PATTERN,
-    featureConfigForApps(selectedApps)
-  );
-  await writeFile(featuresPath, features);
-
+const rewriteGeneratedConfig = async (target: string) => {
   const indexPath = join(target, "packages/config/src/index.ts");
   const index = await readFile(indexPath, "utf8");
   await writeFile(
@@ -324,7 +297,7 @@ pnpm install
 cp .env.example .env
 docker compose up -d postgres
 pnpm db:generate
-pnpm db:push
+pnpm db:migrate:deploy
 pnpm db:seed
 pnpm dev
 \`\`\`
@@ -394,7 +367,7 @@ export const generateProject = async (options: GenerateOptions) => {
 
     await rewritePackage(target, slug);
     await rewriteBranding(target, slug, appName, selectedApps);
-    await rewriteGeneratedConfig(target, selectedApps);
+    await rewriteGeneratedConfig(target);
     await writeFile(join(target, ".gitignore"), GENERATED_GITIGNORE);
     await writeFile(join(target, ".dockerignore"), GENERATED_DOCKERIGNORE);
     await writeFile(join(target, ".repomixignore"), GENERATED_REPOMIXIGNORE);

@@ -2,13 +2,148 @@ import {
   normalizePermissions,
   type PermissionInput,
 } from "@repo/access-control";
-import { prisma } from "@repo/database";
+import { type Prisma, prisma } from "@repo/database";
 import { cursorDate, decodeCursor, type PageInput, toPage } from "./pagination";
 
 const OWNER_ROLE_NAME = "Owner";
+const MAX_OWNER_UPDATE_ATTEMPTS = 3;
+
+export type AccessControlErrorCode =
+  | "LAST_OWNER_REQUIRED"
+  | "MEMBERSHIP_NOT_FOUND"
+  | "OWNER_ROLE_REQUIRES_OWNER"
+  | "OWNER_UPDATE_CONFLICT"
+  | "ROLE_NOT_FOUND";
+
+export class AccessControlError extends Error {
+  readonly code: AccessControlErrorCode;
+
+  constructor(code: AccessControlErrorCode) {
+    super(code);
+    this.code = code;
+  }
+}
 
 const isSystemOwnerRole = (role?: { isSystem: boolean; name: string } | null) =>
   role?.isSystem === true && role.name === OWNER_ROLE_NAME;
+
+const isPrismaWriteConflict = (error: unknown) =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  error.code === "P2034";
+
+interface UpdateMemberRoleInput {
+  actorId: string;
+  membershipId: string;
+  organizationId: string;
+  roleId: string;
+}
+
+const requireOwnerBoundaryActor = async (
+  transaction: Prisma.TransactionClient,
+  input: UpdateMemberRoleInput
+) => {
+  const authorizedActor = await transaction.user.findFirst({
+    select: { id: true },
+    where: {
+      id: input.actorId,
+      OR: [
+        { isSuperAdmin: true },
+        {
+          memberships: {
+            some: {
+              organizationId: input.organizationId,
+              role: { isSystem: true, name: OWNER_ROLE_NAME },
+              status: "ACTIVE",
+            },
+          },
+        },
+      ],
+      status: "ACTIVE",
+    },
+  });
+  if (!authorizedActor) {
+    throw new AccessControlError("OWNER_ROLE_REQUIRES_OWNER");
+  }
+};
+
+const requireRemainingOwner = async (
+  transaction: Prisma.TransactionClient,
+  input: UpdateMemberRoleInput
+) => {
+  const remainingOwnerCount = await transaction.membership.count({
+    where: {
+      id: { not: input.membershipId },
+      organizationId: input.organizationId,
+      role: { isSystem: true, name: OWNER_ROLE_NAME },
+      status: "ACTIVE",
+    },
+  });
+  if (remainingOwnerCount === 0) {
+    throw new AccessControlError("LAST_OWNER_REQUIRED");
+  }
+};
+
+const updateMemberRoleInTransaction = async (
+  transaction: Prisma.TransactionClient,
+  input: UpdateMemberRoleInput
+) => {
+  const role = await transaction.role.findFirst({
+    select: { id: true, isSystem: true, name: true },
+    where: { id: input.roleId, organizationId: input.organizationId },
+  });
+  if (!role) {
+    throw new AccessControlError("ROLE_NOT_FOUND");
+  }
+
+  const membership = await transaction.membership.findFirst({
+    select: {
+      id: true,
+      role: { select: { isSystem: true, name: true } },
+    },
+    where: {
+      id: input.membershipId,
+      organizationId: input.organizationId,
+      status: "ACTIVE",
+    },
+  });
+  if (!membership) {
+    throw new AccessControlError("MEMBERSHIP_NOT_FOUND");
+  }
+
+  const membershipIsOwner = isSystemOwnerRole(membership.role);
+  const targetRoleIsOwner = isSystemOwnerRole(role);
+  if (membershipIsOwner !== targetRoleIsOwner) {
+    await requireOwnerBoundaryActor(transaction, input);
+  }
+  if (membershipIsOwner && !targetRoleIsOwner) {
+    await requireRemainingOwner(transaction, input);
+  }
+
+  const result = await transaction.membership.updateMany({
+    data: { roleId: role.id },
+    where: {
+      id: input.membershipId,
+      organizationId: input.organizationId,
+      status: "ACTIVE",
+    },
+  });
+  if (result.count === 0) {
+    throw new AccessControlError("MEMBERSHIP_NOT_FOUND");
+  }
+
+  await transaction.auditLog.create({
+    data: {
+      action: "member.role_updated",
+      actorId: input.actorId,
+      metadata: { roleId: role.id, roleName: role.name },
+      organizationId: input.organizationId,
+      targetId: input.membershipId,
+      targetType: "Membership",
+    },
+  });
+};
 
 export {
   isKnownPermission,
@@ -134,70 +269,23 @@ export const listMembers = async (input: PageInput) => {
   }));
 };
 
-export const updateMemberRole = (input: {
-  organizationId: string;
-  membershipId: string;
-  roleId: string;
-  actorId: string;
-}) =>
-  prisma.$transaction(async (transaction) => {
-    const role = await transaction.role.findFirst({
-      select: { id: true, isSystem: true, name: true },
-      where: { id: input.roleId, organizationId: input.organizationId },
-    });
-    if (!role) {
-      throw new Error("ROLE_NOT_FOUND");
-    }
-
-    const membership = await transaction.membership.findFirst({
-      select: { id: true, role: { select: { isSystem: true, name: true } } },
-      where: {
-        id: input.membershipId,
-        organizationId: input.organizationId,
-        status: "ACTIVE",
-      },
-    });
-    if (!membership) {
-      throw new Error("MEMBERSHIP_NOT_FOUND");
-    }
-
-    if (isSystemOwnerRole(membership.role) && !isSystemOwnerRole(role)) {
-      const remainingOwnerCount = await transaction.membership.count({
-        where: {
-          id: { not: input.membershipId },
-          organizationId: input.organizationId,
-          role: { isSystem: true, name: OWNER_ROLE_NAME },
-          status: "ACTIVE",
-        },
-      });
-      if (remainingOwnerCount === 0) {
-        throw new Error("LAST_OWNER_REQUIRED");
+export const updateMemberRole = async (input: UpdateMemberRoleInput) => {
+  for (let attempt = 1; attempt <= MAX_OWNER_UPDATE_ATTEMPTS; attempt += 1) {
+    try {
+      return await prisma.$transaction(
+        (transaction) => updateMemberRoleInTransaction(transaction, input),
+        { isolationLevel: "Serializable" }
+      );
+    } catch (error) {
+      if (!isPrismaWriteConflict(error)) {
+        throw error;
+      }
+      if (attempt === MAX_OWNER_UPDATE_ATTEMPTS) {
+        throw new AccessControlError("OWNER_UPDATE_CONFLICT");
       }
     }
-
-    const result = await transaction.membership.updateMany({
-      data: { roleId: role.id },
-      where: {
-        id: input.membershipId,
-        organizationId: input.organizationId,
-        status: "ACTIVE",
-      },
-    });
-    if (result.count === 0) {
-      throw new Error("MEMBERSHIP_NOT_FOUND");
-    }
-
-    await transaction.auditLog.create({
-      data: {
-        action: "member.role_updated",
-        actorId: input.actorId,
-        metadata: { roleId: role.id, roleName: role.name },
-        organizationId: input.organizationId,
-        targetId: input.membershipId,
-        targetType: "Membership",
-      },
-    });
-  });
+  }
+};
 
 export const listAuditLogs = async (input: PageInput) => {
   const cursor = decodeCursor(input.cursor, "audit-logs");

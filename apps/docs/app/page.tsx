@@ -11,9 +11,9 @@ import {
 
 const onboardingSteps = [
   {
-    body: "Install dependencies, copy the aggregate root env file, start PostgreSQL, push the Prisma schema, seed baseline data, then run every app through Turbo.",
+    body: "Install dependencies, copy the aggregate root env file, start PostgreSQL, deploy the checked-in migrations, seed baseline data, then run every app through Turbo.",
     command:
-      "pnpm install -> cp .env.example .env -> docker compose up -d postgres -> pnpm db:push -> pnpm db:seed -> pnpm dev",
+      "pnpm install -> cp .env.example .env -> docker compose up -d postgres -> pnpm db:migrate:deploy -> pnpm db:seed -> pnpm dev",
     title: "Start the stack",
   },
   {
@@ -51,8 +51,8 @@ const referenceSections = [
   {
     points: [
       "Organization onboarding provisions Owner role, baseline permissions, membership, and audit.",
-      "Invitations use hashed tokens, exact-email acceptance, and optional mail delivery.",
-      "Role changes are scoped to an organization and recorded in audit logs.",
+      "Invitations use hashed tokens, exact-email acceptance, durable expiry, and feature-gated mail delivery.",
+      "Role changes are scoped, audited, concurrency-safe, and protect the system Owner boundary.",
       "The access settings screen is the reusable admin pattern for future products.",
     ],
     title: "Organizations and RBAC",
@@ -68,7 +68,7 @@ const referenceSections = [
   },
   {
     points: [
-      "Mail falls back to console delivery without provider credentials.",
+      "Local mail writes to a private outbox without provider credentials.",
       "Storage supports private local, memory, and S3-compatible providers.",
       "Jobs include a local provider with idempotency, retries, and run status.",
       "Billing, analytics, CMS, and observability packages remain extension seams.",

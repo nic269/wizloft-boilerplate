@@ -15,9 +15,9 @@ code.
 | --- | --- | --- |
 | Monorepo tooling | Ready | pnpm, Turbo, Ultracite-on-Biome, TypeScript strict, workspace package boundaries. |
 | Environment workflow | Ready | Root `.env.example`, root `.env` loading through `dotenv-cli`, package-level typed env contracts. |
-| Database | Ready | Forward migrations, scoped job idempotency, pending-invitation and integration identity indexes, invitation-role FK, scoped feature flags, catalog-reconciled system roles. |
+| Database | Ready | Migration-first setup, forward migrations, scoped job idempotency, pending-invitation and integration identity indexes, organization-owned integration FK, invitation-role FK, durable expiry, scoped feature flags, catalog-reconciled system roles. |
 | Auth | Ready | Required verified email, callback-safe auto sign-in, suspended-user access enforcement, branded verification/reset delivery, private development outbox, and recovery screens. |
-| Organizations and access | Ready | Organization onboarding, race-safe invitations, RBAC, member management, last-owner protection, and cursor-paginated access/audit lists. |
+| Organizations and access | Ready | Organization onboarding, race-safe invitations, RBAC, member management, Serializable last-owner protection, protected Owner assignment, and cursor-paginated access/audit lists. |
 | API | Ready | Hono app, contract-first oRPC implementation, `/health`/`/ready`/`/status`, provider-aware readiness, bounded pagination, and OpenAPI handoff. |
 | Providers | Ready with feature requirements | Local fallbacks report truthful modes; enabled production auth requires real mail; selected Resend/SMTP/S3/R2 configurations fail startup/readiness when incomplete. |
 | UI system | Ready | Design-system provider, shared global tokens, app-owned CSS override seams, Storybook surface. |
@@ -63,8 +63,8 @@ pnpm test:e2e:db
   credentials and should be added by the project that selects those providers.
 - `/ready` checks database connectivity and providers required by enabled
   production features. Live delivery/storage smoke still needs deployment credentials.
-- `pnpm test:e2e:db` uses an isolated Compose project, force-resets its dedicated
-  schema, and removes its volume after each run. It remains local-only until a
+- `pnpm test:e2e:db` uses an isolated Compose project, deploys the checked-in
+  migrations to its dedicated volume, and removes the volume after each run. It remains local-only until a
   project accepts the browser runtime cost in pull-request CI.
 - Portable Docker image build/start/readiness is locally proven; image push and
   provider-specific hosting checks remain deployment-platform responsibilities.

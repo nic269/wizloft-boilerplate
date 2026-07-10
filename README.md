@@ -4,7 +4,7 @@ A reusable monorepo starter for Anh Nguyen's future SaaS, education, internal to
 
 ## Stack
 
-- pnpm 10, Node.js 22, Turborepo
+- pnpm 11 via Corepack, Node.js 22, Turborepo
 - TypeScript strict and Ultracite-on-Biome linting
 - Next.js App Router for app/web/docs
 - Hono API service with contract-first oRPC and generated OpenAPI
@@ -31,7 +31,7 @@ pnpm install
 cp .env.example .env
 docker compose up -d postgres
 pnpm db:generate
-pnpm db:push
+pnpm db:migrate:deploy
 pnpm db:seed
 pnpm dev
 ```
@@ -41,8 +41,13 @@ port and update `DATABASE_URL` accordingly:
 
 ```bash
 POSTGRES_PORT=5434 docker compose up -d postgres
-DATABASE_URL=postgresql://postgres:postgres@localhost:5434/personal_saas_boilerplate pnpm db:push
+DATABASE_URL=postgresql://postgres:postgres@localhost:5434/personal_saas_boilerplate pnpm db:migrate:deploy
 ```
+
+After changing the Prisma schema, create a migration with
+`pnpm db:migrate:dev --name <migration-name>`. Keep `pnpm db:push` for rapid
+prototyping against disposable databases only; it does not reproduce raw SQL
+constraints from the checked-in migration history.
 
 Useful checks:
 
@@ -111,7 +116,7 @@ pnpm test:e2e:db
 ```
 
 This starts the Docker Compose `postgres` service, picks an available host port
-starting from `POSTGRES_PORT` or `5432`, pushes the Prisma schema, then runs
+starting from `POSTGRES_PORT` or `5432`, deploys the checked-in migrations, then runs
 Playwright on desktop and mobile profiles. The bootstrap owns its local service
 URLs and starts fresh app/API servers so a running development process cannot
 silently point the suite at another database. Use `pnpm test:e2e` directly when

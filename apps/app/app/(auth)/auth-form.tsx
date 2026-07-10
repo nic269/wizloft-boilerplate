@@ -148,7 +148,7 @@ export const AuthForm = ({
           <Button className="w-full" disabled={isPending} type="submit">
             {isPending ? "Please wait..." : text.submit}
           </Button>
-          {mode === "sign-in" ? (
+          {mode === "sign-in" && authFeatureConfig.passwordReset ? (
             <p className="text-center text-muted-foreground text-sm">
               <Link
                 className="font-medium text-primary hover:underline"

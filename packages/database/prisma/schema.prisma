@@ -47,22 +47,22 @@ enum FileVisibility {
 }
 
 model User {
-  id            String       @id @default(cuid())
+  id            String     @id @default(cuid())
   name          String
-  email         String       @unique
-  emailVerified Boolean      @default(false)
+  email         String     @unique
+  emailVerified Boolean    @default(false)
   image         String?
-  status        UserStatus   @default(ACTIVE)
-  isSuperAdmin  Boolean      @default(false)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  status        UserStatus @default(ACTIVE)
+  isSuperAdmin  Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
-  sessions      Session[]
-  accounts      Account[]
-  memberships   Membership[]
-  auditLogs      AuditLog[]   @relation("AuditActor")
+  sessions        Session[]
+  accounts        Account[]
+  memberships     Membership[]
+  auditLogs       AuditLog[]   @relation("AuditActor")
   invitationsSent Invitation[] @relation("InvitationInviter")
-  files          FileAsset[]   @relation("FileOwner")
+  files           FileAsset[]  @relation("FileOwner")
 
   @@map("user")
 }
@@ -114,18 +114,19 @@ model Verification {
 }
 
 model Organization {
-  id          String      @id @default(cuid())
-  name        String
-  slug        String      @unique
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  memberships Membership[]
-  roles       Role[]
-  invitations Invitation[]
-  auditLogs   AuditLog[]
-  files       FileAsset[]
-  jobs        JobRun[]
+  memberships  Membership[]
+  roles        Role[]
+  invitations  Invitation[]
+  auditLogs    AuditLog[]
+  files        FileAsset[]
+  integrations IntegrationConnection[]
+  jobs         JobRun[]
 
   @@map("organization")
 }
@@ -309,6 +310,8 @@ model IntegrationConnection {
   config         Json?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, provider, externalId])
   @@index([organizationId, provider])

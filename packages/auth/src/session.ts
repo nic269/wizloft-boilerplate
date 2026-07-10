@@ -1,8 +1,18 @@
+import { authFeatureConfig } from "@repo/config";
 import { prisma } from "@repo/database";
 import { type AuthSession, auth } from "./server";
 
 export type SessionUser = AuthSession["user"];
 export type ActiveAuthSession = AuthSession;
+
+export const canUseAuthenticatedSession = (
+  user: {
+    emailVerified: boolean;
+    status: string;
+  },
+  requireEmailVerification: boolean = authFeatureConfig.requireEmailVerification
+) =>
+  user.status === "ACTIVE" && (!requireEmailVerification || user.emailVerified);
 
 export const isAuthenticated = (
   session: AuthSession | null | undefined
@@ -21,5 +31,5 @@ export const getCurrentSession = async (
     where: { id: session.user.id },
   });
 
-  return user?.status === "ACTIVE" && user.emailVerified ? session : null;
+  return user && canUseAuthenticatedSession(user) ? session : null;
 };

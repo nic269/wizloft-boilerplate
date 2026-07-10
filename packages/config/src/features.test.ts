@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { authFeatureConfig, authMailRequired } from "./features";
+import {
+  authFeatureConfig,
+  authMailRequired,
+  featureConfig,
+  isAuthMailRequired,
+} from "./features";
 
 describe("auth feature config", () => {
   it("requires real mail delivery for enabled auth workflows", () => {
@@ -9,5 +14,17 @@ describe("auth feature config", () => {
       requireEmailVerification: true,
     });
     expect(authMailRequired).toBe(true);
+    expect(featureConfig).not.toHaveProperty("docs");
+    expect(featureConfig).not.toHaveProperty("email");
+  });
+
+  it("does not require mail when every auth delivery workflow is disabled", () => {
+    expect(
+      isAuthMailRequired({
+        organizationInvitations: false,
+        passwordReset: false,
+        requireEmailVerification: false,
+      })
+    ).toBe(false);
   });
 });

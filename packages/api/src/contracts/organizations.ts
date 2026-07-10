@@ -1,3 +1,4 @@
+import { type KnownPermission, PERMISSION_CATALOG } from "@repo/access-control";
 import { z } from "zod";
 import {
   apiContract,
@@ -7,10 +8,26 @@ import {
   paginatedDataEnvelope,
 } from "./base";
 
-export const permissionSchema = z.object({
-  action: z.string().min(1),
-  module: z.string().min(1),
-});
+const permissionPairSchemas = PERMISSION_CATALOG.map(({ action, module }) =>
+  z.object({ action: z.literal(action), module: z.literal(module) })
+);
+
+export const permissionSchema = z.union(
+  permissionPairSchemas as [
+    (typeof permissionPairSchemas)[number],
+    (typeof permissionPairSchemas)[number],
+    ...(typeof permissionPairSchemas)[number][],
+  ]
+) as z.ZodType<KnownPermission>;
+
+export const invitationStatusSchema = z.enum([
+  "PENDING",
+  "ACCEPTED",
+  "REVOKED",
+  "EXPIRED",
+]);
+
+export const membershipStatusSchema = z.enum(["ACTIVE", "INVITED", "DISABLED"]);
 
 export const organizationSchema = z.object({
   id: z.string(),
@@ -25,7 +42,16 @@ export const invitationSchema = z.object({
   expiresAt: z.date(),
   id: z.string(),
   invitedBy: z.object({ name: z.string() }).nullable(),
-  status: z.string(),
+  status: invitationStatusSchema,
+});
+
+export const createdInvitationSchema = z.object({
+  acceptUrl: z.url(),
+  delivery: z.enum(["sent", "failed"]),
+  email: z.email(),
+  expiresAt: z.date(),
+  id: z.string(),
+  status: z.literal("PENDING"),
 });
 
 export const roleSchema = z.object({
@@ -40,7 +66,7 @@ export const memberSchema = z.object({
   createdAt: z.date(),
   id: z.string(),
   role: z.object({ id: z.string(), name: z.string() }).nullable(),
-  status: z.string(),
+  status: z.literal("ACTIVE"),
   user: z.object({ email: z.email(), id: z.string(), name: z.string() }),
 });
 
@@ -94,18 +120,7 @@ export const organizationsContract = {
         summary: "Invite an organization member",
       })
       .input(organizationIdInput.extend({ email: z.email().trim().max(254) }))
-      .output(
-        dataEnvelope(
-          z.object({
-            acceptUrl: z.url(),
-            delivery: z.enum(["sent", "failed"]),
-            email: z.email(),
-            expiresAt: z.date(),
-            id: z.string(),
-            status: z.string(),
-          })
-        )
-      ),
+      .output(dataEnvelope(createdInvitationSchema)),
     list: apiContract
       .route({
         method: "GET",

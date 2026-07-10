@@ -1,4 +1,8 @@
-import { appConfig, authFeatureConfig } from "@repo/config";
+import {
+  type AuthFeatureConfig,
+  appConfig,
+  authFeatureConfig,
+} from "@repo/config";
 import { prisma } from "@repo/database";
 import { PasswordResetEmail, sendMail, VerificationEmail } from "@repo/mail";
 import type { BetterAuthOptions, User } from "better-auth";
@@ -47,7 +51,10 @@ export const sendEmailVerificationEmail = ({ user, url }: AuthEmailInput) =>
     to: user.email,
   });
 
-export const createAuthOptions = (env: AuthEnv = keys()): BetterAuthOptions => {
+export const createAuthOptions = (
+  env: AuthEnv = keys(),
+  features: AuthFeatureConfig = authFeatureConfig
+): BetterAuthOptions => {
   const googleEnabled = Boolean(
     env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
   );
@@ -66,25 +73,33 @@ export const createAuthOptions = (env: AuthEnv = keys()): BetterAuthOptions => {
       enabled: true,
       maxPasswordLength: 128,
       minPasswordLength: 8,
-      requireEmailVerification: authFeatureConfig.requireEmailVerification,
+      requireEmailVerification: features.requireEmailVerification,
       resetPasswordTokenExpiresIn: 60 * 60,
-      sendResetPassword: async (data) => {
-        await sendPasswordResetEmail({
-          ...data,
-          url: useAppAuthOrigin(data.url, env.NEXT_PUBLIC_APP_URL),
-        });
-      },
+      ...(features.passwordReset
+        ? {
+            sendResetPassword: async (data) => {
+              await sendPasswordResetEmail({
+                ...data,
+                url: useAppAuthOrigin(data.url, env.NEXT_PUBLIC_APP_URL),
+              });
+            },
+          }
+        : {}),
     },
     emailVerification: {
       autoSignInAfterVerification: true,
       expiresIn: 60 * 60,
-      sendOnSignUp: true,
-      sendVerificationEmail: async (data) => {
-        await sendEmailVerificationEmail({
-          ...data,
-          url: useAppAuthOrigin(data.url, env.NEXT_PUBLIC_APP_URL),
-        });
-      },
+      sendOnSignUp: features.requireEmailVerification,
+      ...(features.requireEmailVerification
+        ? {
+            sendVerificationEmail: async (data) => {
+              await sendEmailVerificationEmail({
+                ...data,
+                url: useAppAuthOrigin(data.url, env.NEXT_PUBLIC_APP_URL),
+              });
+            },
+          }
+        : {}),
     },
     secret: env.BETTER_AUTH_SECRET,
     session: {

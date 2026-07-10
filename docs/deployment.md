@@ -91,7 +91,7 @@ managed ingress, and secret delivery still belong to the deployment platform.
 ```bash
 pnpm install --frozen-lockfile
 pnpm db:generate
-pnpm db:push
+pnpm db:migrate:deploy
 pnpm templates:validate
 pnpm check:ci
 pnpm check-types
@@ -111,10 +111,13 @@ pnpm release:check
 This command validates template catalog drift before the normal lint, type,
 test, boundary, and build checks.
 
-Production deployments should use `pnpm db:migrate:deploy` before promoting
-application traffic. The checked-in initial migration supports clean project
-forks; existing databases created with `db:push` must be baselined deliberately
-before adopting migration deploy.
+Fresh local setup, CI, isolated E2E, and production deployments use
+`pnpm db:migrate:deploy` so raw SQL indexes, constraints, and backfills receive
+the same proof. Use `pnpm db:migrate:dev --name <migration-name>` after schema
+changes. `pnpm db:push` is reserved for disposable prototypes. Existing
+persistent databases created with `db:push` must be backed up and reconciled
+against their actual schema before migration deploy is adopted; do not blindly
+mark migrations as applied.
 
 Provider requirements follow enabled features. Local development can use the
 private mail outbox and local storage, while production auth delivery requires a

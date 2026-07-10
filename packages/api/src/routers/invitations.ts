@@ -5,6 +5,7 @@ import {
 } from "@repo/auth/invitations";
 import { getCurrentSession } from "@repo/auth/session";
 import { ApiError } from "../errors";
+import { requireOrganizationInvitationsEnabled } from "../feature-guards";
 import { os } from "./implementer";
 
 const errorStatus: Record<InvitationErrorCode, 403 | 404 | 409 | 410> = {
@@ -16,6 +17,7 @@ const errorStatus: Record<InvitationErrorCode, 403 | 404 | 409 | 410> = {
 
 export const invitationsRouter = {
   accept: os.invitations.accept.handler(async ({ context, input }) => {
+    requireOrganizationInvitationsEnabled();
     const session = await getCurrentSession(context.headers);
     if (!session) {
       throw new ApiError("UNAUTHORIZED", "Authentication required.", 401);

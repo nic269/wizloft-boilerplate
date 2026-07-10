@@ -134,4 +134,17 @@ describe("auth options", () => {
     expect(options.emailAndPassword?.resetPasswordTokenExpiresIn).toBe(60 * 60);
     expect(options.emailVerification?.expiresIn).toBe(60 * 60);
   });
+
+  it("omits disabled auth delivery callbacks", () => {
+    const options = createAuthOptions(env, {
+      organizationInvitations: false,
+      passwordReset: false,
+      requireEmailVerification: false,
+    });
+
+    expect(options.emailAndPassword?.sendResetPassword).toBeUndefined();
+    expect(options.emailAndPassword?.requireEmailVerification).toBe(false);
+    expect(options.emailVerification?.sendOnSignUp).toBe(false);
+    expect(options.emailVerification?.sendVerificationEmail).toBeUndefined();
+  });
 });

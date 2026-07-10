@@ -5,7 +5,6 @@ export const appConfig = {
   defaultLocale: "en",
   description:
     "A modern, generic SaaS foundation for Anh Nguyen's future apps.",
-  docsUrl: "http://localhost:3003",
   name: "Personal SaaS Boilerplate",
   supportEmail: "support@example.com",
 } as const;

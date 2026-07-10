@@ -5,6 +5,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { requestContext } from "./context";
 import { ApiError, type ApiErrorResponse } from "./errors";
+import { requireAuthEndpointEnabled } from "./feature-guards";
 import { getOpenApiDocument } from "./openapi";
 import { router } from "./routers";
 
@@ -89,9 +90,10 @@ export const createApiApp = () => {
   app.get("/docs/api", (context) =>
     context.html("<html><body><pre>/openapi.json</pre></body></html>")
   );
-  app.on(["GET", "POST"], "/api/auth/*", (context) =>
-    auth.handler(context.req.raw)
-  );
+  app.on(["GET", "POST"], "/api/auth/*", (context) => {
+    requireAuthEndpointEnabled(context.req.path);
+    return auth.handler(context.req.raw);
+  });
   app.use("*", async (context, next) => {
     const { matched, response } = await orpcHandler.handle(context.req.raw, {
       context: {

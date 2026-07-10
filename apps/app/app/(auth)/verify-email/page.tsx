@@ -1,4 +1,6 @@
 import { safeAuthCallbackUrl } from "@repo/auth/callback-url";
+import { authFeatureConfig } from "@repo/config";
+import { notFound } from "next/navigation";
 import { VerifyEmailForm } from "./verify-email-form";
 
 export default async function VerifyEmailPage({
@@ -10,6 +12,10 @@ export default async function VerifyEmailPage({
     token?: string;
   }>;
 }) {
+  if (!authFeatureConfig.requireEmailVerification) {
+    notFound();
+  }
+
   const { callbackUrl, email, token } = await searchParams;
   const safeCallbackUrl = safeAuthCallbackUrl(callbackUrl);
 

@@ -169,6 +169,7 @@ describe("access control service", () => {
           .fn()
           .mockResolvedValue({ id: "role-2", isSystem: true, name: "Member" }),
       },
+      user: { findFirst: vi.fn().mockResolvedValue({ id: "owner-1" }) },
     };
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
       callback(transaction as never)
@@ -211,6 +212,7 @@ describe("access control service", () => {
           .fn()
           .mockResolvedValue({ id: "role-2", isSystem: true, name: "Member" }),
       },
+      user: { findFirst: vi.fn().mockResolvedValue({ id: "owner-1" }) },
     };
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
       callback(transaction as never)
@@ -232,6 +234,109 @@ describe("access control service", () => {
         targetId: "member-1",
       }),
     });
+    expect(transaction.user.findFirst).toHaveBeenCalledWith({
+      select: { id: true },
+      where: expect.objectContaining({
+        id: "owner-1",
+        status: "ACTIVE",
+      }),
+    });
+    expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
+      isolationLevel: "Serializable",
+    });
+  });
+
+  it("requires an active owner or super admin to cross the Owner boundary", async () => {
+    const transaction = {
+      auditLog: { create: vi.fn() },
+      membership: {
+        count: vi.fn(),
+        findFirst: vi.fn().mockResolvedValue({
+          id: "member-1",
+          role: { isSystem: true, name: "Member" },
+        }),
+        updateMany: vi.fn(),
+      },
+      role: {
+        findFirst: vi.fn().mockResolvedValue({
+          id: "role-owner",
+          isSystem: true,
+          name: "Owner",
+        }),
+      },
+      user: { findFirst: vi.fn().mockResolvedValue(null) },
+    };
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
+      callback(transaction as never)
+    );
+
+    await expect(
+      updateMemberRole({
+        actorId: "admin-1",
+        membershipId: "member-1",
+        organizationId: "org-1",
+        roleId: "role-owner",
+      })
+    ).rejects.toMatchObject({ code: "OWNER_ROLE_REQUIRES_OWNER" });
+
+    expect(transaction.membership.updateMany).not.toHaveBeenCalled();
+    expect(transaction.auditLog.create).not.toHaveBeenCalled();
+  });
+
+  it("allows an active super admin to cross the Owner boundary", async () => {
+    const transaction = {
+      auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
+      membership: {
+        count: vi.fn(),
+        findFirst: vi.fn().mockResolvedValue({
+          id: "member-1",
+          role: { isSystem: true, name: "Member" },
+        }),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+      },
+      role: {
+        findFirst: vi.fn().mockResolvedValue({
+          id: "role-owner",
+          isSystem: true,
+          name: "Owner",
+        }),
+      },
+      user: { findFirst: vi.fn().mockResolvedValue({ id: "super-admin-1" }) },
+    };
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
+      callback(transaction as never)
+    );
+
+    await updateMemberRole({
+      actorId: "super-admin-1",
+      membershipId: "member-1",
+      organizationId: "org-1",
+      roleId: "role-owner",
+    });
+
+    expect(transaction.membership.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { roleId: "role-owner" } })
+    );
+  });
+
+  it("retries Serializable write conflicts at most three times", async () => {
+    vi.mocked(prisma.$transaction).mockRejectedValue({ code: "P2034" });
+
+    await expect(
+      updateMemberRole({
+        actorId: "owner-1",
+        membershipId: "member-1",
+        organizationId: "org-1",
+        roleId: "role-2",
+      })
+    ).rejects.toMatchObject({ code: "OWNER_UPDATE_CONFLICT" });
+
+    expect(prisma.$transaction).toHaveBeenCalledTimes(3);
+    expect(prisma.$transaction).toHaveBeenNthCalledWith(
+      3,
+      expect.any(Function),
+      { isolationLevel: "Serializable" }
+    );
   });
 
   it("does not treat a custom role named Owner as the protected system owner", async () => {

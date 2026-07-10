@@ -1,7 +1,11 @@
 import { prisma } from "@repo/database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { auth } from "./server";
-import { getCurrentSession, isAuthenticated } from "./session";
+import {
+  canUseAuthenticatedSession,
+  getCurrentSession,
+  isAuthenticated,
+} from "./session";
 
 vi.mock("@repo/database", () => ({
   prisma: { user: { findUnique: vi.fn() } },
@@ -61,6 +65,15 @@ describe("session helpers", () => {
     } as never);
 
     await expect(getCurrentSession(new Headers())).resolves.toBeNull();
+  });
+
+  it("allows active unverified users when verification is disabled", () => {
+    expect(
+      canUseAuthenticatedSession(
+        { emailVerified: false, status: "ACTIVE" },
+        false
+      )
+    ).toBe(true);
   });
 
   it("does not query user status when Better Auth has no session", async () => {

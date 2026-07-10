@@ -1,17 +1,24 @@
+export interface AuthFeatureConfig {
+  organizationInvitations: boolean;
+  passwordReset: boolean;
+  requireEmailVerification: boolean;
+}
+
 export const authFeatureConfig = {
   organizationInvitations: true,
   passwordReset: true,
   requireEmailVerification: true,
-} as const;
+} as const satisfies AuthFeatureConfig;
 
-export const authMailRequired = Object.values(authFeatureConfig).some(Boolean);
+export const isAuthMailRequired = (features: AuthFeatureConfig) =>
+  Object.values(features).some(Boolean);
+
+export const authMailRequired = isAuthMailRequired(authFeatureConfig);
 
 export const featureConfig = {
   analytics: false,
   billing: false,
   cms: false,
-  docs: true,
-  email: true,
   i18n: false,
   jobs: true,
   organizations: true,

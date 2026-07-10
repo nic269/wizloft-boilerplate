@@ -19,9 +19,9 @@
   "scripts": {
     "build": "echo '@repo/auth is source-only'",
     "check-types": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests",
-    "test:unit": "vitest run --passWithNoTests",
-    "test:integration": "echo 'auth integration tests require api/database'"
+    "test": "vitest run --exclude 'integration/**' --passWithNoTests",
+    "test:unit": "vitest run --exclude 'integration/**' --passWithNoTests",
+    "test:integration": "vitest run integration/postgres.integration.test.ts"
   },
   "dependencies": {
     "@repo/access-control": "workspace:*",

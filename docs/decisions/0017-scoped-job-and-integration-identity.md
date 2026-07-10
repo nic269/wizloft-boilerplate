@@ -19,6 +19,10 @@ provider identities use a partial unique index; tenant ownership remains solely
 in `organizationId`, and connections without an external identity may coexist
 while they are being configured.
 
+Tenant integration ownership is enforced by a foreign key to Organization with
+delete cascade. A deleted tenant connection must never become a global
+connection implicitly.
+
 ## Alternatives Considered
 
 1. Nullable organization scope does not enforce global idempotency uniqueness.

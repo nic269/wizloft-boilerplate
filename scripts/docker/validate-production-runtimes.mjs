@@ -191,6 +191,7 @@ const webPort = await findOpenPort(3101);
 const urls = {
   api: `http://127.0.0.1:${apiPort}`,
   app: `http://127.0.0.1:${appPort}`,
+  docs: "http://127.0.0.1:3003",
   web: `http://127.0.0.1:${webPort}`,
 };
 
@@ -199,6 +200,7 @@ const buildArgs = [
   "APP_INTERNAL_URL=http://app:3000",
   `NEXT_PUBLIC_API_URL=${urls.api}`,
   `NEXT_PUBLIC_APP_URL=${urls.app}`,
+  `NEXT_PUBLIC_DOCS_URL=${urls.docs}`,
   `NEXT_PUBLIC_WEB_URL=${urls.web}`,
 ];
 
@@ -252,6 +254,7 @@ const surfaces = [
       "PORT=3001",
       `NEXT_PUBLIC_API_URL=${urls.api}`,
       `NEXT_PUBLIC_APP_URL=${urls.app}`,
+      `NEXT_PUBLIC_DOCS_URL=${urls.docs}`,
       `NEXT_PUBLIC_WEB_URL=${urls.web}`,
     ],
     healthPath: "/",

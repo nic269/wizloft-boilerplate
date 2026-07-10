@@ -21,6 +21,9 @@ Role assignment must preserve ownership. Updating a member role is rejected when
 the update would leave the organization without at least one active membership
 linked to the `Owner` role.
 
+Owner-boundary authorization and concurrent mutation semantics are refined by
+`0020-protected-organization-owner-boundary.md`.
+
 ## Alternatives Considered
 
 1. Use the Better Auth organization plugin as the source of truth. Deferred to keep the existing vendor-independent

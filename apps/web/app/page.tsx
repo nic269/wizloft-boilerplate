@@ -1,5 +1,14 @@
-import { appConfig, appSurfaces, marketingNav } from "@repo/config";
+import { appConfig, appSurfaces, featureConfig } from "@repo/config";
 import { ArrowRight, Button } from "@repo/design-system";
+import { env } from "../env";
+
+const marketingNav = [
+  { href: "/#features", label: "Features" },
+  ...(appSurfaces.includes("apps/docs") && env.NEXT_PUBLIC_DOCS_URL
+    ? [{ href: env.NEXT_PUBLIC_DOCS_URL, label: "Docs" }]
+    : []),
+  ...(featureConfig.billing ? [{ href: "/pricing", label: "Pricing" }] : []),
+] as const;
 
 export default function WebHomePage() {
   return (
@@ -17,7 +26,7 @@ export default function WebHomePage() {
         </nav>
         <Button
           nativeButton={false}
-          render={<a href="http://localhost:3000/sign-in" />}
+          render={<a href={`${env.NEXT_PUBLIC_APP_URL}/sign-in`} />}
           size="sm"
         >
           Open app
@@ -35,14 +44,14 @@ export default function WebHomePage() {
           <div className="flex flex-wrap gap-3">
             <Button
               nativeButton={false}
-              render={<a href="http://localhost:3000/sign-up" />}
+              render={<a href={`${env.NEXT_PUBLIC_APP_URL}/sign-up`} />}
             >
               Start building <ArrowRight data-icon="inline-end" />
             </Button>
-            {appSurfaces.includes("apps/docs") ? (
+            {appSurfaces.includes("apps/docs") && env.NEXT_PUBLIC_DOCS_URL ? (
               <Button
                 nativeButton={false}
-                render={<a href="http://localhost:3003" />}
+                render={<a href={env.NEXT_PUBLIC_DOCS_URL} />}
                 variant="outline"
               >
                 Read docs

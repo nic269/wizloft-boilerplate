@@ -104,20 +104,8 @@ try {
   );
   await waitForPort(postgresPort);
   run("pnpm", ["db:generate"], env);
-  run(
-    "pnpm",
-    [
-      "--filter",
-      "@repo/database",
-      "exec",
-      "prisma",
-      "db",
-      "push",
-      "--force-reset",
-      "--accept-data-loss",
-    ],
-    env
-  );
+  run("pnpm", ["db:migrate:deploy"], env);
+  run("pnpm", ["--filter", "@repo/auth", "test:integration"], env);
   run("pnpm", ["test:e2e"], env);
 } catch (error) {
   primaryError = error;

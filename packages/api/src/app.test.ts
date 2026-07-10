@@ -17,9 +17,14 @@ import {
   listOrganizationsForUser,
 } from "@repo/auth/organizations";
 import { hasPermission } from "@repo/auth/permissions";
+import { auth } from "@repo/auth/server";
 import { getCurrentSession } from "@repo/auth/session";
+import { authFeatureConfig } from "@repo/config";
 import { prisma } from "@repo/database";
-import { assertMailProviderConfiguration, sendMail } from "@repo/mail";
+import {
+  assertMailProviderConfiguration,
+  sendInvitationMail,
+} from "@repo/mail";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApiApp } from "./app";
 import { assertApiProviderConfiguration } from "./health";
@@ -80,7 +85,7 @@ vi.mock("@repo/mail", () => ({
     provider: "console",
     state: "disabled",
   }),
-  sendMail: vi.fn(),
+  sendInvitationMail: vi.fn(),
 }));
 vi.mock("@repo/storage", () => ({
   assertStorageProviderConfiguration: vi.fn(),
@@ -103,6 +108,11 @@ vi.mock("@repo/jobs", () => ({
 describe("api app", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.assign(authFeatureConfig as Record<string, boolean>, {
+      organizationInvitations: true,
+      passwordReset: true,
+      requireEmailVerification: true,
+    });
     vi.mocked(prisma.$queryRaw).mockResolvedValue([{ "?column?": 1 }]);
   });
 
@@ -143,6 +153,65 @@ describe("api app", () => {
     expect(assertMailProviderConfiguration).toHaveBeenCalledWith({
       required: true,
     });
+  });
+
+  it.each([
+    {
+      flag: "passwordReset",
+      message: "Password reset is not available.",
+      method: "POST",
+      path: "/api/auth/request-password-reset",
+    },
+    {
+      flag: "passwordReset",
+      message: "Password reset is not available.",
+      method: "POST",
+      path: "/api/auth/reset-password",
+    },
+    {
+      flag: "passwordReset",
+      message: "Password reset is not available.",
+      method: "GET",
+      path: "/api/auth/reset-password/reset-token",
+    },
+    {
+      flag: "requireEmailVerification",
+      message: "Email verification is not available.",
+      method: "POST",
+      path: "/api/auth/send-verification-email",
+    },
+    {
+      flag: "requireEmailVerification",
+      message: "Email verification is not available.",
+      method: "POST",
+      path: "/api/auth/verify-email",
+    },
+  ])("returns 404 for disabled Better Auth endpoint $path", async (feature) => {
+    (authFeatureConfig as Record<string, boolean>)[feature.flag] = false;
+
+    const response = await createApiApp().request(feature.path, {
+      method: feature.method,
+    });
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toMatchObject({
+      error: { code: "NOT_FOUND", message: feature.message },
+    });
+    expect(auth.handler).not.toHaveBeenCalled();
+  });
+
+  it("keeps unrelated Better Auth endpoints mounted when features are disabled", async () => {
+    Object.assign(authFeatureConfig as Record<string, boolean>, {
+      passwordReset: false,
+      requireEmailVerification: false,
+    });
+
+    const response = await createApiApp().request("/api/auth/sign-in/email", {
+      method: "POST",
+    });
+
+    expect(response.status).toBe(204);
+    expect(auth.handler).toHaveBeenCalledOnce();
   });
 
   it("fails production readiness when required mail is disabled", async () => {
@@ -313,9 +382,51 @@ describe("api app", () => {
     expect(createInvitation).not.toHaveBeenCalled();
   });
 
+  it.each([
+    {
+      body: undefined,
+      method: "GET",
+      path: "/api/organizations/org-1/invitations",
+    },
+    {
+      body: JSON.stringify({ email: "member@example.com" }),
+      method: "POST",
+      path: "/api/organizations/org-1/invitations",
+    },
+    {
+      body: undefined,
+      method: "DELETE",
+      path: "/api/organizations/org-1/invitations/invite-1",
+    },
+    {
+      body: JSON.stringify({ token: "a".repeat(43) }),
+      method: "POST",
+      path: "/api/invitations/accept",
+    },
+  ])("returns 404 for disabled invitation route $method $path", async (request) => {
+    (
+      authFeatureConfig as { organizationInvitations: boolean }
+    ).organizationInvitations = false;
+
+    const response = await createApiApp().request(request.path, {
+      ...(request.body ? { body: request.body } : {}),
+      headers: { "content-type": "application/json" },
+      method: request.method,
+    });
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toMatchObject({
+      error: {
+        code: "NOT_FOUND",
+        message: "Organization invitations are not available.",
+      },
+    });
+    expect(getCurrentSession).not.toHaveBeenCalled();
+  });
+
   it("creates and delivers an invitation for an authorized owner", async () => {
     vi.mocked(getCurrentSession).mockResolvedValue({
-      user: { id: "owner-1" },
+      user: { id: "owner-1", name: "Ada Owner" },
     } as never);
     vi.mocked(hasPermission).mockResolvedValue(true);
     vi.mocked(createInvitation).mockResolvedValue({
@@ -325,9 +436,10 @@ describe("api app", () => {
         id: "invite-1",
         status: "PENDING",
       } as never,
+      organizationName: "Acme",
       token: "a".repeat(43),
     });
-    vi.mocked(sendMail).mockResolvedValue({
+    vi.mocked(sendInvitationMail).mockResolvedValue({
       id: "mail-1",
       provider: "console",
     });
@@ -345,12 +457,12 @@ describe("api app", () => {
     );
 
     expect(response.status).toBe(201);
-    expect(sendMail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        text: expect.stringContaining("http://localhost:3000/invite/"),
-        to: "member@example.com",
-      })
-    );
+    expect(sendInvitationMail).toHaveBeenCalledWith({
+      inviterName: "Ada Owner",
+      inviteUrl: expect.stringContaining("http://localhost:3000/invite/"),
+      organizationName: "Acme",
+      to: "member@example.com",
+    });
     expect(JSON.stringify(await response.json())).not.toContain("tokenHash");
   });
 
@@ -511,6 +623,39 @@ describe("api app", () => {
         code: "CONFLICT",
         message: "An organization must keep at least one active Owner.",
       },
+    });
+  });
+
+  it.each([
+    {
+      code: "OWNER_ROLE_REQUIRES_OWNER",
+      expectedCode: "FORBIDDEN",
+      expectedStatus: 403,
+    },
+    {
+      code: "OWNER_UPDATE_CONFLICT",
+      expectedCode: "CONFLICT",
+      expectedStatus: 409,
+    },
+  ])("maps $code role update failures", async (failure) => {
+    vi.mocked(getCurrentSession).mockResolvedValue({
+      user: { id: "owner-1" },
+    } as never);
+    vi.mocked(hasPermission).mockResolvedValue(true);
+    vi.mocked(updateMemberRole).mockRejectedValue(new Error(failure.code));
+
+    const response = await createApiApp().request(
+      "/api/organizations/org-1/members/member-1/role",
+      {
+        body: JSON.stringify({ roleId: "role-2" }),
+        headers: { "content-type": "application/json" },
+        method: "PATCH",
+      }
+    );
+
+    expect(response.status).toBe(failure.expectedStatus);
+    expect(await response.json()).toMatchObject({
+      error: { code: failure.expectedCode },
     });
   });
 
