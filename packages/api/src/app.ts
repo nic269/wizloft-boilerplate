@@ -11,7 +11,7 @@ import { router } from "./routers";
 
 const orpcHandler = new OpenAPIHandler(router, {
   clientInterceptors: [
-    onError((error) => {
+    onError((error, options) => {
       if (
         error instanceof ORPCError &&
         error.code === "BAD_REQUEST" &&
@@ -26,6 +26,33 @@ const orpcHandler = new OpenAPIHandler(router, {
           422,
           z.flattenError(zodError),
           { cause: error.cause }
+        );
+      }
+
+      if (
+        !(error instanceof ORPCError) ||
+        error.code === "INTERNAL_SERVER_ERROR"
+      ) {
+        const diagnosticError =
+          error instanceof Error && error.cause instanceof Error
+            ? error.cause
+            : error;
+        options.context.logger.error("api.unhandled_error", {
+          errorMessage:
+            diagnosticError instanceof Error
+              ? diagnosticError.message
+              : "Unknown error",
+          errorStack:
+            diagnosticError instanceof Error
+              ? diagnosticError.stack
+              : undefined,
+        });
+        throw new ApiError(
+          "INTERNAL_SERVER_ERROR",
+          "An unexpected error occurred.",
+          500,
+          undefined,
+          { cause: diagnosticError }
         );
       }
     }),
@@ -124,25 +151,41 @@ export const createApiApp = () => {
   );
 
   app.onError((error, context) => {
-    const apiError =
-      error instanceof ApiError
-        ? error
-        : new ApiError("INTERNAL_SERVER_ERROR", error.message, 500);
-    context.get("logger").error(apiError.message, {
-      code: apiError.code,
-      details: apiError.details,
+    const requestId = context.get("requestId");
+
+    if (error instanceof ApiError) {
+      context.get("logger").error(error.message, {
+        code: error.code,
+        details: error.details,
+      });
+
+      return context.json<ApiErrorResponse>(
+        {
+          error: {
+            code: error.code,
+            details: error.details,
+            message: error.message,
+            requestId,
+          },
+        },
+        error.status as 500
+      );
+    }
+
+    context.get("logger").error("api.unhandled_error", {
+      errorMessage: error.message,
+      errorStack: error.stack,
     });
 
     return context.json<ApiErrorResponse>(
       {
         error: {
-          code: apiError.code,
-          details: apiError.details,
-          message: apiError.message,
-          requestId: context.get("requestId"),
+          code: "INTERNAL_SERVER_ERROR",
+          message: "An unexpected error occurred.",
+          requestId,
         },
       },
-      apiError.status as 500
+      500
     );
   });
 

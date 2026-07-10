@@ -1,6 +1,14 @@
 import { spawn } from "node:child_process";
-import { copyFile, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { basename, join, relative, resolve, sep } from "node:path";
+import {
+  copyFile,
+  cp,
+  mkdir,
+  readFile,
+  realpath,
+  rm,
+  writeFile,
+} from "node:fs/promises";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import Ajv2020 from "ajv/dist/2020.js";
 
 export interface InitManifest {
@@ -171,11 +179,42 @@ const run = (command: string, cwd: string) =>
     });
   });
 
-const assertTarget = (sourceRoot: string, target: string) => {
-  const resolvedSource = resolve(sourceRoot);
-  const resolvedTarget = resolve(target);
+const resolveProspectiveRealPath = async (path: string) => {
+  let existingAncestor = resolve(path);
+  const missingSegments: string[] = [];
+
+  while (true) {
+    try {
+      const canonicalAncestor = await realpath(existingAncestor);
+      return resolve(canonicalAncestor, ...missingSegments.reverse());
+    } catch (error) {
+      const { code } = error as NodeJS.ErrnoException;
+      if (code !== "ENOENT" && code !== "ENOTDIR") {
+        throw error;
+      }
+
+      const parent = dirname(existingAncestor);
+      if (parent === existingAncestor) {
+        throw error;
+      }
+      missingSegments.push(basename(existingAncestor));
+      existingAncestor = parent;
+    }
+  }
+};
+
+export const assertTarget = async (sourceRoot: string, target: string) => {
+  const [resolvedSource, resolvedTarget] = await Promise.all([
+    realpath(resolve(sourceRoot)),
+    resolveProspectiveRealPath(target),
+  ]);
   if (resolvedTarget === resolvedSource) {
     throw new Error("Target must not be the boilerplate source directory.");
+  }
+  if (resolvedTarget.startsWith(`${resolvedSource}${sep}`)) {
+    throw new Error(
+      "Target must not be inside the boilerplate source directory."
+    );
   }
   if (resolvedSource.startsWith(`${resolvedTarget}${sep}`)) {
     throw new Error(
@@ -330,7 +369,7 @@ ${selectedApps.map((app) => `- \`apps/${app}\``).join("\n")}
 export const generateProject = async (options: GenerateOptions) => {
   const sourceRoot = resolve(options.sourceRoot);
   const target = resolve(options.target);
-  assertTarget(sourceRoot, target);
+  await assertTarget(sourceRoot, target);
   const manifest = await loadManifest(sourceRoot);
   const selectedApps = selectApps(manifest, options.apps);
   const slug = packageSlug(basename(target));

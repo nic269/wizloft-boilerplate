@@ -1,9 +1,11 @@
 # Deployment Guide
 
-This boilerplate treats every `apps/*` surface as independently deployable. Local development may use the root `.env`
-file, but production environments must inject variables through the hosting platform.
+This boilerplate keeps runtime and tooling surfaces under `apps/*`. Runtime
+apps are independently deployable; email preview and Storybook are workspace
+tooling surfaces. Local development may use the root `.env` file, but
+production environments must inject variables through the hosting platform.
 
-## Deployable Surfaces
+## Workspace Surfaces
 
 | Surface | Package | Default Port | Notes |
 | --- | --- | --- | --- |

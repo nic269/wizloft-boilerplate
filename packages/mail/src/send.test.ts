@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   assertMailProviderConfiguration,
+  consoleMailProvider,
   getMailProviderStatus,
   MailConfigurationError,
   sendMail,
@@ -54,6 +55,49 @@ describe("mail provider", () => {
       provider: "console",
       state: "disabled",
     });
+  });
+
+  it.each([
+    {
+      field: "Mail subject",
+      input: {
+        subject: "Hello\r\nBcc: attacker@example.com",
+        to: "user@example.com",
+      },
+    },
+    {
+      field: "Mail recipient",
+      input: {
+        subject: "Hello",
+        to: "user@example.com\nBcc: attacker@example.com",
+      },
+    },
+    {
+      field: "Mail sender",
+      input: {
+        from: "sender@example.com\r\nBcc: attacker@example.com",
+        subject: "Hello",
+        to: "user@example.com",
+      },
+    },
+  ])("rejects line breaks in $field before delivery", async ({
+    field,
+    input,
+  }) => {
+    expect(() => sendMail(input)).toThrow(
+      `${field} contains an invalid line break.`
+    );
+    expect(await readdir(outboxRoot)).toEqual([]);
+  });
+
+  it("rejects unsafe headers through the public raw provider", async () => {
+    expect(() =>
+      consoleMailProvider.send({
+        subject: "Hello\r\nBcc: attacker@example.com",
+        to: "user@example.com",
+      })
+    ).toThrow("Mail subject contains an invalid line break.");
+    expect(await readdir(outboxRoot)).toEqual([]);
   });
 
   it("reports resend as configured only when a sender is present", () => {

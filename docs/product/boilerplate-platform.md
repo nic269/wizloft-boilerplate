@@ -9,9 +9,11 @@ domain assumptions.
 
 - Manifest-driven `pnpm boilerplate:init <target>` generation separates the
   internal boilerplate factory from clean application projects. The generator
+  canonicalizes source and target ancestry, including symlinked parents, and
+  rejects overlapping trees before creating the target. It
   rewrites identity and selected app surfaces while stripping Harness, agent,
   planning, release-manifest, and domain-template artifacts. Generated projects
-  also remove source-only template catalog exports, record selected deployable
+  also remove source-only template catalog exports, record selected workspace
   surfaces independently from product feature flags, and avoid carrying a stale
   source lockfile when installation is skipped.
 - Config-driven workspace guardrails enforce app isolation, public package
@@ -24,7 +26,8 @@ domain assumptions.
   local setup, CI, isolated E2E, and production. Schema push remains available
   only for disposable prototyping because it cannot reproduce raw SQL migration
   contracts.
-- Multi-app monorepo with independent deployable surfaces.
+- Multi-app monorepo with independently deployable runtime surfaces plus
+  workspace-owned documentation, preview, and review tooling.
 - Better Auth server/client package split.
 - Same-origin auth/API rewrites from `apps/app` to `apps/api`.
 - Email/password auth pages call Better Auth through same-origin `/api/auth` and
@@ -55,7 +58,9 @@ domain assumptions.
 - Contract-first oRPC schemas drive Hono runtime handling, Zod input/output
   validation, generated OpenAPI, stable operation IDs, and typed browser/server
   clients. API error envelopes include the request ID in both Hono and oRPC
-  responses. Health surfaces are `/health`, `/ready`, and `/status`; provisional
+  responses. Deliberate `ApiError` messages remain public, while unexpected
+  exceptions return a generic message and retain diagnostics only in correlated
+  server logs. Health surfaces are `/health`, `/ready`, and `/status`; provisional
   legacy RPC aliases are not part of the current contract.
 - API liveness and readiness are separate operational signals: `/health` is a
   cheap process check, while `/ready` verifies database connectivity and the
@@ -64,17 +69,20 @@ domain assumptions.
 - Optional mail, storage, jobs, billing, analytics, CMS, and observability
   packages that degrade gracefully when disabled. Mail supports console,
   Resend, and SMTP delivery; storage supports local, memory, S3, and R2 private
-  objects; jobs include a local in-process provider with idempotency, retry,
-  and async run status. Provider diagnostics distinguish disabled, configured,
+  objects; jobs include a local ephemeral in-process provider with idempotency,
+  retry, and async run status for development. The base boilerplate does not
+  mark jobs as required until a product selects a durable adapter. Provider diagnostics distinguish disabled, configured,
   and misconfigured states without exposing credentials. Local storage is
   described as local rather than durable. Enabled auth delivery requires real
   production mail, and explicitly selected S3-compatible providers fail
   production API startup when required values are missing.
+- Mail delivery rejects CR/LF in caller-provided subject, recipient, and sender
+  headers at the shared provider boundary.
 - Organization members, roles, invitations, and audit logs use deterministic
   opaque cursor pagination with bounded limits and `pageInfo.nextCursor`.
 - A source-owned design-system with the complete shadcn Base UI component set,
   stable component subpath exports, and generic helper packages.
-- Handoff surfaces for future products: docs app, React Email previews, Storybook design-system examples, and template
+- Workspace handoff surfaces for future products: docs app, React Email previews, Storybook design-system examples, and template
   tracks for base SaaS, education, dev tools, and Shopify-adjacent add-ons.
 - Production discipline with standalone Next.js outputs, per-surface start scripts, Turbo-pruned Docker builds, target-
   specific runtime images for app/API/web, CI validation, and deployment docs.

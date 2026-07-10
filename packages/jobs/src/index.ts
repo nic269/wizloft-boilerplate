@@ -67,7 +67,7 @@ export interface JobQueueProvider {
 export const getJobProviderStatus = () =>
   ({
     configured: true,
-    mode: "in-process",
+    mode: "ephemeral",
     provider: "local",
     state: "configured",
   }) as const;

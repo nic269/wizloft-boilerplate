@@ -3,6 +3,8 @@ import type { ReactElement } from "react";
 import { writeDevOutboxMessage } from "./dev-outbox";
 import { keys } from "./keys";
 
+const HEADER_LINE_BREAK_PATTERN = /[\r\n]/;
+
 export interface SendMailInput {
   from?: string;
   react?: ReactElement;
@@ -23,6 +25,27 @@ export interface MailProviderStatus {
   state: "configured" | "disabled" | "misconfigured";
 }
 
+const assertSafeHeader = (value: string, field: string) => {
+  if (HEADER_LINE_BREAK_PATTERN.test(value)) {
+    throw new Error(`${field} contains an invalid line break.`);
+  }
+};
+
+const assertSafeMailHeaders = (input: SendMailInput) => {
+  assertSafeHeader(input.subject, "Mail subject");
+  assertSafeHeader(input.to, "Mail recipient");
+  if (input.from) {
+    assertSafeHeader(input.from, "Mail sender");
+  }
+};
+
+const withSafeMailHeaders = (provider: MailProvider): MailProvider => ({
+  send(input) {
+    assertSafeMailHeaders(input);
+    return provider.send(input);
+  },
+});
+
 export class MailConfigurationError extends Error {
   constructor(message: string) {
     super(message);
@@ -30,7 +53,7 @@ export class MailConfigurationError extends Error {
   }
 }
 
-export const consoleMailProvider: MailProvider = {
+export const consoleMailProvider: MailProvider = withSafeMailHeaders({
   async send(input) {
     const env = keys();
     const message = await writeDevOutboxMessage(
@@ -45,7 +68,7 @@ export const consoleMailProvider: MailProvider = {
     });
     return { id: message.id, provider: "console" };
   },
-};
+});
 
 const resolveMailProvider = (env: ReturnType<typeof keys>) => {
   if (env.MAIL_PROVIDER) {
@@ -123,7 +146,7 @@ export const getMailProvider = (): MailProvider => {
   }
 
   if (status.provider === "smtp") {
-    return {
+    return withSafeMailHeaders({
       async send(input) {
         const { createTransport } = await import("nodemailer");
         const { renderToStaticMarkup } = await import("react-dom/server");
@@ -137,10 +160,10 @@ export const getMailProvider = (): MailProvider => {
         });
         return { id: response.messageId, provider: "smtp" };
       },
-    };
+    });
   }
 
-  return {
+  return withSafeMailHeaders({
     async send(input) {
       const { Resend } = await import("resend");
       const resend = new Resend(env.RESEND_API_KEY);
@@ -163,7 +186,11 @@ export const getMailProvider = (): MailProvider => {
         provider: "resend",
       };
     },
-  };
+  });
 };
 
-export const sendMail = (input: SendMailInput) => getMailProvider().send(input);
+export const sendMail = (input: SendMailInput) => {
+  assertSafeMailHeaders(input);
+
+  return getMailProvider().send(input);
+};

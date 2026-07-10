@@ -70,14 +70,14 @@ const referenceSections = [
     points: [
       "Local mail writes to a private outbox without provider credentials.",
       "Storage supports private local, memory, and S3-compatible providers.",
-      "Jobs include a local provider with idempotency, retries, and run status.",
+      "Jobs include an ephemeral local provider with idempotency, retries, and run status.",
       "Billing, analytics, CMS, and observability packages remain extension seams.",
     ],
     title: "Providers",
   },
   {
     points: [
-      "apps/* are independently deployable.",
+      "Runtime apps deploy independently; email previews and Storybook are workspace tooling surfaces.",
       "Production injects env variables through the hosting platform.",
       "Use Docker plus turbo prune for narrow deployment contexts.",
       "Run database migrations before promoting app and API services.",

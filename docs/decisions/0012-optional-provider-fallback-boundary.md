@@ -17,13 +17,18 @@ Provider packages expose status helpers with a `configured` flag. Missing
 optional credentials must not crash local development. Local/dev fallbacks are
 allowed only when they are explicit and private: filesystem-outbox mail, local
 object storage, memory storage, and in-process jobs. Local filesystem storage is
-reported as local rather than durable. S3/R2 storage remains private and uses
-server-side encryption for writes and signed URLs.
+reported as local rather than durable, and the local jobs provider is reported
+as ephemeral rather than production-ready. S3/R2 storage remains private and
+uses server-side encryption for writes and signed URLs.
 
 Feature requirements refine this boundary: email verification, password reset,
 and organization invitations make a real mail provider required in production.
 Startup and `/ready` evaluate that same requirement while development continues
 to use the private outbox.
+
+The base boilerplate has no job-dependent production workflow, so jobs are not
+a required feature. Enabling a production job requirement must first select a
+durable adapter; the bundled ephemeral provider does not satisfy that promise.
 
 ## Alternatives Considered
 
@@ -42,6 +47,8 @@ Positive:
 Tradeoffs:
 
 - Local job runs are not durable across restarts.
+- Production job requirements cannot use the bundled ephemeral provider as
+  readiness proof.
 - Live provider smoke tests remain a deployment concern.
 - Production auth-enabled forks must configure real mail before becoming ready.
 

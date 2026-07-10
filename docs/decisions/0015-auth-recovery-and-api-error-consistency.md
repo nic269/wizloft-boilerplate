@@ -25,6 +25,10 @@ API error responses must include `requestId` in Hono and oRPC error envelopes.
 Invitation revoke routes must preserve the `InvitationError` code and map it to
 the status already declared by the API contract.
 
+Intentional `ApiError` messages and details remain client-visible. Unexpected
+exceptions keep their diagnostic message and stack in server logs, but clients
+receive only a generic `INTERNAL_SERVER_ERROR` message with the request ID.
+
 Owner protection must target the seeded system Owner role, using `Role.isSystem`
 with the Owner role name, so a custom role named Owner does not accidentally
 become the protected invariant.
@@ -46,6 +50,8 @@ Positive:
   UI plumbing.
 - API clients receive consistent error correlation data across Hono and oRPC
   paths.
+- Unexpected database, provider, filesystem, or service diagnostics are not
+  disclosed to API clients.
 - Invitation revoke clients can distinguish not-found from not-pending states.
 - Custom roles cannot accidentally inherit the system Owner invariant by name.
 

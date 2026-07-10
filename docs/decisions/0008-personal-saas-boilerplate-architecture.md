@@ -14,7 +14,8 @@ expectations.
 
 ## Decision
 
-Use a pnpm/Turborepo monorepo with deployable app surfaces under `apps/*` and explicit package entrypoints under
+Use a pnpm/Turborepo monorepo with workspace surfaces under `apps/*`,
+independently deployable runtime apps, and explicit package entrypoints under
 `packages/*`.
 
 The base architecture uses:
@@ -25,14 +26,17 @@ The base architecture uses:
   invitations, and env entrypoints.
 - Prisma/PostgreSQL in `@repo/database` with generic organization/RBAC/invite/audit/platform tables.
 - Optional provider abstractions for mail, storage, jobs, billing, analytics, CMS, observability, and flags.
-- Root `.env.example` for onboarding plus per-app typed `env.ts` files as deployable env contracts.
+- Root `.env.example` for onboarding plus per-app typed `env.ts` files as
+  surface-owned env contracts.
 - A boundary script that forbids app-to-app imports and package-to-app imports.
 
 ## Alternatives Considered
 
-1. Single overloaded Next.js app: rejected because the spec requires independently deployable app/web/api/docs/email/storybook surfaces.
+1. Single overloaded Next.js app: rejected because runtime, documentation,
+   preview, and review surfaces need separate ownership and build boundaries.
 2. Copying Ops Hub directly: rejected because the boilerplate must stay generic and exclude domain-specific code.
-3. Root-only env contract: rejected because each deployable app needs its own env ownership.
+3. Root-only env contract: rejected because each app surface needs its own env
+   ownership.
 
 ## Consequences
 
