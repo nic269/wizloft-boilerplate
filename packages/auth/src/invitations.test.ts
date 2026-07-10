@@ -1,14 +1,16 @@
-import { prisma } from "@repo/database";
+import { prisma, syncSystemRoles } from "@repo/database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   acceptInvitation,
   createInvitation,
   hashInvitationToken,
+  listInvitations,
   revokeInvitation,
 } from "./invitations";
 
 vi.mock("@repo/database", () => ({
   prisma: { $transaction: vi.fn(), invitation: { findMany: vi.fn() } },
+  syncSystemRoles: vi.fn(),
 }));
 
 describe("invitation service", () => {
@@ -17,6 +19,20 @@ describe("invitation service", () => {
   it("hashes invitation credentials before persistence", () => {
     expect(hashInvitationToken("secret-token")).toHaveLength(64);
     expect(hashInvitationToken("secret-token")).not.toContain("secret-token");
+  });
+
+  it("bounds invitation history with deterministic pagination", async () => {
+    vi.mocked(prisma.invitation.findMany).mockResolvedValue([]);
+
+    await listInvitations({ limit: 20, organizationId: "org-1" });
+
+    expect(prisma.invitation.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        take: 21,
+        where: { organizationId: "org-1" },
+      })
+    );
   });
 
   it("creates a Member invitation and audit record transactionally", async () => {
@@ -28,7 +44,9 @@ describe("invitation service", () => {
           .mockImplementation(({ data }) => ({ id: "invite-1", ...data })),
         findFirst: vi.fn().mockResolvedValue(null),
       },
-      role: { upsert: vi.fn().mockResolvedValue({ id: "role-1" }) },
+      role: {
+        findUnique: vi.fn().mockResolvedValue({ id: "role-1" }),
+      },
     };
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
       callback(transaction as never)
@@ -55,6 +73,75 @@ describe("invitation service", () => {
         action: "invitation.created",
         targetId: "invite-1",
       }),
+    });
+  });
+
+  it("repairs system roles for a legacy organization before inviting", async () => {
+    const transaction = {
+      auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
+      invitation: {
+        create: vi
+          .fn()
+          .mockImplementation(({ data }) => ({ id: "invite-1", ...data })),
+        findFirst: vi.fn().mockResolvedValue(null),
+      },
+      role: { findUnique: vi.fn().mockResolvedValue(null) },
+    };
+    vi.mocked(syncSystemRoles).mockResolvedValue({
+      Member: { id: "role-member", name: "Member" },
+    } as never);
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
+      callback(transaction as never)
+    );
+
+    const result = await createInvitation({
+      email: "member@example.com",
+      expiresAt: new Date("2030-01-01T00:00:00.000Z"),
+      invitedById: "owner-1",
+      organizationId: "legacy-org",
+    });
+
+    expect(syncSystemRoles).toHaveBeenCalledWith(transaction, "legacy-org");
+    expect(result.invitation.roleId).toBe("role-member");
+  });
+
+  it("retries after a concurrent pending invitation wins the unique race", async () => {
+    const transaction = {
+      auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
+      invitation: {
+        create: vi.fn().mockRejectedValueOnce({ code: "P2002" }),
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce({ id: "invite-1" }),
+        update: vi.fn().mockImplementation(({ data }) => ({
+          email: "user@example.com",
+          id: "invite-1",
+          status: "PENDING",
+          ...data,
+        })),
+      },
+      role: {
+        findUnique: vi.fn().mockResolvedValue({ id: "role-1" }),
+      },
+    };
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
+      callback(transaction as never)
+    );
+
+    const result = await createInvitation({
+      email: "user@example.com",
+      expiresAt: new Date("2030-01-01T00:00:00.000Z"),
+      invitedById: "owner-1",
+      organizationId: "org-1",
+    });
+
+    expect(prisma.$transaction).toHaveBeenCalledTimes(2);
+    expect(transaction.invitation.update).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        tokenHash: hashInvitationToken(result.token),
+      }),
+      where: { id: "invite-1" },
     });
   });
 

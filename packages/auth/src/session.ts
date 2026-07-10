@@ -17,9 +17,9 @@ export const getCurrentSession = async (
   }
 
   const user = await prisma.user.findUnique({
-    select: { status: true },
+    select: { emailVerified: true, status: true },
     where: { id: session.user.id },
   });
 
-  return user?.status === "ACTIVE" ? session : null;
+  return user?.status === "ACTIVE" && user.emailVerified ? session : null;
 };

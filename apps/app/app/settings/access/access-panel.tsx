@@ -43,6 +43,7 @@ export function AccessPanel() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [auditCursor, setAuditCursor] = useState<string | null>(null);
   const [roleName, setRoleName] = useState("");
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([
     ...CUSTOM_ROLE_DEFAULT_PERMISSION_KEYS,
@@ -54,21 +55,60 @@ export function AccessPanel() {
     if (!selectedOrganizationId) {
       return;
     }
+    const loadAllRoles = async () => {
+      const items: Role[] = [];
+      let cursor: string | null = null;
+      do {
+        const response = await apiClient.organizations.roles.list({
+          ...(cursor ? { cursor } : {}),
+          limit: 100,
+          organizationId: selectedOrganizationId,
+        });
+        items.push(...response.data);
+        cursor = response.pageInfo.nextCursor;
+      } while (cursor);
+      return items;
+    };
+    const loadAllMembers = async () => {
+      const items: Member[] = [];
+      let cursor: string | null = null;
+      do {
+        const response = await apiClient.organizations.members.list({
+          ...(cursor ? { cursor } : {}),
+          limit: 100,
+          organizationId: selectedOrganizationId,
+        });
+        items.push(...response.data);
+        cursor = response.pageInfo.nextCursor;
+      } while (cursor);
+      return items;
+    };
     const [nextRoles, nextMembers, nextAuditLogs] = await Promise.all([
-      apiClient.organizations.roles
-        .list({ organizationId: selectedOrganizationId })
-        .then((response) => response.data),
-      apiClient.organizations.members
-        .list({ organizationId: selectedOrganizationId })
-        .then((response) => response.data),
-      apiClient.organizations
-        .auditLogs({ organizationId: selectedOrganizationId })
-        .then((response) => response.data),
+      loadAllRoles(),
+      loadAllMembers(),
+      apiClient.organizations.auditLogs({
+        limit: 20,
+        organizationId: selectedOrganizationId,
+      }),
     ]);
     setRoles(nextRoles);
     setMembers(nextMembers);
-    setAuditLogs(nextAuditLogs);
+    setAuditLogs(nextAuditLogs.data);
+    setAuditCursor(nextAuditLogs.pageInfo.nextCursor);
   }, []);
+
+  const loadMoreAuditLogs = async () => {
+    if (!(organizationId && auditCursor)) {
+      return;
+    }
+    const response = await apiClient.organizations.auditLogs({
+      cursor: auditCursor,
+      limit: 20,
+      organizationId,
+    });
+    setAuditLogs((current) => [...current, ...response.data]);
+    setAuditCursor(response.pageInfo.nextCursor);
+  };
 
   useEffect(() => {
     apiClient.organizations
@@ -299,6 +339,15 @@ export function AccessPanel() {
               </li>
             ))}
           </ul>
+          {auditCursor ? (
+            <Button
+              className="mt-3"
+              onClick={loadMoreAuditLogs}
+              variant="outline"
+            >
+              Load more
+            </Button>
+          ) : null}
         </CardContent>
       </Card>
     </div>

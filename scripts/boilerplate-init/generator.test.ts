@@ -1,11 +1,37 @@
-import { access, mkdtemp, readFile, rm } from "node:fs/promises";
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { generateProject } from "./generator.ts";
+import { generateProject, loadManifest } from "./generator.ts";
 
 const sourceRoot = resolve(import.meta.dirname, "../..");
 const temporaryRoots: string[] = [];
+const INVALID_MANIFEST_ERROR =
+  /Invalid init manifest:.*additional properties.*requiredApps.*array.*defaultApps.*duplicate/;
+
+const createManifestFixture = async (value: unknown) => {
+  const root = await mkdtemp(join(tmpdir(), "wizloft-manifest-"));
+  temporaryRoots.push(root);
+  const scriptsDirectory = join(root, "scripts", "boilerplate-init");
+  await mkdir(scriptsDirectory, { recursive: true });
+  await Promise.all([
+    writeFile(join(root, "boilerplate.init.json"), JSON.stringify(value)),
+    readFile(
+      join(sourceRoot, "scripts", "boilerplate-init", "manifest.schema.json"),
+      "utf8"
+    ).then((schema) =>
+      writeFile(join(scriptsDirectory, "manifest.schema.json"), schema)
+    ),
+  ]);
+  return root;
+};
 
 afterEach(async () => {
   await Promise.all(
@@ -16,6 +42,35 @@ afterEach(async () => {
 });
 
 describe("boilerplate init", () => {
+  it("validates the init manifest with the tracked runtime schema", async () => {
+    const root = await createManifestFixture({
+      defaultApps: ["app", "api"],
+      optionalApps: [],
+      remove: [],
+      requiredApps: ["app", "api"],
+      sourceExcludes: [],
+      validationCommands: ["pnpm check"],
+      version: 1,
+    });
+
+    await expect(loadManifest(root)).resolves.toMatchObject({ version: 1 });
+  });
+
+  it("reports all invalid manifest fields before generation", async () => {
+    const root = await createManifestFixture({
+      defaultApps: ["app", "app"],
+      optionalApps: [],
+      remove: [],
+      requiredApps: "app",
+      sourceExcludes: [],
+      unexpected: true,
+      validationCommands: [],
+      version: 1,
+    });
+
+    await expect(loadManifest(root)).rejects.toThrow(INVALID_MANIFEST_ERROR);
+  });
+
   it("generates a clean renamed project with selected apps", async () => {
     const root = await mkdtemp(join(tmpdir(), "wizloft-init-"));
     temporaryRoots.push(root);
@@ -32,10 +87,15 @@ describe("boilerplate init", () => {
 
     const packageJson = JSON.parse(
       await readFile(join(target, "package.json"), "utf8")
-    ) as { name: string; scripts: Record<string, string> };
+    ) as {
+      devDependencies: Record<string, string>;
+      name: string;
+      scripts: Record<string, string>;
+    };
     expect(packageJson.name).toBe("learning-platform");
     expect(packageJson.scripts["boilerplate:init"]).toBeUndefined();
     expect(packageJson.scripts["templates:validate"]).toBeUndefined();
+    expect(packageJson.devDependencies.ajv).toBeUndefined();
     expect(packageJson.scripts["release:check"]).not.toContain("templates");
     expect(packageJson.scripts.postinstall).toBe(
       "node scripts/postinstall.mjs"
@@ -97,9 +157,9 @@ describe("boilerplate init", () => {
     expect(
       await readFile(join(target, ".github/workflows/ci.yml"), "utf8")
     ).not.toContain("templates:validate");
-    expect(await readFile(join(target, ".dockerignore"), "utf8")).not.toContain(
-      "harness.db"
-    );
+    const dockerIgnore = await readFile(join(target, ".dockerignore"), "utf8");
+    expect(dockerIgnore).not.toContain("harness.db");
+    expect(dockerIgnore).toContain("**/.data");
     expect(
       await readFile(join(target, ".repomixignore"), "utf8")
     ).not.toContain("tests/*");

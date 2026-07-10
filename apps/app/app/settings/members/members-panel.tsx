@@ -23,6 +23,7 @@ export function MembersPanel() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [organizationId, setOrganizationId] = useState("");
   const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [invitationCursor, setInvitationCursor] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [acceptUrl, setAcceptUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,12 +35,27 @@ export function MembersPanel() {
         return;
       }
       const response = await apiClient.organizations.invitations.list({
+        limit: 20,
         organizationId: selectedOrganizationId,
       });
       setInvitations(response.data);
+      setInvitationCursor(response.pageInfo.nextCursor);
     },
     []
   );
+
+  const loadMoreInvitations = async () => {
+    if (!(organizationId && invitationCursor)) {
+      return;
+    }
+    const response = await apiClient.organizations.invitations.list({
+      cursor: invitationCursor,
+      limit: 20,
+      organizationId,
+    });
+    setInvitations((current) => [...current, ...response.data]);
+    setInvitationCursor(response.pageInfo.nextCursor);
+  };
 
   useEffect(() => {
     apiClient.organizations
@@ -175,6 +191,15 @@ export function MembersPanel() {
               </li>
             ))}
           </ul>
+          {invitationCursor ? (
+            <Button
+              className="mt-3"
+              onClick={loadMoreInvitations}
+              variant="outline"
+            >
+              Load more
+            </Button>
+          ) : null}
         </CardContent>
       </Card>
     </div>

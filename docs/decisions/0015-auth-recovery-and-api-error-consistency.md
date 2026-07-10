@@ -51,10 +51,9 @@ Positive:
 
 Tradeoffs:
 
-- Verified-email-before-sign-in remains disabled by default and must be enabled
-  by the project that accepts that onboarding behavior.
+- Decision 0016 supersedes the original optional-verification tradeoff: verified
+  email is now required before authenticated product access.
 
 ## Follow-Up
 
-- Add browser E2E for reset and verification when the test harness owns a real
-  mail sink or token capture fixture.
+- Browser E2E now consumes the private development outbox for verification links.

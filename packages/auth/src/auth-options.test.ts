@@ -1,3 +1,4 @@
+import { appConfig } from "@repo/config";
 import { sendMail } from "@repo/mail";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -60,7 +61,7 @@ describe("auth options", () => {
 
     expect(sendMail).toHaveBeenCalledWith(
       expect.objectContaining({
-        subject: "Reset your Personal SaaS Boilerplate password",
+        subject: `Reset your ${appConfig.name} password`,
         text: expect.stringContaining(
           "http://localhost:3000/reset-password/token"
         ),
@@ -82,7 +83,7 @@ describe("auth options", () => {
 
     expect(sendMail).toHaveBeenCalledWith(
       expect.objectContaining({
-        subject: "Verify your Personal SaaS Boilerplate email",
+        subject: `Verify your ${appConfig.name} email`,
         text: expect.stringContaining(
           "http://localhost:3000/verify-email/token"
         ),
@@ -101,17 +102,35 @@ describe("auth options", () => {
 
     await options.emailAndPassword?.sendResetPassword?.({
       token: "reset-token",
-      url: "http://localhost:3000/reset-password/token",
+      url: "http://localhost:3002/api/auth/reset-password/token",
       user,
     });
     await options.emailVerification?.sendVerificationEmail?.({
       token: "verify-token",
-      url: "http://localhost:3000/verify-email/token",
+      url: "http://localhost:3002/api/auth/verify-email?token=verify-token",
       user,
     });
 
     expect(sendMail).toHaveBeenCalledTimes(2);
+    expect(sendMail).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        text: expect.stringContaining(
+          "http://localhost:3000/api/auth/reset-password/token"
+        ),
+      })
+    );
+    expect(sendMail).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        text: expect.stringContaining(
+          "http://localhost:3000/api/auth/verify-email?token=verify-token"
+        ),
+      })
+    );
     expect(options.emailVerification?.sendOnSignUp).toBe(true);
+    expect(options.emailVerification?.autoSignInAfterVerification).toBe(true);
+    expect(options.emailAndPassword?.requireEmailVerification).toBe(true);
     expect(options.emailAndPassword?.resetPasswordTokenExpiresIn).toBe(60 * 60);
     expect(options.emailVerification?.expiresIn).toBe(60 * 60);
   });

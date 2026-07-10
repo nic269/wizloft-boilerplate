@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { copyFile, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join, relative, resolve, sep } from "node:path";
+import Ajv2020 from "ajv/dist/2020.js";
 
 export interface InitManifest {
   defaultApps: string[];
@@ -50,6 +51,7 @@ const GENERATED_DOCKERIGNORE = `.git
 .react-email
 .turbo
 coverage
+.data
 dist
 node_modules
 out
@@ -61,6 +63,7 @@ test-results
 **/.react-email
 **/.turbo
 **/coverage
+**/.data
 **/dist
 **/node_modules
 **/out
@@ -125,13 +128,36 @@ const titleFromSlug = (slug: string) =>
     .join(" ");
 
 export const loadManifest = async (sourceRoot: string) => {
-  const value = JSON.parse(
-    await readFile(join(sourceRoot, "boilerplate.init.json"), "utf8")
-  ) as InitManifest;
-  if (value.version !== 1) {
-    throw new Error(`Unsupported init manifest version: ${value.version}`);
+  const manifestPath = join(sourceRoot, "boilerplate.init.json");
+  const schemaPath = join(
+    sourceRoot,
+    "scripts",
+    "boilerplate-init",
+    "manifest.schema.json"
+  );
+  let value: unknown;
+  let schema: object;
+  try {
+    [value, schema] = await Promise.all([
+      readFile(manifestPath, "utf8").then(JSON.parse),
+      readFile(schemaPath, "utf8").then(JSON.parse),
+    ]);
+  } catch (error) {
+    throw new Error(
+      `Could not parse init manifest or schema: ${error instanceof Error ? error.message : "Unknown JSON error"}`
+    );
   }
-  return value;
+
+  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(
+    schema
+  );
+  if (!validate(value)) {
+    const details = validate.errors
+      ?.map((error) => `${error.instancePath || "/"} ${error.message}`)
+      .join("; ");
+    throw new Error(`Invalid init manifest: ${details ?? "unknown error"}`);
+  }
+  return value as InitManifest;
 };
 
 const run = (command: string, cwd: string) =>
@@ -180,6 +206,7 @@ const rewritePackage = async (target: string, slug: string) => {
   const path = join(target, "package.json");
   const packageJson = JSON.parse(await readFile(path, "utf8")) as {
     description: string;
+    devDependencies: Record<string, string>;
     name: string;
     scripts: Record<string, string>;
   };
@@ -188,6 +215,11 @@ const rewritePackage = async (target: string, slug: string) => {
   packageJson.scripts = Object.fromEntries(
     Object.entries(packageJson.scripts).filter(
       ([name]) => !REMOVED_PACKAGE_SCRIPTS.has(name)
+    )
+  );
+  packageJson.devDependencies = Object.fromEntries(
+    Object.entries(packageJson.devDependencies).filter(
+      ([name]) => name !== "ajv"
     )
   );
   packageJson.scripts["release:check"] =

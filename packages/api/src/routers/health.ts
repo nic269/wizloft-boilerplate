@@ -10,7 +10,7 @@ const requireReadyPayload = async () => {
       "SERVICE_UNAVAILABLE",
       "API is not ready to accept traffic.",
       503,
-      { checks: payload.checks }
+      { checks: payload.checks, providers: payload.providers }
     );
   }
   return { ...payload, ok: true as const };
@@ -21,17 +21,6 @@ const status = os.health.status.handler(() => getStatusPayload());
 
 export const healthRouter = {
   health,
-  legacyRpc: {
-    health: os.health.legacyRpc.health.handler(() => ({
-      data: getHealthPayload(),
-    })),
-    ready: os.health.legacyRpc.ready.handler(async () => ({
-      data: await requireReadyPayload(),
-    })),
-    status: os.health.legacyRpc.status.handler(() => ({
-      data: getStatusPayload(),
-    })),
-  },
   ready,
   status,
 };

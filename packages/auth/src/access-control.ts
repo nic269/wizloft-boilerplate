@@ -3,6 +3,7 @@ import {
   type PermissionInput,
 } from "@repo/access-control";
 import { prisma } from "@repo/database";
+import { cursorDate, decodeCursor, type PageInput, toPage } from "./pagination";
 
 const OWNER_ROLE_NAME = "Owner";
 
@@ -17,10 +18,12 @@ export {
   type PermissionDefinition,
   type PermissionInput,
 } from "@repo/access-control";
+export { PaginationCursorError } from "./pagination";
 
-export const listRoles = (organizationId: string) =>
-  prisma.role.findMany({
-    orderBy: { name: "asc" },
+export const listRoles = async (input: PageInput) => {
+  const cursor = decodeCursor(input.cursor, "roles");
+  const rows = await prisma.role.findMany({
+    orderBy: [{ name: "asc" }, { id: "asc" }],
     select: {
       _count: { select: { memberships: true } },
       description: true,
@@ -31,8 +34,25 @@ export const listRoles = (organizationId: string) =>
         select: { action: true, module: true },
       },
     },
-    where: { organizationId },
+    take: input.limit + 1,
+    where: {
+      organizationId: input.organizationId,
+      ...(cursor
+        ? {
+            OR: [
+              { name: { gt: cursor.sort } },
+              { id: { gt: cursor.id }, name: cursor.sort },
+            ],
+          }
+        : {}),
+    },
   });
+  return toPage(rows, input.limit, (role) => ({
+    id: role.id,
+    kind: "roles",
+    sort: role.name,
+  }));
+};
 
 export const createRole = (input: {
   organizationId: string;
@@ -81,9 +101,11 @@ export const createRole = (input: {
     return role;
   });
 
-export const listMembers = (organizationId: string) =>
-  prisma.membership.findMany({
-    orderBy: { createdAt: "asc" },
+export const listMembers = async (input: PageInput) => {
+  const cursor = decodeCursor(input.cursor, "members");
+  const cursorCreatedAt = cursor ? cursorDate(cursor.sort) : undefined;
+  const rows = await prisma.membership.findMany({
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     select: {
       createdAt: true,
       id: true,
@@ -91,8 +113,26 @@ export const listMembers = (organizationId: string) =>
       status: true,
       user: { select: { email: true, id: true, name: true } },
     },
-    where: { organizationId, status: "ACTIVE" },
+    take: input.limit + 1,
+    where: {
+      organizationId: input.organizationId,
+      status: "ACTIVE",
+      ...(cursor && cursorCreatedAt
+        ? {
+            OR: [
+              { createdAt: { gt: cursorCreatedAt } },
+              { createdAt: cursorCreatedAt, id: { gt: cursor.id } },
+            ],
+          }
+        : {}),
+    },
   });
+  return toPage(rows, input.limit, (membership) => ({
+    id: membership.id,
+    kind: "members",
+    sort: membership.createdAt.toISOString(),
+  }));
+};
 
 export const updateMemberRole = (input: {
   organizationId: string;
@@ -159,9 +199,11 @@ export const updateMemberRole = (input: {
     });
   });
 
-export const listAuditLogs = (organizationId: string) =>
-  prisma.auditLog.findMany({
-    orderBy: { createdAt: "desc" },
+export const listAuditLogs = async (input: PageInput) => {
+  const cursor = decodeCursor(input.cursor, "audit-logs");
+  const cursorCreatedAt = cursor ? cursorDate(cursor.sort) : undefined;
+  const rows = await prisma.auditLog.findMany({
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     select: {
       action: true,
       actor: { select: { email: true, name: true } },
@@ -171,6 +213,22 @@ export const listAuditLogs = (organizationId: string) =>
       targetId: true,
       targetType: true,
     },
-    take: 50,
-    where: { organizationId },
+    take: input.limit + 1,
+    where: {
+      organizationId: input.organizationId,
+      ...(cursor && cursorCreatedAt
+        ? {
+            OR: [
+              { createdAt: { lt: cursorCreatedAt } },
+              { createdAt: cursorCreatedAt, id: { lt: cursor.id } },
+            ],
+          }
+        : {}),
+    },
   });
+  return toPage(rows, input.limit, (auditLog) => ({
+    id: auditLog.id,
+    kind: "audit-logs",
+    sort: auditLog.createdAt.toISOString(),
+  }));
+};

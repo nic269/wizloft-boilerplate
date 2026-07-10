@@ -14,6 +14,7 @@
     "@repo/api": [
       "@repo/access-control",
       "@repo/auth",
+      "@repo/config",
       "@repo/database",
       "@repo/jobs",
       "@repo/logger",

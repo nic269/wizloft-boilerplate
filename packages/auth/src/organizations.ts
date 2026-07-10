@@ -1,5 +1,4 @@
-import { OWNER_PERMISSIONS } from "@repo/access-control";
-import { prisma } from "@repo/database";
+import { prisma, syncSystemRoles } from "@repo/database";
 
 export const normalizeOrganizationSlug = (value: string) =>
   value
@@ -44,16 +43,10 @@ export const createOrganizationForUser = async (input: {
       select: { id: true, name: true, slug: true },
     });
 
-    const ownerRole = await transaction.role.create({
-      data: {
-        description: "Full access to organization settings and members.",
-        isSystem: true,
-        name: "Owner",
-        organizationId: organization.id,
-        permissions: { createMany: { data: [...OWNER_PERMISSIONS] } },
-      },
-      select: { id: true, name: true },
-    });
+    const { Owner: ownerRole } = await syncSystemRoles(
+      transaction,
+      organization.id
+    );
 
     await transaction.membership.create({
       data: {

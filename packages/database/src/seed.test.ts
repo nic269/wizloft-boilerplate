@@ -8,6 +8,7 @@ describe("database seed", () => {
   it("reconciles system roles and permissions with the policy catalog", async () => {
     const transaction = {
       organization: {
+        findMany: vi.fn().mockResolvedValue([{ id: "org-1" }, { id: "org-2" }]),
         upsert: vi.fn().mockResolvedValue({ id: "org-1" }),
       },
       role: {
@@ -28,14 +29,14 @@ describe("database seed", () => {
 
     await seedDatabase(client as never);
 
-    expect(transaction.role.upsert).toHaveBeenCalledTimes(4);
+    expect(transaction.role.upsert).toHaveBeenCalledTimes(8);
     expect(transaction.role.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         create: expect.objectContaining({ isSystem: true, name: "Owner" }),
         update: expect.objectContaining({ isSystem: true }),
       })
     );
-    expect(transaction.rolePermission.deleteMany).toHaveBeenCalledTimes(4);
+    expect(transaction.rolePermission.deleteMany).toHaveBeenCalledTimes(8);
     expect(transaction.rolePermission.createMany).toHaveBeenCalledWith({
       data: ROLE_PERMISSION_PRESETS.Member.map((permission) => ({
         ...permission,

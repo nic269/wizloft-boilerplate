@@ -264,6 +264,7 @@ model WebhookEvent {
 model JobRun {
   id             String       @id @default(cuid())
   organizationId String?
+  scopeKey       String       @default("global")
   name           String
   status         JobRunStatus @default(QUEUED)
   idempotencyKey String?
@@ -278,7 +279,7 @@ model JobRun {
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   logs         JobLog[]
 
-  @@unique([name, idempotencyKey])
+  @@unique([scopeKey, name, idempotencyKey])
   @@index([organizationId, createdAt])
   @@index([status, createdAt])
   @@map("job_run")

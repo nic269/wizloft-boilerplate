@@ -33,6 +33,12 @@ describe("storage provider", () => {
   it("uses local storage by default", async () => {
     const root = await mkdtemp(join(tmpdir(), "wizloft-storage-"));
     vi.stubEnv("LOCAL_STORAGE_DIR", root);
+    expect(getStorageProviderStatus()).toEqual({
+      configured: true,
+      mode: "local",
+      provider: "local",
+      state: "configured",
+    });
     const provider = getStorageProvider();
 
     await provider.putObject({

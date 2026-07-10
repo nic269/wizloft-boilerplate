@@ -41,3 +41,4 @@ scripts/bin/harness-cli.exe
 .history/
 
 .env
+.data/

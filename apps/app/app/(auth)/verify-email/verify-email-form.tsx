@@ -29,20 +29,28 @@ const getErrorMessage = (error: unknown) => {
 };
 
 export const VerifyEmailForm = ({
+  callbackUrl,
   email,
   token,
 }: {
+  callbackUrl: string;
   email: string;
   token: string;
 }) => {
   if (token) {
-    return <TokenVerificationPanel token={token} />;
+    return <TokenVerificationPanel callbackUrl={callbackUrl} token={token} />;
   }
 
-  return <ResendVerificationPanel email={email} />;
+  return <ResendVerificationPanel callbackUrl={callbackUrl} email={email} />;
 };
 
-const TokenVerificationPanel = ({ token }: { token: string }) => {
+const TokenVerificationPanel = ({
+  callbackUrl,
+  token,
+}: {
+  callbackUrl: string;
+  token: string;
+}) => {
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(Boolean(token));
   const [verified, setVerified] = useState(false);
@@ -54,7 +62,7 @@ const TokenVerificationPanel = ({ token }: { token: string }) => {
       try {
         const response = await authClient.verifyEmail({
           query: {
-            callbackURL: "/dashboard",
+            callbackURL: callbackUrl,
             token,
           },
         });
@@ -90,7 +98,7 @@ const TokenVerificationPanel = ({ token }: { token: string }) => {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [callbackUrl, token]);
 
   return (
     <VerificationCard>
@@ -113,7 +121,7 @@ const TokenVerificationPanel = ({ token }: { token: string }) => {
         {isPending ? null : (
           <Link
             className={buttonVariants({ className: "w-full" })}
-            href={verified ? "/dashboard" : "/verify-email"}
+            href={verified ? callbackUrl : "/verify-email"}
           >
             {verified ? "Continue" : "Request a new link"}
           </Link>
@@ -123,7 +131,13 @@ const TokenVerificationPanel = ({ token }: { token: string }) => {
   );
 };
 
-const ResendVerificationPanel = ({ email }: { email: string }) => {
+const ResendVerificationPanel = ({
+  callbackUrl,
+  email,
+}: {
+  callbackUrl: string;
+  email: string;
+}) => {
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [sentEmail, setSentEmail] = useState<string | null>(null);
@@ -138,7 +152,7 @@ const ResendVerificationPanel = ({ email }: { email: string }) => {
 
     try {
       const response = await authClient.sendVerificationEmail({
-        callbackURL: "/dashboard",
+        callbackURL: callbackUrl,
         email: targetEmail,
       });
 

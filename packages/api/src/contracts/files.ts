@@ -15,7 +15,7 @@ export const filesContract = {
         ...dataEnvelope(
           z.object({
             configured: z.boolean(),
-            mode: z.enum(["durable", "ephemeral", "disabled"]),
+            mode: z.enum(["local", "durable", "ephemeral", "disabled"]),
             provider: z.enum(["local", "memory", "s3", "r2"]),
           })
         ).shape,

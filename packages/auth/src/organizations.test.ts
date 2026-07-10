@@ -1,4 +1,4 @@
-import { prisma } from "@repo/database";
+import { prisma, syncSystemRoles } from "@repo/database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createOrganizationForUser,
@@ -11,6 +11,7 @@ vi.mock("@repo/database", () => ({
     $transaction: vi.fn(),
     organization: { findMany: vi.fn() },
   },
+  syncSystemRoles: vi.fn(),
 }));
 
 describe("organization service", () => {
@@ -45,12 +46,25 @@ describe("organization service", () => {
           .mockResolvedValue({ id: "org-1", name: "Acme", slug: "acme" }),
       },
       role: {
-        create: vi.fn().mockResolvedValue({ id: "role-1", name: "Owner" }),
+        upsert: vi.fn().mockImplementation(({ create }) => ({
+          id: `role-${create.name}`,
+          name: create.name,
+        })),
+      },
+      rolePermission: {
+        createMany: vi.fn().mockResolvedValue({ count: 1 }),
+        deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
       },
     };
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
       callback(transaction as never)
     );
+    vi.mocked(syncSystemRoles).mockResolvedValue({
+      Admin: { id: "role-Admin", name: "Admin" },
+      Member: { id: "role-Member", name: "Member" },
+      Owner: { id: "role-Owner", name: "Owner" },
+      Viewer: { id: "role-Viewer", name: "Viewer" },
+    });
 
     await expect(
       createOrganizationForUser({
@@ -67,11 +81,12 @@ describe("organization service", () => {
     expect(transaction.membership.create).toHaveBeenCalledWith({
       data: {
         organizationId: "org-1",
-        roleId: "role-1",
+        roleId: "role-Owner",
         status: "ACTIVE",
         userId: "user-1",
       },
     });
+    expect(syncSystemRoles).toHaveBeenCalledWith(transaction, "org-1");
     expect(transaction.auditLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         action: "organization.created",

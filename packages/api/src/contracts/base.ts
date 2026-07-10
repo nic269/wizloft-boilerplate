@@ -18,5 +18,18 @@ export const apiContract = oc.errors({
 
 export const emptyInputSchema = z.object({});
 
+export const cursorPaginationInputSchema = z.object({
+  cursor: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export const pageInfoSchema = z.object({
+  nextCursor: z.string().nullable(),
+});
+
 export const dataEnvelope = <TSchema extends z.ZodType>(schema: TSchema) =>
   z.object({ data: schema });
+
+export const paginatedDataEnvelope = <TSchema extends z.ZodType>(
+  schema: TSchema
+) => z.object({ data: z.array(schema), pageInfo: pageInfoSchema });

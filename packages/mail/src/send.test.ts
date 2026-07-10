@@ -1,4 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   assertMailProviderConfiguration,
   getMailProviderStatus,
@@ -7,19 +10,44 @@ import {
 } from "./send";
 
 describe("mail provider", () => {
-  beforeEach(() => {
+  let outboxRoot: string;
+
+  beforeEach(async () => {
     vi.unstubAllEnvs();
+    outboxRoot = await mkdtemp(join(tmpdir(), "wizloft-mail-outbox-"));
+    vi.stubEnv("MAIL_OUTBOX_DIR", outboxRoot);
+  });
+
+  afterEach(async () => {
+    vi.unstubAllEnvs();
+    await rm(outboxRoot, { force: true, recursive: true });
   });
 
   it("uses console delivery when provider credentials are absent", async () => {
     vi.stubEnv("RESEND_API_KEY", "");
     const status = getMailProviderStatus();
 
-    await expect(
-      sendMail({ subject: "Hello", text: "Body", to: "user@example.com" })
-    ).resolves.toMatchObject({
+    const delivery = await sendMail({
+      subject: "Hello",
+      text: "Body",
+      to: "user@example.com",
+    });
+    expect(delivery).toMatchObject({
       provider: "console",
     });
+    const files = await readdir(outboxRoot);
+    expect(files).toHaveLength(1);
+    const message = JSON.parse(
+      await readFile(join(outboxRoot, files[0] as string), "utf8")
+    ) as Record<string, unknown>;
+    expect(message).toMatchObject({
+      subject: "Hello",
+      text: "Body",
+      to: "user@example.com",
+    });
+    expect(message.id).toBe(delivery.id);
+    expect(message).not.toHaveProperty("react");
+    expect(message).not.toHaveProperty("html");
     expect(status).toEqual({
       configured: false,
       mode: "development",
@@ -54,6 +82,15 @@ describe("mail provider", () => {
 
     expect(() => assertMailProviderConfiguration()).toThrow(
       MailConfigurationError
+    );
+  });
+
+  it("rejects console delivery when production features require mail", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("MAIL_PROVIDER", "console");
+
+    expect(() => assertMailProviderConfiguration({ required: true })).toThrow(
+      "A real mail provider is required"
     );
   });
 

@@ -15,11 +15,11 @@ code.
 | --- | --- | --- |
 | Monorepo tooling | Ready | pnpm, Turbo, Ultracite-on-Biome, TypeScript strict, workspace package boundaries. |
 | Environment workflow | Ready | Root `.env.example`, root `.env` loading through `dotenv-cli`, package-level typed env contracts. |
-| Database | Ready | Initial migration, PostgreSQL compose service, query indexes and provider uniqueness, invitation-role FK, scoped feature flags, catalog-reconciled system-role seed. |
-| Auth | Ready | Better Auth server/client package split, same-origin Next rewrites, email-password E2E coverage, suspended-user access enforcement, shared verification/reset email delivery, browser reset-password and verify/resend screens. |
-| Organizations and access | Ready | Organization onboarding, invitations, RBAC, member management, last-owner protection, audit log patterns. |
-| API | Ready | Hono app, API package, liveness/readiness checks, provider status, RPC-style registry, OpenAPI handoff. |
-| Providers | Ready as optional core | Mail and storage disable/fallback cleanly when absent, report explicit states, and fail production API startup when a selected Resend/SMTP/S3/R2 provider is incomplete. |
+| Database | Ready | Forward migrations, scoped job idempotency, pending-invitation and integration identity indexes, invitation-role FK, scoped feature flags, catalog-reconciled system roles. |
+| Auth | Ready | Required verified email, callback-safe auto sign-in, suspended-user access enforcement, branded verification/reset delivery, private development outbox, and recovery screens. |
+| Organizations and access | Ready | Organization onboarding, race-safe invitations, RBAC, member management, last-owner protection, and cursor-paginated access/audit lists. |
+| API | Ready | Hono app, contract-first oRPC implementation, `/health`/`/ready`/`/status`, provider-aware readiness, bounded pagination, and OpenAPI handoff. |
+| Providers | Ready with feature requirements | Local fallbacks report truthful modes; enabled production auth requires real mail; selected Resend/SMTP/S3/R2 configurations fail startup/readiness when incomplete. |
 | UI system | Ready | Design-system provider, shared global tokens, app-owned CSS override seams, Storybook surface. |
 | Handoff surfaces | Ready | `apps/web`, `apps/docs`, `apps/email`, `apps/storybook`. |
 | Release validation | Ready | `pnpm release:check`, deterministic six-journey browser E2E, and production Docker proof for fail-fast, public assets, and app/API/web readiness. |
@@ -55,17 +55,14 @@ pnpm test:e2e:db
 
 - `apps/email` is a development preview surface; it intentionally does not have
   a production app build.
-- Email verification messages are sent on sign-up and the app has verify/resend
-  screens, but verified-email enforcement before sign-in is not enabled by
-  default yet. Enable it in a project-specific story when that onboarding
-  behavior is desired.
+- Email/password signup requires verification. Production deployments must
+  configure Resend or SMTP; local and E2E flows use the private filesystem outbox.
 - Storybook build can emit bundle-size warnings. These are acceptable for a
   design-system review surface, not product runtime warnings.
 - Live delivery/storage smoke checks still require real S3, Resend, or SMTP
   credentials and should be added by the project that selects those providers.
-- `/ready` checks database connectivity only. Optional provider credentials are
-  still reported as diagnostics and should get provider-specific smoke checks in
-  projects that enable them.
+- `/ready` checks database connectivity and providers required by enabled
+  production features. Live delivery/storage smoke still needs deployment credentials.
 - `pnpm test:e2e:db` uses an isolated Compose project, force-resets its dedicated
   schema, and removes its volume after each run. It remains local-only until a
   project accepts the browser runtime cost in pull-request CI.

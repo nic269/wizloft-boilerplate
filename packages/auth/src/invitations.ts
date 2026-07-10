@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
-import { MEMBER_PERMISSIONS } from "@repo/access-control";
-import { prisma } from "@repo/database";
+import { prisma, syncSystemRoles } from "@repo/database";
+import { cursorDate, decodeCursor, type PageInput, toPage } from "./pagination";
 
 export type InvitationErrorCode =
   | "INVITATION_NOT_FOUND"
@@ -26,9 +26,11 @@ export const hashInvitationToken = (token: string) =>
 export const createInvitationToken = () =>
   randomBytes(32).toString("base64url");
 
-export const listInvitations = (organizationId: string) =>
-  prisma.invitation.findMany({
-    orderBy: { createdAt: "desc" },
+export const listInvitations = async (input: PageInput) => {
+  const cursor = decodeCursor(input.cursor, "invitations");
+  const cursorCreatedAt = cursor ? cursorDate(cursor.sort) : undefined;
+  const rows = await prisma.invitation.findMany({
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     select: {
       createdAt: true,
       email: true,
@@ -37,8 +39,25 @@ export const listInvitations = (organizationId: string) =>
       invitedBy: { select: { name: true } },
       status: true,
     },
-    where: { organizationId },
+    take: input.limit + 1,
+    where: {
+      organizationId: input.organizationId,
+      ...(cursor && cursorCreatedAt
+        ? {
+            OR: [
+              { createdAt: { lt: cursorCreatedAt } },
+              { createdAt: cursorCreatedAt, id: { lt: cursor.id } },
+            ],
+          }
+        : {}),
+    },
   });
+  return toPage(rows, input.limit, (invitation) => ({
+    id: invitation.id,
+    kind: "invitations",
+    sort: invitation.createdAt.toISOString(),
+  }));
+};
 
 export const createInvitation = async (input: {
   organizationId: string;
@@ -49,58 +68,75 @@ export const createInvitation = async (input: {
   const token = createInvitationToken();
   const email = normalizeInvitationEmail(input.email);
 
-  const invitation = await prisma.$transaction(async (transaction) => {
-    const memberRole = await transaction.role.upsert({
-      create: {
-        description: "Standard organization member access.",
-        isSystem: true,
-        name: "Member",
-        organizationId: input.organizationId,
-        permissions: { createMany: { data: [...MEMBER_PERMISSIONS] } },
-      },
-      select: { id: true },
-      update: { isSystem: true },
-      where: {
-        organizationId_name: {
-          name: "Member",
-          organizationId: input.organizationId,
+  const persistInvitation = () =>
+    prisma.$transaction(async (transaction) => {
+      let memberRole = await transaction.role.findUnique({
+        select: { id: true },
+        where: {
+          organizationId_name: {
+            name: "Member",
+            organizationId: input.organizationId,
+          },
         },
-      },
+      });
+      if (!memberRole) {
+        const roles = await syncSystemRoles(transaction, input.organizationId);
+        memberRole = roles.Member;
+      }
+
+      const pending = await transaction.invitation.findFirst({
+        select: { id: true },
+        where: {
+          email,
+          organizationId: input.organizationId,
+          status: "PENDING",
+        },
+      });
+
+      const data = {
+        expiresAt: input.expiresAt,
+        invitedById: input.invitedById,
+        roleId: memberRole.id,
+        tokenHash: hashInvitationToken(token),
+      };
+      const created = pending
+        ? await transaction.invitation.update({
+            data,
+            where: { id: pending.id },
+          })
+        : await transaction.invitation.create({
+            data: { ...data, email, organizationId: input.organizationId },
+          });
+
+      await transaction.auditLog.create({
+        data: {
+          action: "invitation.created",
+          actorId: input.invitedById,
+          metadata: { email, expiresAt: input.expiresAt.toISOString() },
+          organizationId: input.organizationId,
+          targetId: created.id,
+          targetType: "Invitation",
+        },
+      });
+
+      return created;
     });
 
-    const pending = await transaction.invitation.findFirst({
-      select: { id: true },
-      where: { email, organizationId: input.organizationId, status: "PENDING" },
-    });
-
-    const data = {
-      expiresAt: input.expiresAt,
-      invitedById: input.invitedById,
-      roleId: memberRole.id,
-      tokenHash: hashInvitationToken(token),
-    };
-    const created = pending
-      ? await transaction.invitation.update({ data, where: { id: pending.id } })
-      : await transaction.invitation.create({
-          data: { ...data, email, organizationId: input.organizationId },
-        });
-
-    await transaction.auditLog.create({
-      data: {
-        action: "invitation.created",
-        actorId: input.invitedById,
-        metadata: { email, expiresAt: input.expiresAt.toISOString() },
-        organizationId: input.organizationId,
-        targetId: created.id,
-        targetType: "Invitation",
-      },
-    });
-
-    return created;
+  const invitation = await persistInvitation().catch((error: unknown) => {
+    if (!isUniqueConstraintError(error)) {
+      throw error;
+    }
+    return persistInvitation();
   });
 
   return { invitation, token };
 };
+
+const isUniqueConstraintError = (error: unknown) =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  error.code === "P2002";
 
 export const revokeInvitation = (input: {
   organizationId: string;

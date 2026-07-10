@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
+  completeEmailVerification,
   createOrganization,
   createTestSuffix,
   DASHBOARD_URL_PATTERN,
@@ -8,6 +9,7 @@ import {
 } from "./support/user-flows";
 
 const INVITE_URL_PATTERN = /\/invite\//;
+const VERIFY_EMAIL_URL_PATTERN = /\/verify-email\?/;
 
 test("owner can invite a member who signs up and accepts access", async ({
   browser,
@@ -41,6 +43,12 @@ test("owner can invite a member who signs up and accepts access", async ({
     await memberPage.getByPlaceholder("you@example.com").fill(memberEmail);
     await memberPage.getByPlaceholder("Password").fill(E2E_PASSWORD);
     await memberPage.getByRole("button", { name: "Create account" }).click();
+    await expect(memberPage).toHaveURL(VERIFY_EMAIL_URL_PATTERN);
+    await completeEmailVerification({
+      email: memberEmail,
+      expectedUrl: INVITE_URL_PATTERN,
+      page: memberPage,
+    });
     await expect(memberPage).toHaveURL(INVITE_URL_PATTERN);
 
     await memberPage.getByRole("button", { name: "Accept invitation" }).click();

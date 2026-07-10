@@ -1,5 +1,6 @@
 import { logger } from "@repo/logger";
 import type { ReactElement } from "react";
+import { writeDevOutboxMessage } from "./dev-outbox";
 import { keys } from "./keys";
 
 export interface SendMailInput {
@@ -30,9 +31,19 @@ export class MailConfigurationError extends Error {
 }
 
 export const consoleMailProvider: MailProvider = {
-  send(input) {
-    logger.info("mail.console", { subject: input.subject, to: input.to });
-    return Promise.resolve({ id: crypto.randomUUID(), provider: "console" });
+  async send(input) {
+    const env = keys();
+    const message = await writeDevOutboxMessage(
+      input,
+      env.MAIL_OUTBOX_DIR ?? ".data/mail"
+    );
+    logger.info("mail.console", {
+      id: message.id,
+      outboxPath: message.path,
+      subject: input.subject,
+      to: input.to,
+    });
+    return { id: message.id, provider: "console" };
   },
 };
 
@@ -86,14 +97,18 @@ export const getMailProviderStatus = (): MailProviderStatus => {
   return { configured: true, mode: "provider", provider, state: "configured" };
 };
 
-export const assertMailProviderConfiguration = () => {
+export const assertMailProviderConfiguration = (
+  options: { required?: boolean } = {}
+) => {
   const status = getMailProviderStatus();
   if (
     process.env.NODE_ENV === "production" &&
-    status.state === "misconfigured"
+    (status.state === "misconfigured" ||
+      (options.required === true && status.state !== "configured"))
   ) {
     throw new MailConfigurationError(
-      status.message ?? "Mail provider configuration is incomplete."
+      status.message ??
+        "A real mail provider is required by enabled production features."
     );
   }
   return status;

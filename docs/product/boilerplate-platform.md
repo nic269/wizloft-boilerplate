@@ -51,19 +51,23 @@ domain assumptions.
 - Contract-first oRPC schemas drive Hono runtime handling, Zod input/output
   validation, generated OpenAPI, stable operation IDs, and typed browser/server
   clients. API error envelopes include the request ID in both Hono and oRPC
-  responses. Existing REST contracts and deprecated health RPC URLs remain
-  compatible.
+  responses. Health surfaces are `/health`, `/ready`, and `/status`; provisional
+  legacy RPC aliases are not part of the current contract.
 - API liveness and readiness are separate operational signals: `/health` is a
-  cheap process check, while `/ready` verifies database connectivity and returns
-  `503 Service Unavailable` when the API should not receive traffic.
+  cheap process check, while `/ready` verifies database connectivity and the
+  providers required by enabled production features, returning `503 Service
+  Unavailable` when the API should not receive traffic.
 - Optional mail, storage, jobs, billing, analytics, CMS, and observability
   packages that degrade gracefully when disabled. Mail supports console,
   Resend, and SMTP delivery; storage supports local, memory, S3, and R2 private
   objects; jobs include a local in-process provider with idempotency, retry,
-  and run status. Provider diagnostics distinguish disabled, configured, and
-  misconfigured states without exposing credentials. Explicitly selected mail
-  or S3-compatible providers fail production API startup when required values
-  are missing instead of silently falling back.
+  and async run status. Provider diagnostics distinguish disabled, configured,
+  and misconfigured states without exposing credentials. Local storage is
+  described as local rather than durable. Enabled auth delivery requires real
+  production mail, and explicitly selected S3-compatible providers fail
+  production API startup when required values are missing.
+- Organization members, roles, invitations, and audit logs use deterministic
+  opaque cursor pagination with bounded limits and `pageInfo.nextCursor`.
 - A source-owned design-system with the complete shadcn Base UI component set,
   stable component subpath exports, and generic helper packages.
 - Handoff surfaces for future products: docs app, React Email previews, Storybook design-system examples, and template

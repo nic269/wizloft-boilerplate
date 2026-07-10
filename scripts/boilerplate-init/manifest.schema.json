@@ -14,11 +14,37 @@
   "properties": {
     "$schema": { "type": "string" },
     "version": { "const": 1 },
-    "sourceExcludes": { "type": "array", "items": { "type": "string" } },
-    "remove": { "type": "array", "items": { "type": "string" } },
-    "requiredApps": { "type": "array", "items": { "type": "string" } },
-    "defaultApps": { "type": "array", "items": { "type": "string" } },
-    "optionalApps": { "type": "array", "items": { "type": "string" } },
-    "validationCommands": { "type": "array", "items": { "type": "string" } }
+    "sourceExcludes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "remove": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "requiredApps": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "defaultApps": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "optionalApps": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "validationCommands": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    }
   }
 }

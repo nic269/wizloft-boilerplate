@@ -1,5 +1,8 @@
 # US-007 API Contract RPC Foundation
 
+> Historical evidence: decision 0018 and US-037 remove the provisional legacy
+> RPC health aliases; current consumers use `/health`, `/ready`, and `/status`.
+
 ## Status
 
 implemented

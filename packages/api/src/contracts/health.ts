@@ -9,9 +9,11 @@ const readinessCheckSchema = z.object({
 });
 const providerStatusSchema = z.object({
   configured: z.boolean(),
+  healthy: z.boolean(),
   message: z.string().optional(),
   mode: z.string(),
   provider: z.string(),
+  required: z.boolean(),
   state: z.enum(["configured", "disabled", "misconfigured"]),
 });
 export const readySchema = z.object({
@@ -61,37 +63,4 @@ const status = apiContract
   .input(emptyInputSchema)
   .output(statusSchema);
 
-const legacyRpc = {
-  health: apiContract
-    .route({
-      deprecated: true,
-      method: "GET",
-      operationId: "health.get.rpc",
-      path: "/rpc/health.get",
-      summary: "RPC health.get",
-    })
-    .input(emptyInputSchema)
-    .output(z.object({ data: okSchema })),
-  ready: apiContract
-    .route({
-      deprecated: true,
-      method: "GET",
-      operationId: "ready.get.rpc",
-      path: "/rpc/ready.get",
-      summary: "RPC ready.get",
-    })
-    .input(emptyInputSchema)
-    .output(z.object({ data: readySchema })),
-  status: apiContract
-    .route({
-      deprecated: true,
-      method: "GET",
-      operationId: "status.get.rpc",
-      path: "/rpc/status.get",
-      summary: "RPC status.get",
-    })
-    .input(emptyInputSchema)
-    .output(z.object({ data: statusSchema })),
-};
-
-export const healthContract = { health, legacyRpc, ready, status };
+export const healthContract = { health, ready, status };

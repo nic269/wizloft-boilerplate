@@ -1,5 +1,8 @@
 # Design
 
+> Superseded in part by decisions 0016 and US-037: `/ready` now evaluates
+> providers required by enabled production features.
+
 ## Domain Model
 
 Provider status retains `configured` for compatibility and adds `state` with

@@ -6,6 +6,7 @@ export const keys = () =>
     emptyStringAsUndefined: true,
     runtimeEnv: process.env,
     server: {
+      MAIL_OUTBOX_DIR: z.string().min(1).optional(),
       MAIL_PROVIDER: z.enum(["console", "resend", "smtp"]).optional(),
       RESEND_API_KEY: z.string().min(1).optional(),
       RESEND_FROM_EMAIL: z.string().email().optional(),

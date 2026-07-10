@@ -116,12 +116,12 @@ application traffic. The checked-in initial migration supports clean project
 forks; existing databases created with `db:push` must be baselined deliberately
 before adopting migration deploy.
 
-Optional providers follow one deployment rule: absent integrations stay
-disabled or local, while explicitly selected `resend`, `smtp`, `s3`, or `r2`
+Provider requirements follow enabled features. Local development can use the
+private mail outbox and local storage, while production auth delivery requires a
+configured `resend` or `smtp` provider. Explicitly selected `s3` or `r2`
 providers must have all required variables. The API exits before listening when
-production provider configuration is incomplete. `/ready` reports provider
-state diagnostics but keeps optional providers separate from database
-readiness.
+production provider configuration is incomplete, and `/ready` fails when the
+database or a required provider is unhealthy.
 
 The final fork-readiness audit lives in `docs/release-readiness.md`.
 

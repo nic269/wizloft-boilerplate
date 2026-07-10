@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { apiContract, dataEnvelope, emptyInputSchema } from "./base";
+import {
+  apiContract,
+  cursorPaginationInputSchema,
+  dataEnvelope,
+  emptyInputSchema,
+  paginatedDataEnvelope,
+} from "./base";
 
 export const permissionSchema = z.object({
   action: z.string().min(1),
@@ -49,6 +55,9 @@ export const auditLogSchema = z.object({
 });
 
 const organizationIdInput = z.object({ organizationId: z.string().min(1) });
+const organizationPageInput = organizationIdInput.extend(
+  cursorPaginationInputSchema.shape
+);
 
 export const organizationsContract = {
   auditLogs: apiContract
@@ -58,8 +67,8 @@ export const organizationsContract = {
       path: "/api/organizations/{organizationId}/audit-logs",
       summary: "List organization audit logs",
     })
-    .input(organizationIdInput)
-    .output(dataEnvelope(z.array(auditLogSchema))),
+    .input(organizationPageInput)
+    .output(paginatedDataEnvelope(auditLogSchema)),
   create: apiContract
     .route({
       method: "POST",
@@ -104,8 +113,8 @@ export const organizationsContract = {
         path: "/api/organizations/{organizationId}/invitations",
         summary: "List organization invitations",
       })
-      .input(organizationIdInput)
-      .output(dataEnvelope(z.array(invitationSchema))),
+      .input(organizationPageInput)
+      .output(paginatedDataEnvelope(invitationSchema)),
     revoke: apiContract
       .route({
         method: "DELETE",
@@ -134,8 +143,8 @@ export const organizationsContract = {
         path: "/api/organizations/{organizationId}/members",
         summary: "List organization members",
       })
-      .input(organizationIdInput)
-      .output(dataEnvelope(z.array(memberSchema))),
+      .input(organizationPageInput)
+      .output(paginatedDataEnvelope(memberSchema)),
     updateRole: apiContract
       .route({
         method: "PATCH",
@@ -176,7 +185,7 @@ export const organizationsContract = {
         path: "/api/organizations/{organizationId}/roles",
         summary: "List organization roles",
       })
-      .input(organizationIdInput)
-      .output(dataEnvelope(z.array(roleSchema))),
+      .input(organizationPageInput)
+      .output(paginatedDataEnvelope(roleSchema)),
   },
 };

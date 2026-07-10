@@ -112,12 +112,8 @@ export const createApiApp = () => {
     context.json<ApiErrorResponse>(
       {
         error: {
-          code: context.req.path.startsWith("/rpc/")
-            ? "RPC_NOT_FOUND"
-            : "NOT_FOUND",
-          message: context.req.path.startsWith("/rpc/")
-            ? "RPC procedure not found."
-            : "Route not found.",
+          code: "NOT_FOUND",
+          message: "Route not found.",
           requestId: context.get("requestId"),
         },
       },

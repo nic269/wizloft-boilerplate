@@ -22,12 +22,13 @@ describe("session helpers", () => {
   it("returns active user sessions", async () => {
     vi.mocked(auth.api.getSession).mockResolvedValue(session as never);
     vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      emailVerified: true,
       status: "ACTIVE",
     } as never);
 
     await expect(getCurrentSession(new Headers())).resolves.toEqual(session);
     expect(prisma.user.findUnique).toHaveBeenCalledWith({
-      select: { status: true },
+      select: { emailVerified: true, status: true },
       where: { id: "user-1" },
     });
   });
@@ -37,7 +38,10 @@ describe("session helpers", () => {
     "SUSPENDED",
   ] as const)("returns null for %s users", async (status) => {
     vi.mocked(auth.api.getSession).mockResolvedValue(session as never);
-    vi.mocked(prisma.user.findUnique).mockResolvedValue({ status } as never);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      emailVerified: true,
+      status,
+    } as never);
 
     await expect(getCurrentSession(new Headers())).resolves.toBeNull();
   });
@@ -45,6 +49,16 @@ describe("session helpers", () => {
   it("returns null when the session user no longer exists", async () => {
     vi.mocked(auth.api.getSession).mockResolvedValue(session as never);
     vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
+
+    await expect(getCurrentSession(new Headers())).resolves.toBeNull();
+  });
+
+  it("returns null for active users with unverified email", async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(session as never);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      emailVerified: false,
+      status: "ACTIVE",
+    } as never);
 
     await expect(getCurrentSession(new Headers())).resolves.toBeNull();
   });

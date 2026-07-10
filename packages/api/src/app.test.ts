@@ -3,6 +3,7 @@ import {
   listAuditLogs,
   listMembers,
   listRoles,
+  PaginationCursorError,
   updateMemberRole,
 } from "@repo/auth/access-control";
 import {
@@ -18,9 +19,10 @@ import {
 import { hasPermission } from "@repo/auth/permissions";
 import { getCurrentSession } from "@repo/auth/session";
 import { prisma } from "@repo/database";
-import { sendMail } from "@repo/mail";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { assertMailProviderConfiguration, sendMail } from "@repo/mail";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApiApp } from "./app";
+import { assertApiProviderConfiguration } from "./health";
 
 vi.mock("@repo/auth/session", () => ({ getCurrentSession: vi.fn() }));
 vi.mock("@repo/auth/keys", () => ({
@@ -63,6 +65,7 @@ vi.mock("@repo/auth/access-control", () => ({
   listAuditLogs: vi.fn(),
   listMembers: vi.fn(),
   listRoles: vi.fn(),
+  PaginationCursorError: class MockPaginationCursorError extends Error {},
   updateMemberRole: vi.fn(),
 }));
 vi.mock("@repo/auth/permissions", () => ({ hasPermission: vi.fn() }));
@@ -83,7 +86,7 @@ vi.mock("@repo/storage", () => ({
   assertStorageProviderConfiguration: vi.fn(),
   getStorageProviderStatus: () => ({
     configured: true,
-    mode: "durable",
+    mode: "local",
     provider: "local",
     state: "configured",
   }),
@@ -103,17 +106,19 @@ describe("api app", () => {
     vi.mocked(prisma.$queryRaw).mockResolvedValue([{ "?column?": 1 }]);
   });
 
+  afterEach(() => vi.unstubAllEnvs());
+
   it("serves status", async () => {
     const response = await createApiApp().request("/status");
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ ok: true, service: "api" });
   });
 
-  it("serves typed RPC status procedure", async () => {
+  it("does not expose removed legacy RPC procedures", async () => {
     const response = await createApiApp().request("/rpc/status.get");
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(404);
     expect(await response.json()).toMatchObject({
-      data: { ok: true, service: "api" },
+      error: { code: "NOT_FOUND" },
     });
   });
 
@@ -128,6 +133,32 @@ describe("api app", () => {
         jobs: { configured: true, provider: "local" },
         mail: { configured: false, provider: "console", state: "disabled" },
         storage: { configured: true, provider: "local" },
+      },
+    });
+  });
+
+  it("uses auth delivery requirements for startup provider policy", () => {
+    assertApiProviderConfiguration();
+
+    expect(assertMailProviderConfiguration).toHaveBeenCalledWith({
+      required: true,
+    });
+  });
+
+  it("fails production readiness when required mail is disabled", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+
+    const response = await createApiApp().request("/ready");
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({
+      error: {
+        code: "SERVICE_UNAVAILABLE",
+        details: {
+          providers: {
+            mail: { healthy: false, required: true, state: "disabled" },
+          },
+        },
       },
     });
   });
@@ -148,13 +179,13 @@ describe("api app", () => {
     });
   });
 
-  it("returns structured errors for unknown RPC procedures", async () => {
+  it("returns standard structured errors for unknown routes", async () => {
     const response = await createApiApp().request("/rpc/missing.get", {
       headers: { "x-request-id": "req-rpc-missing" },
     });
     expect(response.status).toBe(404);
     expect(await response.json()).toMatchObject({
-      error: { code: "RPC_NOT_FOUND", requestId: "req-rpc-missing" },
+      error: { code: "NOT_FOUND", requestId: "req-rpc-missing" },
     });
   });
 
@@ -163,9 +194,7 @@ describe("api app", () => {
     expect(response.status).toBe(200);
     const document = await response.json();
     expect(document.paths["/status"].get.operationId).toBe("status.get.rest");
-    expect(document.paths["/rpc/status.get"].get.operationId).toBe(
-      "status.get.rpc"
-    );
+    expect(document.paths["/rpc/status.get"]).toBeUndefined();
   });
 
   it("exposes optional provider statuses", async () => {
@@ -490,17 +519,20 @@ describe("api app", () => {
       user: { id: "user-1" },
     } as never);
     vi.mocked(hasPermission).mockResolvedValue(true);
-    vi.mocked(listAuditLogs).mockResolvedValue([
-      {
-        action: "role.created",
-        actor: null,
-        createdAt: new Date("2030-01-01T00:00:00.000Z"),
-        id: "audit-1",
-        metadata: null,
-        targetId: "role-1",
-        targetType: "Role",
-      },
-    ] as never);
+    vi.mocked(listAuditLogs).mockResolvedValue({
+      items: [
+        {
+          action: "role.created",
+          actor: null,
+          createdAt: new Date("2030-01-01T00:00:00.000Z"),
+          id: "audit-1",
+          metadata: null,
+          targetId: "role-1",
+          targetType: "Role",
+        },
+      ],
+      nextCursor: null,
+    } as never);
 
     const response = await createApiApp().request(
       "/api/organizations/org-1/audit-logs"
@@ -513,7 +545,10 @@ describe("api app", () => {
       organizationId: "org-1",
       userId: "user-1",
     });
-    expect(listAuditLogs).toHaveBeenCalledWith("org-1");
+    expect(listAuditLogs).toHaveBeenCalledWith({
+      limit: 20,
+      organizationId: "org-1",
+    });
   });
 
   it("lists members through member read permission", async () => {
@@ -521,13 +556,36 @@ describe("api app", () => {
       user: { id: "user-1" },
     } as never);
     vi.mocked(hasPermission).mockResolvedValue(true);
-    vi.mocked(listMembers).mockResolvedValue([]);
+    vi.mocked(listMembers).mockResolvedValue({
+      items: [],
+      nextCursor: null,
+    });
 
     const response = await createApiApp().request(
       "/api/organizations/org-1/members"
     );
 
     expect(response.status).toBe(200);
-    expect(listMembers).toHaveBeenCalledWith("org-1");
+    expect(listMembers).toHaveBeenCalledWith({
+      limit: 20,
+      organizationId: "org-1",
+    });
+  });
+
+  it("normalizes malformed pagination cursors to a validation error", async () => {
+    vi.mocked(getCurrentSession).mockResolvedValue({
+      user: { id: "user-1" },
+    } as never);
+    vi.mocked(hasPermission).mockResolvedValue(true);
+    vi.mocked(listMembers).mockRejectedValue(new PaginationCursorError());
+
+    const response = await createApiApp().request(
+      "/api/organizations/org-1/members?cursor=invalid"
+    );
+
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({
+      error: { code: "VALIDATION_ERROR" },
+    });
   });
 });

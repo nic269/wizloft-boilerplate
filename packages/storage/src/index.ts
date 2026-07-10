@@ -12,7 +12,7 @@ import { createS3StorageProvider, isS3StorageConfigured } from "./providers/s3";
 export interface StorageProviderStatus {
   configured: boolean;
   message?: string;
-  mode: "durable" | "ephemeral" | "disabled";
+  mode: "durable" | "ephemeral" | "local" | "disabled";
   provider: "local" | "memory" | "s3" | "r2";
   state: "configured" | "disabled" | "misconfigured";
 }
@@ -66,7 +66,7 @@ export const getStorageProviderStatus = (): StorageProviderStatus => {
 
   return {
     configured: true,
-    mode: "durable",
+    mode: "local",
     provider: "local",
     state: "configured",
   };

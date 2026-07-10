@@ -1,5 +1,8 @@
 # US-030 Real API Readiness
 
+> Superseded in part by US-037: readiness now evaluates required providers and
+> the deprecated `/rpc/ready.get` alias has been removed.
+
 ## Status
 
 implemented

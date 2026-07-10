@@ -5,6 +5,10 @@ import "./styles.css";
 
 export const metadata: Metadata = {
   description: "Authenticated product app surface.",
+  robots: {
+    follow: false,
+    index: false,
+  },
   title: "Personal SaaS Boilerplate App",
 };
 

@@ -4,6 +4,7 @@ import {
   listAuditLogs,
   listMembers,
   listRoles,
+  PaginationCursorError,
   updateMemberRole,
 } from "@repo/auth/access-control";
 import {
@@ -53,6 +54,17 @@ const requireOrganizationPermission = async (
   }
 };
 
+const requireValidPage = async <T>(query: Promise<T>) => {
+  try {
+    return await query;
+  } catch (error) {
+    if (error instanceof PaginationCursorError) {
+      throw new ApiError("VALIDATION_ERROR", error.message, 422);
+    }
+    throw error;
+  }
+};
+
 const createOrganization = os.organizations.create.handler(
   async ({ context, input }) => {
     const user = await requireUser(context.headers);
@@ -95,7 +107,14 @@ const listOrganizationInvitations = os.organizations.invitations.list.handler(
       "members",
       "read"
     );
-    return { data: await listInvitations(input.organizationId) };
+    const page = await requireValidPage(
+      listInvitations({
+        ...(input.cursor ? { cursor: input.cursor } : {}),
+        limit: input.limit,
+        organizationId: input.organizationId,
+      })
+    );
+    return { data: page.items, pageInfo: { nextCursor: page.nextCursor } };
   }
 );
 
@@ -222,7 +241,14 @@ const listOrganizationRoles = os.organizations.roles.list.handler(
       "roles",
       "read"
     );
-    return { data: await listRoles(input.organizationId) };
+    const page = await requireValidPage(
+      listRoles({
+        ...(input.cursor ? { cursor: input.cursor } : {}),
+        limit: input.limit,
+        organizationId: input.organizationId,
+      })
+    );
+    return { data: page.items, pageInfo: { nextCursor: page.nextCursor } };
   }
 );
 
@@ -235,7 +261,14 @@ const listOrganizationMembers = os.organizations.members.list.handler(
       "members",
       "read"
     );
-    return { data: await listMembers(input.organizationId) };
+    const page = await requireValidPage(
+      listMembers({
+        ...(input.cursor ? { cursor: input.cursor } : {}),
+        limit: input.limit,
+        organizationId: input.organizationId,
+      })
+    );
+    return { data: page.items, pageInfo: { nextCursor: page.nextCursor } };
   }
 );
 
@@ -286,7 +319,14 @@ const listOrganizationAuditLogs = os.organizations.auditLogs.handler(
       "audit",
       "read"
     );
-    return { data: await listAuditLogs(input.organizationId) };
+    const page = await requireValidPage(
+      listAuditLogs({
+        ...(input.cursor ? { cursor: input.cursor } : {}),
+        limit: input.limit,
+        organizationId: input.organizationId,
+      })
+    );
+    return { data: page.items, pageInfo: { nextCursor: page.nextCursor } };
   }
 );
 

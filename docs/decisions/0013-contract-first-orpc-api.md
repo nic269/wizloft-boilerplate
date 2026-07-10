@@ -21,9 +21,9 @@ call existing auth and provider services, `OpenAPIHandler` mounts them in Hono,
 `OpenAPIGenerator` publishes the specification, and `OpenAPILink` provides
 browser and server clients.
 
-Existing REST paths, response envelopes, auth cookies, success statuses, and
-error envelope remain compatible. The old health RPC URLs remain as deprecated
-contract routes while new consumers use the named client procedures.
+REST paths, auth cookies, success statuses, and the error envelope remain the
+runtime interface. The provisional health RPC URLs were removed by decision
+0018 because this boilerplate has no production consumers requiring compatibility.
 
 ## Alternatives Considered
 
@@ -48,7 +48,8 @@ Tradeoffs:
 
 - API contracts must stay browser-safe and cannot import server implementations.
 - oRPC packages become core API dependencies.
-- Legacy RPC health routes remain until consumers can remove them explicitly.
+- Historical consumers of the provisional RPC health routes must use
+  `/health`, `/ready`, and `/status`.
 
 ## Follow-Up
 

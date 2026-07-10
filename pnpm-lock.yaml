@@ -20,6 +20,9 @@ importers:
       '@types/node':
         specifier: ^26.1.0
         version: 26.1.0
+      ajv:
+        specifier: ^8.20.0
+        version: 8.20.0
       dotenv-cli:
         specifier: ^11.0.0
         version: 11.0.0
@@ -389,6 +392,9 @@ importers:
       '@repo/auth':
         specifier: workspace:*
         version: link:../auth
+      '@repo/config':
+        specifier: workspace:*
+        version: link:../config
       '@repo/database':
         specifier: workspace:*
         version: link:../database
@@ -426,6 +432,9 @@ importers:
       '@repo/access-control':
         specifier: workspace:*
         version: link:../access-control
+      '@repo/config':
+        specifier: workspace:*
+        version: link:../config
       '@repo/database':
         specifier: workspace:*
         version: link:../database

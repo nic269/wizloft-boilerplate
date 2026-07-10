@@ -33,20 +33,27 @@ describe("access control service", () => {
     vi.mocked(prisma.membership.findMany).mockResolvedValue([]);
     vi.mocked(prisma.auditLog.findMany).mockResolvedValue([]);
 
-    await listRoles("org-1");
-    await listMembers("org-1");
-    await listAuditLogs("org-1");
+    await listRoles({ limit: 20, organizationId: "org-1" });
+    await listMembers({ limit: 20, organizationId: "org-1" });
+    await listAuditLogs({ limit: 20, organizationId: "org-1" });
 
     expect(prisma.role.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { organizationId: "org-1" } })
+      expect.objectContaining({
+        take: 21,
+        where: { organizationId: "org-1" },
+      })
     );
     expect(prisma.membership.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        take: 21,
         where: { organizationId: "org-1", status: "ACTIVE" },
       })
     );
     expect(prisma.auditLog.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { organizationId: "org-1" } })
+      expect.objectContaining({
+        take: 21,
+        where: { organizationId: "org-1" },
+      })
     );
   });
 

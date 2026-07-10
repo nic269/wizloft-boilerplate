@@ -1,6 +1,7 @@
 "use client";
 
 import { signIn, signUp } from "@repo/auth/client";
+import { authFeatureConfig } from "@repo/config";
 import {
   Button,
   Card,
@@ -89,7 +90,15 @@ export const AuthForm = ({
         return;
       }
 
-      router.push(callbackUrl);
+      if (mode === "sign-up" && authFeatureConfig.requireEmailVerification) {
+        const verificationParams = new URLSearchParams({
+          callbackUrl,
+          email,
+        });
+        router.push(`/verify-email?${verificationParams.toString()}`);
+      } else {
+        router.push(callbackUrl);
+      }
       router.refresh();
     } catch (caughtError) {
       setError(getErrorMessage(caughtError));

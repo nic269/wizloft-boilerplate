@@ -1,5 +1,8 @@
 # Design
 
+> Superseded in part by decision 0016 and US-037: verification is now required
+> and E2E consumes a private development outbox.
+
 ## Domain Model
 
 The story uses Better Auth's existing `User`, verification token, and reset

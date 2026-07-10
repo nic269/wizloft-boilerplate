@@ -10,9 +10,7 @@ describe("openapi document", () => {
     expect(openApiDocument.paths?.["/status"]?.get?.operationId).toBe(
       "status.get.rest"
     );
-    expect(openApiDocument.paths?.["/rpc/status.get"]?.get?.operationId).toBe(
-      "status.get.rpc"
-    );
+    expect(openApiDocument.paths?.["/rpc/status.get"]).toBeUndefined();
     expect(
       openApiDocument.paths?.["/api/organizations/{organizationId}/members"]
         ?.get?.operationId

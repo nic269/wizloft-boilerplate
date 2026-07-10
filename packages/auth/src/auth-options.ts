@@ -1,3 +1,4 @@
+import { appConfig, authFeatureConfig } from "@repo/config";
 import { prisma } from "@repo/database";
 import { PasswordResetEmail, sendMail, VerificationEmail } from "@repo/mail";
 import type { BetterAuthOptions, User } from "better-auth";
@@ -5,7 +6,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { createElement } from "react";
 import { keys } from "./keys";
 
-const APP_NAME = "Personal SaaS Boilerplate";
+const APP_NAME = appConfig.name;
 const PASSWORD_RESET_SUBJECT = `Reset your ${APP_NAME} password`;
 const EMAIL_VERIFICATION_SUBJECT = `Verify your ${APP_NAME} email`;
 
@@ -15,6 +16,14 @@ interface AuthEmailInput {
   url: string;
   user: User;
 }
+
+const useAppAuthOrigin = (url: string, appUrl: string) => {
+  const generatedUrl = new URL(url);
+  return new URL(
+    `${generatedUrl.pathname}${generatedUrl.search}${generatedUrl.hash}`,
+    appUrl
+  ).toString();
+};
 
 export const sendPasswordResetEmail = ({ user, url }: AuthEmailInput) =>
   sendMail({
@@ -57,16 +66,24 @@ export const createAuthOptions = (env: AuthEnv = keys()): BetterAuthOptions => {
       enabled: true,
       maxPasswordLength: 128,
       minPasswordLength: 8,
+      requireEmailVerification: authFeatureConfig.requireEmailVerification,
       resetPasswordTokenExpiresIn: 60 * 60,
       sendResetPassword: async (data) => {
-        await sendPasswordResetEmail(data);
+        await sendPasswordResetEmail({
+          ...data,
+          url: useAppAuthOrigin(data.url, env.NEXT_PUBLIC_APP_URL),
+        });
       },
     },
     emailVerification: {
+      autoSignInAfterVerification: true,
       expiresIn: 60 * 60,
       sendOnSignUp: true,
       sendVerificationEmail: async (data) => {
-        await sendEmailVerificationEmail(data);
+        await sendEmailVerificationEmail({
+          ...data,
+          url: useAppAuthOrigin(data.url, env.NEXT_PUBLIC_APP_URL),
+        });
       },
     },
     secret: env.BETTER_AUTH_SECRET,
