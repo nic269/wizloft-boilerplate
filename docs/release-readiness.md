@@ -19,9 +19,9 @@ code.
 | Auth | Ready | Required verified email, callback-safe auto sign-in, suspended-user access enforcement, branded verification/reset delivery, private development outbox, and recovery screens. |
 | Organizations and access | Ready | Organization onboarding, race-safe invitations, RBAC, member management, Serializable last-owner protection, protected Owner assignment, and cursor-paginated access/audit lists. |
 | API | Ready | Hono app, contract-first oRPC implementation, `/health`/`/ready`/`/status`, provider-aware readiness, bounded pagination, and OpenAPI handoff. |
-| Providers | Ready with feature requirements | Local fallbacks report truthful modes; enabled production auth requires real mail; selected Resend/SMTP/S3/R2 configurations fail startup/readiness when incomplete. |
+| Providers | Ready with feature requirements | Local fallbacks report truthful modes; jobs are ephemeral and not required by the base product; enabled production auth requires real mail; selected Resend/SMTP/S3/R2 configurations fail startup/readiness when incomplete. |
 | UI system | Ready | Design-system provider, shared global tokens, app-owned CSS override seams, Storybook surface. |
-| Handoff surfaces | Ready | `apps/web`, `apps/docs`, `apps/email`, `apps/storybook`. |
+| Workspace surfaces | Ready | Runtime app/web/API plus docs, email-preview, and Storybook handoff tooling. |
 | Release validation | Ready | `pnpm release:check`, deterministic six-journey browser E2E, and production Docker proof for fail-fast, public assets, and app/API/web readiness. |
 | Templates | Catalog-ready | Typed catalog and README tracks exist in the source boilerplate; generated projects remove source-only catalog exports. |
 
@@ -59,6 +59,9 @@ pnpm test:e2e:db
   configure Resend or SMTP; local and E2E flows use the private filesystem outbox.
 - Storybook build can emit bundle-size warnings. These are acceptable for a
   design-system review surface, not product runtime warnings.
+- The bundled jobs provider is ephemeral and intended for local development.
+  A product that requires production background execution must select a durable
+  adapter before marking jobs as required in readiness.
 - Live delivery/storage smoke checks still require real S3, Resend, or SMTP
   credentials and should be added by the project that selects those providers.
 - `/ready` checks database connectivity and providers required by enabled

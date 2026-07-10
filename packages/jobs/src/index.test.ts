@@ -3,9 +3,19 @@ import {
   createLocalJobProvider,
   createOrganizationJobScopeKey,
   GLOBAL_JOB_SCOPE_KEY,
+  getJobProviderStatus,
 } from ".";
 
 describe("local job provider", () => {
+  it("reports that local job execution is ephemeral", () => {
+    expect(getJobProviderStatus()).toEqual({
+      configured: true,
+      mode: "ephemeral",
+      provider: "local",
+      state: "configured",
+    });
+  });
+
   it("runs registered jobs and records completion", async () => {
     const provider = createLocalJobProvider();
     const handler = vi.fn(async () => undefined);

@@ -67,7 +67,7 @@ export default function WebHomePage() {
                 key={item}
               >
                 <span>{item}</span>
-                <span className="text-muted-foreground">deployable</span>
+                <span className="text-muted-foreground">workspace surface</span>
               </div>
             ))}
           </div>

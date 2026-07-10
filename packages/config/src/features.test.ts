@@ -14,8 +14,10 @@ describe("auth feature config", () => {
       requireEmailVerification: true,
     });
     expect(authMailRequired).toBe(true);
+    expect(featureConfig.jobs).toBe(false);
     expect(featureConfig).not.toHaveProperty("docs");
     expect(featureConfig).not.toHaveProperty("email");
+    expect(featureConfig).not.toHaveProperty("organizations");
   });
 
   it("does not require mail when every auth delivery workflow is disabled", () => {

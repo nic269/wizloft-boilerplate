@@ -20,7 +20,6 @@ export const featureConfig = {
   billing: false,
   cms: false,
   i18n: false,
-  jobs: true,
-  organizations: true,
+  jobs: false,
   storage: true,
 } as const;
