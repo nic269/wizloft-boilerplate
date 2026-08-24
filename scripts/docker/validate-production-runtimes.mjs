@@ -216,6 +216,9 @@ const surfaces = [
       "BETTER_AUTH_SECRET=replace-with-at-least-32-random-characters",
       "BETTER_AUTH_URL=http://api:3002/api/auth",
       "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/personal_saas_boilerplate",
+      "MAIL_PROVIDER=resend",
+      "RESEND_API_KEY=test-key",
+      "RESEND_FROM_EMAIL=noreply@example.com",
     ],
     healthPath: "/health",
     hostPort: String(apiPort),
@@ -298,7 +301,6 @@ try {
     containerName: `${imagePrefix}-invalid-storage`,
     env: [
       ...apiSurface.env,
-      "MAIL_PROVIDER=console",
       "STORAGE_PROVIDER=s3",
       "S3_BUCKET=private-files",
       "S3_REGION=",

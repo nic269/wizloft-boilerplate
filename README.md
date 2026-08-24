@@ -4,7 +4,7 @@ A reusable monorepo starter for Anh Nguyen's future SaaS, education, internal to
 
 ## Stack
 
-- pnpm 11 via Corepack, Node.js 22, Turborepo
+- pnpm 11.23 via Corepack, Node.js 24 LTS, Turborepo
 - TypeScript strict and Ultracite-on-Biome linting
 - Next.js App Router for app/web/docs
 - Hono API service with contract-first oRPC and generated OpenAPI

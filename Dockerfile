@@ -1,4 +1,4 @@
-FROM node:22-alpine AS base
+FROM node:24-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
@@ -40,7 +40,7 @@ RUN if [ -e packages/database/node_modules/@prisma/client ]; then \
       cp -RL "${modules_dir}/.prisma/client" /tmp/prisma-runtime/generated; \
     fi
 
-FROM node:22-alpine AS next-runner-base
+FROM node:24-alpine AS next-runner-base
 WORKDIR /app
 ENV NODE_ENV=production
 RUN addgroup -S app && adduser -S app -G app
