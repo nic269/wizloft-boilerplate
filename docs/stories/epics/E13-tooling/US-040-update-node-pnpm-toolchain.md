@@ -55,9 +55,8 @@ Node.js 24 LTS and pnpm 11.23.0 through Corepack.
 - `corepack pnpm docker:validate` passed after building the API, app, and web
   production images from `node:24-alpine` with pnpm 11.23.0, checking invalid
   S3 and mail configuration rejections, and reaching each surface's HTTP probe.
-- `corepack pnpm check:ci` remains blocked by PostCSS lint and formatting
-  failures in the app, docs, web, Storybook, and design-system configuration
-  files; none is changed by this story.
+- `corepack pnpm check:ci` passed after removing unused CommonJS compatibility
+  setup from the shared and re-exported PostCSS configuration files.
 - `corepack pnpm test` passed.
 - `corepack pnpm boundaries` passed.
 - `corepack pnpm build` failed with the local `.env` because the three required
