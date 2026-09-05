@@ -35,3 +35,4 @@ temp_interactive_push.bat
 .wizloft/harness/node_modules/
 .wizloft/harness/local/
 # wizloft-harness:end
+.omp
