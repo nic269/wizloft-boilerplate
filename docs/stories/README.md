@@ -1,34 +1,8 @@
 # Stories
 
-Stories are work packets. They turn product intent into bounded implementation
-and validation work.
-
-No story packets are active yet.
-
-## Normal Story
-
-Use `docs/templates/story.md` for normal feature work.
-
-Suggested path:
-
-```text
-docs/stories/epics/E01-domain-name/US-001-short-story-title.md
-```
-
-## High-Risk Story
-
-Use `docs/templates/high-risk-story/` when the feature intake classifies work as
-high-risk.
-
-Suggested path:
-
-```text
-docs/stories/epics/E02-risky-domain/US-012-risky-story-title/
-  execplan.md
-  overview.md
-  design.md
-  validation.md
-```
+Stories are historical work packets that preserve accepted intent, design, and
+validation evidence. They remain project records; the retired workflow no
+longer treats them as rows in a SQLite control plane.
 
 ## Status Flow
 

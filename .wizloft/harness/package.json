@@ -1,0 +1,9 @@
+{
+  "name": "wizloft-harness-project-tooling",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@wizloft/harness-project": "0.1.0-alpha.4"
+  }
+}

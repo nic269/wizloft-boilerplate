@@ -12,9 +12,6 @@ coverage
 .data
 desktop-dist
 dist
-harness.db
-harness.db-shm
-harness.db-wal
 node_modules
 out
 playwright-report

@@ -1,28 +1,18 @@
 # Product Docs
 
-This directory is intentionally generic and mostly empty in Harness v0.
+This directory holds the boilerplate's current product contracts.
 
-When a user provides a project spec, derive smaller product contract files here
-instead of keeping one large spec as the living plan. Name files by the product
-domains that actually exist in that spec, for example `overview.md`,
-`billing.md`, `workflows.md`, `permissions.md`, or `api-conventions.md`.
+When a new product behavior is accepted, keep the relevant domain contract here
+small and focused rather than extending one monolithic specification.
 
-Do not create domain files before the spec just to fill the folder. Empty
-structure is healthier than fake product truth.
-
-## Current Product Contracts
-
-- `symphony-web-ui-controller.md` - Local Web UI controller for Harness Symphony
-  task execution, review, dependency blocking, Codex event logs, PR review, and
-  sync.
+Do not create domain files just to fill the folder. Empty structure is healthier
+than invented product truth.
 
 ## Update Rule
 
 When behavior changes:
 
 1. Update the affected product doc.
-2. Update or create the story packet.
-3. Update durable proof status with `scripts/bin/harness-cli story add` or
-   `scripts/bin/harness-cli story update`.
-4. Record a decision if the change affects architecture, scope, risk, or a
+2. Update tests and validation evidence with the implementation.
+3. Record a decision if the change affects architecture, scope, risk, or a
    previously settled product rule.

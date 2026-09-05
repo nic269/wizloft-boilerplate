@@ -1,35 +1,17 @@
 # Documentation Map
 
-This directory holds the project harness and any product contract derived from a
-future user-provided spec.
+This directory contains product, architecture, setup, and historical delivery
+records for the boilerplate.
 
-## Main Files
+## Current Sources
 
-- `HARNESS.md`: how humans and agents collaborate.
-- `FEATURE_INTAKE.md`: how prompts become tiny, normal, or high-risk work.
-- `ARCHITECTURE.md`: architecture discovery and boundary rules.
-- `TEST_MATRIX.md`: legacy proof map; current proof status is queried with
-  `scripts/bin/harness-cli query matrix`.
-- `HARNESS_BACKLOG.md`: legacy improvement list; current improvement records
-  are stored with `scripts/bin/harness-cli backlog`.
-- `GLOSSARY.md`: shared terms.
-- `SYMPHONY_QUICKSTART.md`: beginner-facing instructions for running Harness
-  stories through Symphony.
-- `SYMPHONY_SCOPE.md`: detailed scope for the Harness-native agent workbench
-  and orchestration layer.
+- `ARCHITECTURE.md`: application boundaries and dependency direction.
+- `product/`: current product contracts.
+- `deployment.md`: deployment and runtime guidance.
+- `release-readiness.md`: release proof and known caveats.
+- `decisions/`: accepted technical and product decisions.
+- `stories/`: historical feature packets and their validation evidence.
 
-## Folders
-
-- `product/`: current product truth, empty until a spec is derived.
-- `stories/`: feature packets and backlog.
-- `decisions/`: durable decisions and tradeoffs.
-- `demo/`: concrete walkthroughs that show how the harness transforms input
-  into agent-ready work.
-- `templates/`: reusable spec-intake, story, plan, decision, and validation
-  formats.
-
-## Current State
-
-Harness v0 exists before implementation. These docs define how the project will
-grow; they do not imply that app code, tests, CI, or deployment automation exist
-yet.
+Repository-local Wizloft Harness instructions live in
+`.wizloft/harness/INSTRUCTIONS.md`; they are intentionally separate from product
+documentation.

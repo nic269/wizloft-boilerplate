@@ -1,46 +1,21 @@
 # Agent Instructions
 
-## Project Skills
+<!-- wizloft-harness:start -->
+This repository uses Wizloft Harness.
 
-Use `.codex/skills/harness-intake-griller/SKILL.md` when a request needs
-discussion, feature intake, docs, or story shaping before Symphony execution.
-The skill is project-scoped; do not use a global copy as the source of truth.
+Read `.wizloft/harness/INSTRUCTIONS.md`.
 
-<!-- HARNESS:BEGIN -->
-## Harness
+Run Harness commands with:
 
-This repo uses Harness. Before work, read:
+```text
+node .wizloft/harness/run.mjs <Harness module argv>
+```
 
-- `README.md`
-- `docs/HARNESS.md`
-- `docs/FEATURE_INTAKE.md`
-- `docs/ARCHITECTURE.md`
-- `docs/CONTEXT_RULES.md`
-- `docs/TOOL_REGISTRY.md`
-- `scripts/bin/harness-cli query matrix` on macOS/Linux, or `.\scripts\bin\harness-cli.exe query matrix` on Windows
+Stable Context subject: `wizloft-boilerplate:project`.
+Authority subjects: `wizloft-boilerplate:project` and `wizloft-boilerplate:harness`.
 
-Use the Rust Harness CLI at `scripts/bin/harness-cli` on macOS/Linux or
-`scripts/bin/harness-cli.exe` on Windows as the main operational tool. Before a
-step that could use an external tool, run `scripts/bin/harness-cli query tools
---capability <name> --status present` to see what is equipped; an absent
-capability is a clean skip.
-<!-- HARNESS:END -->
-
----
-
----
-
----
-
----
-
----
-
----
-
----
-
----
+Do not duplicate Harness rules in this file.
+<!-- wizloft-harness:end -->
 
 ## Config
 

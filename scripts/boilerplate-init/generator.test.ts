@@ -168,6 +168,7 @@ describe("boilerplate init", () => {
     await expect(access(join(target, "docs"))).rejects.toThrow();
     await expect(access(join(target, "AGENTS.md"))).rejects.toThrow();
     await expect(access(join(target, ".codex"))).rejects.toThrow();
+    await expect(access(join(target, ".wizloft"))).rejects.toThrow();
     await expect(
       access(join(target, "packages/config/src/templates.ts"))
     ).rejects.toThrow();

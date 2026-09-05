@@ -1,0 +1,35 @@
+{
+  "schema": "wizloft.harness.project",
+  "schemaVersion": 1,
+  "projectId": "wizloft-boilerplate",
+  "generatedBy": {
+    "package": "@wizloft/harness-project",
+    "version": "0.1.0-alpha.4"
+  },
+  "runtime": {
+    "package": "@wizloft/harness-project",
+    "release": "0.1.0-alpha.4"
+  },
+  "subjects": {
+    "project": "wizloft-boilerplate:project",
+    "harness": "wizloft-boilerplate:harness"
+  },
+  "memoryScope": "project:wizloft-boilerplate",
+  "paths": {
+    "instructions": ".wizloft/harness/INSTRUCTIONS.md",
+    "profile": ".wizloft/harness/profile.mjs",
+    "runner": ".wizloft/harness/run.mjs",
+    "projectTruth": ".wizloft/PROJECT.md",
+    "localState": ".wizloft/harness/local"
+  },
+  "command": {
+    "argv": [
+      "node",
+      ".wizloft/harness/run.mjs"
+    ]
+  },
+  "adapters": [
+    "agents",
+    "claude"
+  ]
+}
