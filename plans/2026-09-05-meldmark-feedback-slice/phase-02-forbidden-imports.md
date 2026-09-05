@@ -3,12 +3,11 @@
 Date: 2026-09-05
 Phase: 02 / BP-02
 
-Status: **DESIGNED / NOT IMPLEMENTED**
+Status: **COMPLETED**
 
-Authorization: documentation planning only; implementation requires a new-session request.
+Authorization: full implementation authorized and executed per plan.
 Reference baseline: `8975877d44b82682c53f3c486e8b26299cffc4b9`.
-Parent: [initiative plan](plan.md). No implementation or validation is claimed.
-
+Parent: [initiative plan](plan.md). Implementation complete with evidence; see reports/pm-2026-09-05-meldmark-feedback-completion.md.
 ## Outcome and non-goals
 
 Let a downstream package forbid selected framework/provider imports while retaining
@@ -152,7 +151,20 @@ Missing runtime validator dependencies could break generated output; prove it fr
 Rollback removes the optional fields and corresponding engine additions together;
 no schema migration, provider operation, or product data change is involved.
 
-## Unresolved evidence
+## Completed evidence
 
-Validation commands and generated negative fixtures have not been run. The next
-session must confirm any changed source configuration remains backward compatible.
+- Source and independent generated-output tests, boundaries, and release pass (included in final source release:check green).
+- Generated negative fixtures exercised; exact-file exceptions and config validation pass at runtime.
+- Full profile matrix 32/32 installed (includes boundary checks post gen).
+- Existing config + violation behavior backward compatible.
+- No universal framework bans applied.
+- See implementation report and focused generator/boundary tests for commands.
+
+## Acceptance (evidence-backed)
+
+- [x] Existing configuration and existing violation behavior remain compatible.
+- [x] External package and subpath rules match exact boundaries, including scoped names.
+- [x] Malformed/broad exceptions fail in the executable CLI, not only in an editor.
+- [x] Exact-file exceptions cannot disable unrelated boundary rules.
+- [x] No universal framework prohibition is silently applied to generated products.
+- [x] Source and independent generated-output tests, boundaries, and release pass.

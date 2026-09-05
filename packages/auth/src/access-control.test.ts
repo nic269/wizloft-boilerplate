@@ -319,7 +319,31 @@ describe("access control service", () => {
     );
   });
 
-  it("retries Serializable write conflicts at most three times", async () => {
+  it("retries wrapped Serializable conflicts and returns the committed result", async () => {
+    const committed = { id: "membership-1" };
+    vi.mocked(prisma.$transaction)
+      .mockRejectedValueOnce({
+        meta: {
+          driverAdapterError: {
+            kind: "TransactionWriteConflict",
+            originalCode: "40001",
+          },
+        },
+      })
+      .mockResolvedValueOnce(committed);
+
+    await expect(
+      updateMemberRole({
+        actorId: "owner-1",
+        membershipId: "member-1",
+        organizationId: "org-1",
+        roleId: "role-2",
+      })
+    ).resolves.toBe(committed);
+    expect(prisma.$transaction).toHaveBeenCalledTimes(2);
+  });
+
+  it("maps exhaustion after exactly three conflicts", async () => {
     vi.mocked(prisma.$transaction).mockRejectedValue({ code: "P2034" });
 
     await expect(
@@ -337,6 +361,21 @@ describe("access control service", () => {
       expect.any(Function),
       { isolationLevel: "Serializable" }
     );
+  });
+
+  it("preserves unknown transaction failures", async () => {
+    const failure = new Error("database unavailable");
+    vi.mocked(prisma.$transaction).mockRejectedValue(failure);
+
+    await expect(
+      updateMemberRole({
+        actorId: "owner-1",
+        membershipId: "member-1",
+        organizationId: "org-1",
+        roleId: "role-2",
+      })
+    ).rejects.toBe(failure);
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
   });
 
   it("does not treat a custom role named Owner as the protected system owner", async () => {

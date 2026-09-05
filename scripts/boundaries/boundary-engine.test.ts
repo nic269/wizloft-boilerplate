@@ -121,4 +121,77 @@ describe("boundary engine", () => {
 
     await expect(checkBoundaries({ configPath, root })).resolves.toEqual([]);
   });
+  it("checks external imports with exact file exceptions", async () => {
+    const root = await mkdtemp(join(tmpdir(), "boundaries-"));
+    roots.push(root);
+    const configPath = join(root, "boundaries.config.json");
+    await writeJson(configPath, {
+      clientSafeEntrypoints: {},
+      forbiddenImportExceptions: {
+        "@repo/domain": {
+          "src/index.ts": ["@prisma/client", "next"],
+        },
+      },
+      forbiddenPackageImports: {
+        "@repo/domain": ["@prisma/client", "next", "next/server"],
+      },
+      packageRules: { "@repo/domain": [] },
+    });
+    await workspace({
+      kind: "packages",
+      name: "@repo/domain",
+      root,
+      source:
+        'import "@prisma/client/runtime";\nimport "next/server";\nimport "nextish";\n',
+    });
+
+    const violations = await checkBoundaries({ configPath, root });
+    expect(
+      violations.filter(({ code }) => code === "forbidden-package-import")
+    ).toEqual([
+      expect.objectContaining({
+        file: "packages/domain/src/index.ts",
+        message: expect.stringContaining("next/server"),
+      }),
+    ]);
+  });
+
+  it("rejects malformed and broad exception paths before inspection", async () => {
+    const root = await mkdtemp(join(tmpdir(), "boundaries-"));
+    roots.push(root);
+    const configPath = join(root, "boundaries.config.json");
+    await writeJson(configPath, {
+      clientSafeEntrypoints: {},
+      forbiddenImportExceptions: {
+        "@repo/domain": { "src/**": ["next"] },
+      },
+      forbiddenPackageImports: { "@repo/domain": ["next"] },
+      packageRules: { "@repo/domain": [] },
+    });
+    await workspace({
+      kind: "packages",
+      name: "@repo/domain",
+      root,
+      source: "",
+    });
+
+    await expect(checkBoundaries({ configPath, root })).rejects.toThrow(
+      "Invalid forbidden import exception path"
+    );
+  });
+
+  it("rejects forbidden import rules for an unknown owner", async () => {
+    const root = await mkdtemp(join(tmpdir(), "boundaries-"));
+    roots.push(root);
+    const configPath = join(root, "boundaries.config.json");
+    await writeJson(configPath, {
+      clientSafeEntrypoints: {},
+      forbiddenPackageImports: { "@repo/missing": ["next"] },
+      packageRules: {},
+    });
+
+    await expect(checkBoundaries({ configPath, root })).rejects.toThrow(
+      "Forbidden import rules have unknown owner @repo/missing"
+    );
+  });
 });

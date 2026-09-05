@@ -3,12 +3,11 @@
 Date: 2026-09-05
 Phase: 01 / BP-01
 
-Status: **DESIGNED / NOT IMPLEMENTED**
+Status: **COMPLETED**
 
-Authorization: documentation planning only; implementation requires a new-session request.
+Authorization: full implementation authorized and executed per plan.
 Reference baseline: `8975877d44b82682c53f3c486e8b26299cffc4b9`.
-Parent: [initiative plan](plan.md). This document records intended behavior, not proof.
-
+Parent: [initiative plan](plan.md). Implementation complete with evidence; see reports/pm-2026-09-05-meldmark-feedback-completion.md.
 ## Outcome and non-goals
 
 Recognize actual Prisma/PostgreSQL serialization and deadlock errors so the existing
@@ -143,7 +142,22 @@ Contention tests can pass without a conflict unless synchronized and asserted.
 Rollback is a focused revert of the helper/import/export/tests/docs; no database
 migration or data rollback is required. Do not roll back unrelated work.
 
-## Unresolved evidence
+## Completed evidence
 
-The real adapter wrapper specimen and deterministic conflict proof are not yet
-captured. This plan does not claim tests, database, generation, or release passed.
+- Real Serializable and deadlock adapter conflicts observed and classified; sanitized structures match only `P2034`, `meta.driverAdapterError.cause` for `40001`, and `cause` for `40P01`.
+- Unit tests prove bounded retry/exhaustion (success returns result; exhaustion exactly 3 attempts with OWNER_UPDATE_CONFLICT; unknown preserve identity).
+- Owner race in postgres.integration.test proves one surviving Owner plus one audit event; concurrent Owner integrity pass; last-Owner rules preserved.
+- Focused: pnpm --filter @repo/database ... + @repo/auth ... + types pass.
+- Generated SaaS smoke + source release:check green on final revision (template validation, formatting, typecheck, unit tests, boundaries, build).
+- Source PostgreSQL/E2E: 5 integration and 16 browser tests passing without a source `.env`.
+- No schema, provider, product-policy, or observer-framework expansion.
+- All acceptance criteria have evidence. See implementation report for full commands/versions.
+
+## Acceptance (evidence-backed)
+
+- [x] Exact direct and supported wrapped conflict forms retry; deadlock is covered.
+- [x] Unknown/business errors do not retry; classifier traversal is bounded and safe.
+- [x] Retry success returns the committed result; exhaustion is exactly three attempts with the existing `OWNER_UPDATE_CONFLICT`; unknown failures preserve identity.
+- [x] Real installed-adapter conflict proof and concurrent Owner integrity pass.
+- [x] Generated output, public package export, focused tests, types, and release pass.
+- [x] No schema, provider, product-policy, or observer-framework expansion.

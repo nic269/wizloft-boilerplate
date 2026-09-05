@@ -1,10 +1,9 @@
 # Phase 04 — BP-05: Generation Receipt
 
 Date: 2026-09-05
-Status: **DESIGNED / NOT IMPLEMENTED**
+Status: **COMPLETED**
 Dependency: Phase 03's copy/hygiene contract. Profiles are not required: before BP-04, the resolved profile is always saas.
-Context: [plan](plan.md), [generator](../../scripts/boilerplate-init/generator.ts), [init manifest](../../boilerplate.init.json).
-
+Context: [plan](plan.md), [generator](../../scripts/boilerplate-init/generator.ts), [init manifest](../../boilerplate.init.json). Implementation complete; see reports/pm-2026-09-05-meldmark-feedback-completion.md.
 ## Outcome and non-goals
 
 Every successful new target contains a project-owned `boilerplate.receipt.json` describing how its initial source snapshot was generated. It is passive metadata: downstream builds, releases and application startup never depend on the receipt or the source repository.
@@ -109,3 +108,20 @@ Sequence: define schema and hash framing; implement metadata fallbacks; integrat
 Primary risk is overclaiming provenance. HEAD is only a reference; actual output bytes have their own digest. Dependency versions and permissions remain explicitly outside the digest contract. Avoid unbounded Git logging/output in the reader.
 
 Rollback removes generator receipt integration/schema/tests and docs. Existing emitted receipts are passive; no application or database migration is necessary. Do not delete receipts in unrelated generated products.
+
+## Completed evidence
+
+- Receipt v1 emitted for clean/dirty Git, directory, unborn, unavailable cases; digest deterministic (same bytes/options = same; path/content change alters).
+- No secret in metadata; source-only schema rejects extras/invalids.
+- Generate skip-install + install/validate both emit accurate receipt; gen `pnpm release:check` passes without reading receipt or source tools.
+- Source release:check green on final; full 32/32 matrix includes receipt selection accurate.
+- SaaS migration bytes unchanged.
+- See implementation report for actual fixture results, versions (Node 24.20.0, pnpm 11.23.0).
+
+## Verification and acceptance (evidence-backed)
+
+- [x] Focused tests + deterministic/identity/error cases pass.
+- [x] Fake source fixtures cover all Git states; digest contract holds; schema rejects bad.
+- [x] Generate modes accurate; failed gen no partial target.
+- [x] Generated release:check independent of receipt; no Git req; remove receipt still builds.
+- [x] Source release:check green.

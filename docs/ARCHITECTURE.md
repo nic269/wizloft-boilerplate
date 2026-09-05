@@ -16,6 +16,12 @@ Static authorization policy belongs to dependency-free
 presets. Stateful authorization belongs to `@repo/auth`, which evaluates users,
 memberships, roles, and persisted permissions through Prisma.
 
+Serializable ownership mutations retry only database errors classified by
+`@repo/database/transaction-conflicts`: Prisma `P2034`, PostgreSQL `40001` or
+`40P01`, and Prisma adapter `TransactionWriteConflict`. Classification follows
+only bounded `cause`, `meta`, and `driverAdapterError` wrappers, so arbitrary
+business errors never trigger a replay.
+
 ## Discovery Before Shape
 
 Before proposing implementation shape, identify:
@@ -118,9 +124,32 @@ by package:
   server-oriented packages.
 - Core packages with an allowlist cannot import outside their approved layers.
 - Workspace dependency cycles are rejected.
+- Optional external-package bans use exact package-or-subpath matching. Their
+  exceptions are exact, owner-scoped regular files validated inside the
+  workspace root; wildcard and directory exceptions are rejected.
 
 Keep this checker in generated projects. Update the config when introducing a
 real package boundary; do not add broad exceptions for one import.
+
+## Generation Profiles
+
+`boilerplate.init.json` is the generation policy authority. The default `saas`
+profile preserves the full source baseline. The `core` profile is an
+identity-first cut: `User`, `Session`, `Account`, and `Verification`; auth
+signup, verification, recovery, sessions; health/readiness; and neutral
+protected app/API surfaces. Product domains, provider packages, their routes,
+environment keys, migrations, and tests are removed together.
+
+App selection is orthogonal to profile selection. App and API are required;
+web, docs, email preview, and Storybook are optional. Generated workspace
+manifests and boundary configuration are rewritten and validated against the
+selected package/app closure. `boilerplate.receipt.json` records origin and the
+initial pre-install source digest but is not an input to builds or runtime.
+
+Generation rejects source symlinks and excludes local environment, database,
+cache, process, Harness, and agent state before target creation. Generated
+projects retain the migration-first lifecycle: `dev` refuses to start when
+checked-in migrations are not deployed.
 
 ## Parse-First Boundary Rule
 

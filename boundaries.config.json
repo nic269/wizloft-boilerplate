@@ -8,6 +8,8 @@
     "@repo/mail": [],
     "@repo/storage": []
   },
+  "forbiddenImportExceptions": {},
+  "forbiddenPackageImports": {},
   "packageRules": {
     "@repo/access-control": [],
     "@repo/analytics": [],

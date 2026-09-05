@@ -8,14 +8,17 @@ domain assumptions.
 ## Core Behaviors
 
 - Manifest-driven `pnpm boilerplate:init <target>` generation separates the
-  internal boilerplate factory from clean application projects. The generator
-  canonicalizes source and target ancestry, including symlinked parents, and
-  rejects overlapping trees before creating the target. It
-  rewrites identity and selected app surfaces while stripping Harness, agent,
-  planning, release-manifest, and domain-template artifacts. Generated projects
-  also remove source-only template catalog exports, record selected workspace
-  surfaces independently from product feature flags, and avoid carrying a stale
-  source lockfile when installation is skipped.
+  internal boilerplate factory from clean application projects. The default
+  `saas` profile preserves the full baseline; the `core` profile emits an
+  identity-first four-model database and removes product domains and unused
+  providers. App selection remains independent, with app/API required and web,
+  docs, email preview, and Storybook optional. The generator canonicalizes
+  source and target ancestry, rejects overlapping trees and source symlinks
+  before target creation, and excludes local environment, database, cache,
+  Harness, and agent state. Generated projects include a passive,
+  deterministic origin receipt, rewrite manifests/boundaries/env contracts to
+  the selected closure, and remove the copied lockfile when installation is
+  skipped.
 - Config-driven workspace guardrails enforce app isolation, public package
   exports, declared dependencies, core package layers, Client Component safety,
   explicit package policy coverage, package-name imports across workspaces, and
@@ -95,12 +98,15 @@ domain assumptions.
 - Template tracks are code-owned through a typed catalog, docs app rendering, and CLI validation/list commands so future
   products can select add-ons without copying domain code into core.
 - Generated projects keep tests and CI visible to review tooling through a
-  generated `.repomixignore`, and generated Docker contexts omit only runtime
-  noise rather than source Harness bookkeeping entries.
-- CI and local release readiness both validate template catalog drift before lint, type, test, boundary, and production
-  build checks.
-- Domain template tracks stay as guidance until a concrete project selects one; executable domain scaffold code should
-  be added only when the selected project can validate it.
+  generated `.repomixignore`, while generated Docker contexts and Git ignore
+  local runtime data, caches, logs, PID files, Harness, and agent tooling.
+- Every generated profile is source-formatted before its deterministic receipt
+  is calculated. Generation validates package inventory, workspace dependency
+  closure, excluded core domains, and the core Prisma model inventory.
+- CI and local release readiness validate template catalog drift before lint,
+  type, test, boundary, and production build checks.
+- Domain template tracks stay as guidance until a concrete project selects one;
+  executable product-domain code is absent from the identity-first core.
 
 ## Non-Goals
 

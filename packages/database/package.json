@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
-    "./keys": "./src/keys.ts"
+    "./keys": "./src/keys.ts",
+    "./transaction-conflicts": "./src/transaction-conflicts.ts"
   },
   "scripts": {
     "build": "dotenv -e ../../.env -- prisma generate",
@@ -15,6 +16,7 @@
     "db:push": "dotenv -e ../../.env -- prisma db push",
     "db:migrate:dev": "dotenv -e ../../.env -- prisma migrate dev",
     "db:migrate:deploy": "dotenv -e ../../.env -- prisma migrate deploy",
+    "db:migrate:status": "dotenv -e ../../.env -- prisma migrate status",
     "db:seed": "dotenv -e ../../.env -- tsx src/seed.ts",
     "db:studio": "dotenv -e ../../.env -- prisma studio",
     "test": "vitest run --passWithNoTests",

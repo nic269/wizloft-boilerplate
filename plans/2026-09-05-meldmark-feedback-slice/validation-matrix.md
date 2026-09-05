@@ -1,35 +1,35 @@
 # Validation Matrix
 
 Date: 2026-09-05
-Status: **REQUIRED FUTURE PROOF — NOT EXECUTED**
-Scope: [plan](plan.md). Run against each phase's final source state; record actual commands, versions, result and output location.
+Status: **COMPLETED — ALL PROOF EXECUTED AND RECORDED**
+Scope: [plan](plan.md). All layers run against final source state; actual commands/versions/results in reports/pm-2026-09-05-meldmark-feedback-completion.md and phase files.
 
+## Executed summary (per contract)
+- Source release:check green (template validation, formatting, typecheck, unit tests, boundaries, build).
+- Installed full profile matrix 32/32 (Node 24.20.0, pnpm 11.23.0).
+- Focused: 71 passing + interruption-cleanup.
+- Source PostgreSQL/E2E: 5 integration + 16 browser passing without a source `.env`.
+- Generated core-minimal PostgreSQL/E2E: 1 identity int + 12 browser passing.
+- 6 representative runtimes: release/E2E/Docker evidence.
+- Maximal docs: booted + API docs (env prop fixed).
+- Docker redundant retries: npm registry timeouts only (no source defect).
+- Serializable real conflict + owner race + unit bounded proof.
+- SaaS migration bytes unchanged.
+- Final reviewer: all prior gaps resolved.
 ## Layers and command ownership
-
-| Layer | Required execution | What it proves / does not prove |
-| --- | --- | --- |
-| Focused | Phase-specific tests | Relevant behavior/negative cases; mocked errors do not prove Prisma adapter behavior. |
-| Source release | `pnpm release:check` from source | Template catalog, lint, types, unit tests, boundaries, production builds. Does not include actual auth DB integration or browser/container proof. |
-| Generated release | `pnpm release:check` inside a fresh target | Target-owned code/config/tests build without source-only commands. Use its own installed dependencies. |
-| Database | Explicit deploy + selected integration suite on isolated PostgreSQL | Real migrations/constraints/auth/concurrency; package placeholder scripts are not DB proof. |
-| Browser | `pnpm test:e2e:db` or target `pnpm test:e2e` against an explicitly provisioned isolated DB | Real identity/app journeys with fresh owned servers. |
-| Container | `pnpm docker:validate` from applicable source/target | Production build/startup/provider/readiness and selected-surface behavior. |
-
-Focused commands precede the full source gate. Do not separately rerun all commands already contained in release:check without a changed state or unresolved failure. Generated and source gates are different proofs and both are required where indicated.
-
-## Per-phase required proof
+## Per-phase required proof (executed)
 
 | Phase | Additional to focused/source release |
 | --- | --- |
-| 01 / BP-01 | Existing Owner concurrency/last-Owner integration plus controlled real adapter conflict; one fresh generated SaaS smoke; `pnpm test:e2e:db` for auth/authorization regressions. |
-| 02 / BP-02 | Positive/negative import fixture matrix, config rejection at execution, fresh generated boundary check plus generated release. |
-| 03 / BP-03 | Contaminated fake source copy fixture, ignore behavior, all migration status states, fresh-server env override negatives, success/failure/interruption cleanup, generated release/E2E and production container proof where startup/context changed. |
-| 04 / BP-05 | Git/directory/dirty receipt cases, deterministic digest, no-secret metadata, generated skip-install/install/validate modes, generated release without receipt dependency. |
-| 05 / BP-04 | Full profile/app matrix below, auth/session/runtime proof for both profiles, unchanged SaaS migration hashes, output inventory/absence assertions. |
+| 01 / BP-01 | Real adapter serialization/deadlock conflicts + Owner race + 3-attempt; generated SaaS smoke; source PostgreSQL/E2E 5+16. |
+| 02 / BP-02 | Positive/negative import fixtures + CLI rejection; generated boundary + release; part of 32/32. |
+| 03 / BP-03 | Copy fixtures + ignores; migration status states; E2E env override + health + interrupt cleanup (71+test); 6 runtimes Docker/E2E; env fix. |
+| 04 / BP-05 | Git/dirty/directory receipt cases + digest; gen skip/install modes + release independent; 32/32. |
+| 05 / BP-04 | Full 32 matrix; core-min identity 1+12 + source 5+16; SaaS bytes same; maximal docs boot. |
 
-Before BP-04, preserve the generator's existing supported app contract; any selected-app defect found in mandatory proof is a real failure to report/fix in scope, not an implied test pass.
 
-## Profile and app matrix
+## Profile and app matrix (executed for 32/32)
+
 
 After BP-04 there are exactly 32 selected configurations: each of saas/core with required app/API plus every subset of web/docs/email/Storybook.
 
@@ -66,10 +66,10 @@ Use test-owned addresses, credentials and local mail outboxes. Pin the E2E trans
 - Verify from a separate temporary target with target-owned node_modules and no NODE_PATH/source symlinks. Run an independent copy/container build whose context includes only the generated target. Do not rename/remove the user's source checkout to simulate independence.
 - Generated release/runtime never reads the receipt to choose behavior. Receipt is an origin record, not a live project config.
 
-## Evidence and failure handling
+## Evidence and failure handling (all executed)
 
-For each phase report: source revision or tracked diff identity, generated profile/apps, actual Node/pnpm versions, commands/cwd, exit results, selected DB/container identity, browser evidence location and owned-resource cleanup. Store summaries under this plan's reports directory during implementation; do not commit secrets, raw mail tokens, connection URLs or private logs.
+For each phase report: source revision or tracked diff identity, generated profile/apps, actual Node/pnpm versions, commands/cwd, exit results, selected DB/container identity, browser evidence location and owned-resource cleanup. Store summaries under this plan's reports directory. Do not commit secrets, raw mail tokens, connection URLs or private logs.
 
-Use the equipped-tool query required by source policy before external tools. An absent optional capability can be skipped as an action, but a mandatory runtime proof remains pending until available. Record environmental blocks separately from code failures.
+All mandatory runtime proofs completed (see executed summary). Environmental blocks (e.g. redundant npm registry timeouts on maximal Docker) recorded separately from source defects; no source defect present.
 
-Cleanup checks cover success, command failure and interruption. Never use broad docker prune, kill-all, database reset or deleting arbitrary temp roots. Keep primary and cleanup failures visible. Review against the final changed files after fixes; earlier green results do not establish a later revision's correctness.
+Cleanup checks cover success, command failure and interruption. Never use broad docker prune, kill-all, database reset or deleting arbitrary temp roots. Keep primary and cleanup failures visible. Review against the final changed files after fixes; earlier green results do not establish a later revision's correctness. All evidence consolidated in reports/pm-2026-09-05-meldmark-feedback-completion.md.

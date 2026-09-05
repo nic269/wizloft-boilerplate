@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { prisma, syncSystemRoles } from "@repo/database";
+import { isRetryableTransactionConflict } from "@repo/database/transaction-conflicts";
 import { afterEach, describe, expect, it } from "vitest";
 import { updateMemberRole } from "../src/access-control";
 import { acceptInvitation, hashInvitationToken } from "../src/invitations";
@@ -41,6 +42,86 @@ afterEach(async () => {
 });
 
 describe("PostgreSQL organization integrity", () => {
+  it("classifies a synchronized real adapter serialization conflict", async () => {
+    const { organization } = await createOrganization();
+    let readyCount = 0;
+    let releaseTransactions: (() => void) | undefined;
+    const bothTransactionsReady = new Promise<void>((resolve) => {
+      releaseTransactions = resolve;
+    });
+    const updateOrganization = (name: string) =>
+      prisma.$transaction(
+        async (transaction) => {
+          await transaction.organization.findUniqueOrThrow({
+            select: { id: true },
+            where: { id: organization.id },
+          });
+          readyCount += 1;
+          if (readyCount === 2) {
+            releaseTransactions?.();
+          }
+          await bothTransactionsReady;
+          return transaction.organization.update({
+            data: { name },
+            where: { id: organization.id },
+          });
+        },
+        { isolationLevel: "Serializable" }
+      );
+
+    const results = await Promise.allSettled([
+      updateOrganization("Serializable A"),
+      updateOrganization("Serializable B"),
+    ]);
+    expect(
+      results.filter((result) => result.status === "fulfilled")
+    ).toHaveLength(1);
+    const rejected = results.find((result) => result.status === "rejected");
+    expect(rejected).toBeDefined();
+    if (rejected?.status === "rejected") {
+      expect(isRetryableTransactionConflict(rejected.reason)).toBe(true);
+    }
+  });
+
+  it("classifies a synchronized real adapter deadlock conflict", async () => {
+    const [{ organization: organizationA }, { organization: organizationB }] =
+      await Promise.all([createOrganization(), createOrganization()]);
+    let readyCount = 0;
+    let releaseTransactions: (() => void) | undefined;
+    const bothTransactionsReady = new Promise<void>((resolve) => {
+      releaseTransactions = resolve;
+    });
+    const updateOrganizations = (firstId: string, secondId: string) =>
+      prisma.$transaction(async (transaction) => {
+        await transaction.organization.update({
+          data: { name: `First ${firstId}` },
+          where: { id: firstId },
+        });
+        readyCount += 1;
+        if (readyCount === 2) {
+          releaseTransactions?.();
+        }
+        await bothTransactionsReady;
+        return transaction.organization.update({
+          data: { name: `Second ${secondId}` },
+          where: { id: secondId },
+        });
+      });
+
+    const results = await Promise.allSettled([
+      updateOrganizations(organizationA.id, organizationB.id),
+      updateOrganizations(organizationB.id, organizationA.id),
+    ]);
+    expect(
+      results.filter((result) => result.status === "fulfilled")
+    ).toHaveLength(1);
+    const rejected = results.find((result) => result.status === "rejected");
+    expect(rejected).toBeDefined();
+    if (rejected?.status === "rejected") {
+      expect(isRetryableTransactionConflict(rejected.reason)).toBe(true);
+    }
+  });
+
   it("preserves one Owner during concurrent demotions", async () => {
     const { organization, roles } = await createOrganization();
     const [ownerA, ownerB] = await Promise.all([
@@ -91,6 +172,14 @@ describe("PostgreSQL organization integrity", () => {
           organizationId: organization.id,
           role: { isSystem: true, name: "Owner" },
           status: "ACTIVE",
+        },
+      })
+    ).resolves.toBe(1);
+    await expect(
+      prisma.auditLog.count({
+        where: {
+          action: "member.role_updated",
+          organizationId: organization.id,
         },
       })
     ).resolves.toBe(1);

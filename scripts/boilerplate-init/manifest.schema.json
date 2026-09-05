@@ -4,47 +4,57 @@
   "additionalProperties": false,
   "required": [
     "version",
+    "defaultProfile",
     "sourceExcludes",
     "remove",
     "requiredApps",
-    "defaultApps",
     "optionalApps",
+    "profiles",
     "validationCommands"
   ],
   "properties": {
     "$schema": { "type": "string" },
-    "version": { "const": 1 },
-    "sourceExcludes": {
-      "type": "array",
-      "items": { "type": "string", "minLength": 1 },
-      "uniqueItems": true
-    },
-    "remove": {
-      "type": "array",
-      "items": { "type": "string", "minLength": 1 },
-      "uniqueItems": true
-    },
+    "version": { "const": 2 },
+    "defaultProfile": { "enum": ["saas", "core"] },
+    "sourceExcludes": { "$ref": "#/$defs/uniqueStrings" },
+    "remove": { "$ref": "#/$defs/uniqueStrings" },
     "requiredApps": {
+      "allOf": [
+        { "$ref": "#/$defs/uniqueStrings" },
+        { "type": "array", "minItems": 1 }
+      ]
+    },
+    "optionalApps": { "$ref": "#/$defs/uniqueStrings" },
+    "profiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["saas", "core"],
+      "properties": {
+        "saas": { "$ref": "#/$defs/profile" },
+        "core": { "$ref": "#/$defs/profile" }
+      }
+    },
+    "validationCommands": { "$ref": "#/$defs/uniqueStrings" }
+  },
+  "$defs": {
+    "uniqueStrings": {
       "type": "array",
       "items": { "type": "string", "minLength": 1 },
-      "minItems": 1,
       "uniqueItems": true
     },
-    "defaultApps": {
-      "type": "array",
-      "items": { "type": "string", "minLength": 1 },
-      "minItems": 1,
-      "uniqueItems": true
-    },
-    "optionalApps": {
-      "type": "array",
-      "items": { "type": "string", "minLength": 1 },
-      "uniqueItems": true
-    },
-    "validationCommands": {
-      "type": "array",
-      "items": { "type": "string", "minLength": 1 },
-      "uniqueItems": true
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["defaultApps"],
+      "properties": {
+        "defaultApps": {
+          "allOf": [
+            { "$ref": "#/$defs/uniqueStrings" },
+            { "type": "array", "minItems": 1 }
+          ]
+        },
+        "packages": { "$ref": "#/$defs/uniqueStrings" }
+      }
     }
   }
 }

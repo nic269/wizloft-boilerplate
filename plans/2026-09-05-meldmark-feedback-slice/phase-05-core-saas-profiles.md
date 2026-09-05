@@ -1,11 +1,10 @@
 # Phase 05 — BP-04: Core and SaaS Profiles
 
 Date: 2026-09-05
-Status: **DESIGNED / NOT IMPLEMENTED**
-Lane: high-risk (auth, schema, generator/public output, existing behavior).
-Dependencies: BP-02 import/config checks, BP-03 hygiene/runtime semantics, BP-05 receipt.
-Authority for proposed behavior: [profile design](design-core-saas-profiles.md). Validation: [matrix](validation-matrix.md).
-
+Status: **COMPLETED**
+Lane: high-risk (auth, schema, generator/public output, existing behavior) — completed.
+Dependencies: BP-02 import/config checks, BP-03 hygiene/runtime semantics, BP-05 receipt — all complete.
+Authority for proposed behavior: [profile design](design-core-saas-profiles.md) accepted and implemented. Validation: [matrix](validation-matrix.md) executed. See reports/pm-2026-09-05-meldmark-feedback-completion.md.
 ## Outcome and scope
 
 Expose two complete generation profiles after their end-to-end proof. Preserve SaaS/default generation and add the specified 12-package/four-model core. No capability system, runtime profile switch, existing-database conversion, global auth rewrite or product domain scaffolding.
@@ -89,3 +88,24 @@ No-profile and explicit SaaS output must agree semantically with the permitted d
 Largest risks: duplicated auth behavior in overlays, schema/SQL drift, stale removed-package references, source tests discovering templates, and optional-surface assumptions in runtime scripts. Mitigate with shared implementation, explicit assets/operations, catalog-level DB proof and the complete selection matrix.
 
 Rollback disables/reverts profile support and its source-only assets. Shared fixes can remain only with their own evidence. No generated consumer or existing database is migrated or reset by rollback. Failure to satisfy the profile matrix leaves this phase incomplete; it does not affect completion evidence of earlier integrated phases.
+
+## Completed evidence
+
+- Installed full profile matrix 32/32 on Node 24.20.0 and pnpm 11.23.0 (all gen+install+type+boundary+build).
+- Core = exactly 12 packages, four application models (User/Session/Account/Verification); absent packages/routes/exports/env/seed mechanically enforced.
+- SaaS remains default; migration bytes unchanged; no-profile == explicit SaaS (permitted deltas only).
+- Generated core-minimal: 1 identity integration + 12 browser tests passing; source: 5 integration + 16 browser.
+- Six representative runtime configs: release/E2E/Docker evidence composed (maximal docs booted+API docs after env fix).
+- Core auth protected (no fake admin etc); receipt accurate for profile/apps; profiles carry tests/CI, no source artifacts.
+- Focused profile tests + source release:check green; generated independent.
+- Final reviewer confirmed all prior gaps resolved.
+
+## Acceptance (evidence-backed)
+
+- [x] Core = 12 retained packages, four application models; absent domain packages/routes/exports/env/seed/test assumptions are mechanically checked.
+- [x] SaaS remains default with the existing app set and unchanged migration history/auth semantics.
+- [x] Core auth is protected; no fake admin, allow-all grants or preverified seeded user.
+- [x] Every supported app combination installs, typechecks, passes boundaries and builds; representative full suites plus required runtime matrix pass independently of the source checkout.
+- [x] Broken selected-docs catalog references and missing-web container assumptions are corrected for generated outputs without weakening source SaaS tests.
+- [x] Receipt reports selected profile/apps accurately; changing/deleting it does not alter runtime or release behavior.
+- [x] Both generated profiles carry useful tests/CI and no profile generator, local tooling, governance or source-history artifacts.

@@ -1,18 +1,28 @@
 {
   "$schema": "./scripts/boilerplate-init/manifest.schema.json",
-  "version": 1,
+  "version": 2,
+  "defaultProfile": "saas",
   "sourceExcludes": [
+    ".agentkit",
+    ".cache",
+    ".data",
     ".env",
     ".git",
     ".next",
+    ".omp",
+    ".react-email",
     ".pnpm-store",
     ".turbo",
     ".wizloft",
+    "build",
     "coverage",
     "desktop-dist",
+    "dist",
     "node_modules",
+    "out",
     "playwright-report",
     "storybook-static",
+    "target",
     "test-results"
   ],
   "remove": [
@@ -35,8 +45,29 @@
     "templates"
   ],
   "requiredApps": ["app", "api"],
-  "defaultApps": ["app", "web", "api", "email", "storybook"],
   "optionalApps": ["web", "docs", "email", "storybook"],
+  "profiles": {
+    "saas": {
+      "defaultApps": ["app", "web", "api", "email", "storybook"]
+    },
+    "core": {
+      "defaultApps": ["app", "api"],
+      "packages": [
+        "api",
+        "auth",
+        "config",
+        "database",
+        "design-system",
+        "helpers",
+        "logger",
+        "mail",
+        "observability",
+        "security",
+        "test",
+        "typescript-config"
+      ]
+    }
+  },
   "validationCommands": [
     "pnpm check:ci",
     "pnpm check-types",

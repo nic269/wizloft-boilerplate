@@ -3,6 +3,7 @@ import {
   type PermissionInput,
 } from "@repo/access-control";
 import { type Prisma, prisma } from "@repo/database";
+import { isRetryableTransactionConflict } from "@repo/database/transaction-conflicts";
 import { cursorDate, decodeCursor, type PageInput, toPage } from "./pagination";
 
 const OWNER_ROLE_NAME = "Owner";
@@ -26,12 +27,6 @@ export class AccessControlError extends Error {
 
 const isSystemOwnerRole = (role?: { isSystem: boolean; name: string } | null) =>
   role?.isSystem === true && role.name === OWNER_ROLE_NAME;
-
-const isPrismaWriteConflict = (error: unknown) =>
-  typeof error === "object" &&
-  error !== null &&
-  "code" in error &&
-  error.code === "P2034";
 
 interface UpdateMemberRoleInput {
   actorId: string;
@@ -277,7 +272,7 @@ export const updateMemberRole = async (input: UpdateMemberRoleInput) => {
         { isolationLevel: "Serializable" }
       );
     } catch (error) {
-      if (!isPrismaWriteConflict(error)) {
+      if (!isRetryableTransactionConflict(error)) {
         throw error;
       }
       if (attempt === MAX_OWNER_UPDATE_ATTEMPTS) {

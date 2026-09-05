@@ -10,21 +10,35 @@ import {
 } from "node:fs/promises";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import Ajv2020 from "ajv/dist/2020.js";
+import {
+  digestGeneratedSource,
+  type GenerationReceipt,
+  readSourceIdentity,
+  stableSourceIdentity,
+} from "./generation-receipt.ts";
+import { applyProfile } from "./profile-application.ts";
+import { validateProfileOutput } from "./profile-output-validator.ts";
+import {
+  type ProfileInitManifest,
+  resolveProfile,
+} from "./profile-resolver.ts";
+import {
+  assertNoSelectedSymlinks,
+  sourcePathAllowed,
+} from "./source-copy-policy.ts";
 
-export interface InitManifest {
-  defaultApps: string[];
-  optionalApps: string[];
+export interface InitManifest extends ProfileInitManifest {
   remove: string[];
-  requiredApps: string[];
   sourceExcludes: string[];
   validationCommands: string[];
-  version: 1;
+  version: 2;
 }
 
 export interface GenerateOptions {
   appName: string;
   apps?: string[];
   install: boolean;
+  profile?: string;
   sourceRoot: string;
   target: string;
   validate: boolean;
@@ -42,13 +56,21 @@ coverage/
 *.tsbuildinfo
 apps/*/next-env.d.ts
 
-# Tests
-test-results/
-playwright-report/
-
 # Local environment and data
 .env
+.env.*
+!.env.example
+!.env.test.example
 .data/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+*.log
+*.pid
 
 # OS and editor files
 .DS_Store
@@ -62,6 +84,9 @@ coverage
 .data
 dist
 node_modules
+.agentkit
+.omp
+.wizloft
 out
 playwright-report
 storybook-static
@@ -95,6 +120,9 @@ ios/*
 android/*
 __pycache__/*
 node_modules/*
+.agentkit/*
+.omp/*
+.wizloft/*
 
 .opencode/*
 .serena/*
@@ -108,8 +136,26 @@ const APP_SURFACES_PATTERN =
   /export const appSurfaces: readonly string\[\] = \[[\s\S]*?\];/;
 const TEMPLATE_CI_STEP_PATTERN =
   /\n {6}- name: Validate templates\n {8}run: pnpm templates:validate\n/;
+const GENERATED_CI_BUILD_STEP =
+  "      - name: Build\n        run: pnpm build\n";
+const GENERATED_CI_ENV_ANCHOR = '      SKIP_ENV_VALIDATION: "false"\n';
+const GENERATED_CI_ENV = `${GENERATED_CI_ENV_ANCHOR}      MAIL_OUTBOX_DIR: apps/api/.data/mail
+      MAIL_PROVIDER: console
+      PLAYWRIGHT_REUSE_SERVER: "false"
+`;
+const GENERATED_CI_RUNTIME_STEPS = `${GENERATED_CI_BUILD_STEP}
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run auth integration
+        run: pnpm --filter @repo/auth test:integration
+
+      - name: Run browser identity journeys
+        run: pnpm test:e2e
+`;
 const REMOVED_PACKAGE_SCRIPTS = new Set([
   "boilerplate:init",
+  "profiles:verify",
   "templates:list",
   "templates:json",
   "templates:validate",
@@ -179,6 +225,46 @@ const run = (command: string, cwd: string) =>
     });
   });
 
+const runArgs = (command: string, args: string[], cwd: string) =>
+  new Promise<void>((resolvePromise, reject) => {
+    const child = spawn(command, args, { cwd, stdio: "inherit" });
+    child.once("error", reject);
+    child.once("exit", (code) => {
+      if (code === 0) {
+        resolvePromise();
+        return;
+      }
+      reject(
+        new Error(
+          `Command failed (${code ?? "unknown"}): ${command} ${args.join(" ")}`
+        )
+      );
+    });
+  });
+
+const formatGeneratedPaths = (
+  sourceRoot: string,
+  target: string,
+  targetPaths: string[]
+) =>
+  runArgs(
+    join(
+      sourceRoot,
+      "node_modules",
+      ".bin",
+      process.platform === "win32" ? "biome.cmd" : "biome"
+    ),
+    [
+      "format",
+      "--write",
+      "--vcs-use-ignore-file=false",
+      "--config-path",
+      join(sourceRoot, "biome.jsonc"),
+      ...targetPaths,
+    ],
+    target
+  );
+
 const resolveProspectiveRealPath = async (path: string) => {
   let existingAncestor = resolve(path);
   const missingSegments: string[] = [];
@@ -221,22 +307,6 @@ export const assertTarget = async (sourceRoot: string, target: string) => {
       "Target must not contain the boilerplate source directory."
     );
   }
-};
-
-const selectApps = (manifest: InitManifest, requested?: string[]) => {
-  const known = new Set([...manifest.requiredApps, ...manifest.optionalApps]);
-  const selected = [...new Set(requested ?? manifest.defaultApps)];
-  const unknown = selected.filter((app) => !known.has(app));
-  if (unknown.length > 0) {
-    throw new Error(`Unknown app surface(s): ${unknown.join(", ")}`);
-  }
-  const missing = manifest.requiredApps.filter(
-    (app) => !selected.includes(app)
-  );
-  if (missing.length > 0) {
-    throw new Error(`Required app surface(s) missing: ${missing.join(", ")}`);
-  }
-  return selected;
 };
 
 const rewritePackage = async (target: string, slug: string) => {
@@ -316,14 +386,33 @@ const rewriteGeneratedConfig = async (target: string) => {
     indexPath,
     index.replace('export * from "./templates";\n', "")
   );
+  const ciPath = join(target, ".github/workflows/ci.yml");
+  let ci = await readFile(ciPath, "utf8");
+  if (
+    !(
+      ci.includes(GENERATED_CI_BUILD_STEP) &&
+      ci.includes(GENERATED_CI_ENV_ANCHOR)
+    )
+  ) {
+    throw new Error("Generated CI anchors could not be located.");
+  }
+  ci = ci
+    .replace(GENERATED_CI_ENV_ANCHOR, GENERATED_CI_ENV)
+    .replace(GENERATED_CI_BUILD_STEP, GENERATED_CI_RUNTIME_STEPS);
+  await writeFile(ciPath, ci);
 };
 
 const generatedReadme = (
   appName: string,
-  selectedApps: string[]
+  selectedApps: string[],
+  profile: string
 ) => `# ${appName}
 
-Generated from the Wizloft personal SaaS boilerplate.
+Generated from the Wizloft \`${profile}\` profile.
+
+\`boilerplate.receipt.json\` records the selected profile, initial generated-source
+digest, and best-effort source identity. It is passive origin metadata; builds
+and runtime behavior do not depend on it.
 
 ## Apps
 
@@ -332,21 +421,27 @@ ${selectedApps.map((app) => `- \`apps/${app}\``).join("\n")}
 ## Setup
 
 \`\`\`bash
-pnpm install
+corepack pnpm install
 cp .env.example .env
 docker compose up -d postgres
-pnpm db:generate
-pnpm db:migrate:deploy
-pnpm db:seed
-pnpm dev
+corepack pnpm db:generate
+corepack pnpm db:migrate:deploy
+corepack pnpm db:seed
+corepack pnpm dev
 \`\`\`
 
-Run \`pnpm release:check\` before release.
+Run \`corepack pnpm release:check\` before release.
 `;
 
-const generatedSpec = (appName: string, selectedApps: string[]) => `# ${appName}
+const generatedSpec = (
+  appName: string,
+  selectedApps: string[],
+  profile: string
+) => `# ${appName}
 
 ## Foundation
+Profile: \`${profile}\`
+
 
 - pnpm and Turborepo monorepo
 - TypeScript strict and Ultracite-on-Biome
@@ -371,27 +466,29 @@ export const generateProject = async (options: GenerateOptions) => {
   const target = resolve(options.target);
   await assertTarget(sourceRoot, target);
   const manifest = await loadManifest(sourceRoot);
-  const selectedApps = selectApps(manifest, options.apps);
+  const resolvedProfile = resolveProfile(manifest, {
+    apps: options.apps,
+    profile: options.profile,
+  });
+  const selectedApps = resolvedProfile.apps;
   const slug = packageSlug(basename(target));
   const appName = options.appName || titleFromSlug(slug);
+  const sourceIdentityBefore = readSourceIdentity(sourceRoot);
+  await assertNoSelectedSymlinks({
+    remove: manifest.remove,
+    sourceExcludes: manifest.sourceExcludes,
+    sourceRoot,
+  });
 
   await mkdir(target, { recursive: false });
   try {
-    const excluded = new Set(manifest.sourceExcludes);
     await cp(sourceRoot, target, {
-      filter: (source) => {
-        const entry = relative(sourceRoot, source);
-        if (!entry) {
-          return true;
-        }
-        const segments = entry.split(sep);
-        const isRemoved = manifest.remove.some(
-          (removed) => entry === removed || entry.startsWith(`${removed}${sep}`)
-        );
-        return !(
-          isRemoved || segments.some((segment) => excluded.has(segment))
-        );
-      },
+      filter: (source) =>
+        sourcePathAllowed({
+          entry: relative(sourceRoot, source),
+          remove: manifest.remove,
+          sourceExcludes: manifest.sourceExcludes,
+        }),
       recursive: true,
     });
 
@@ -404,27 +501,100 @@ export const generateProject = async (options: GenerateOptions) => {
       }
     }
 
+    await applyProfile({
+      resolved: resolvedProfile,
+      sourceRoot,
+      target,
+    });
     await rewritePackage(target, slug);
     await rewriteBranding(target, slug, appName, selectedApps);
     await rewriteGeneratedConfig(target);
     await writeFile(join(target, ".gitignore"), GENERATED_GITIGNORE);
+    await validateProfileOutput({ resolved: resolvedProfile, target });
     await writeFile(join(target, ".dockerignore"), GENERATED_DOCKERIGNORE);
     await writeFile(join(target, ".repomixignore"), GENERATED_REPOMIXIGNORE);
     await writeFile(
       join(target, "README.md"),
-      generatedReadme(appName, selectedApps)
+      generatedReadme(appName, selectedApps, resolvedProfile.profile)
     );
     await writeFile(
       join(target, "SPEC.md"),
-      generatedSpec(appName, selectedApps)
+      generatedSpec(appName, selectedApps, resolvedProfile.profile)
     );
-    await copyFile(join(target, ".env.example"), join(target, ".env"));
     await rm(join(target, "boilerplate.init.json"), { force: true });
+    if (!options.install) {
+      await rm(join(target, "pnpm-lock.yaml"), { force: true });
+    }
+    await formatGeneratedPaths(sourceRoot, target, ["."]);
+
+    const [sourcePackage, receiptSchema, snapshot] = await Promise.all([
+      readFile(join(sourceRoot, "package.json"), "utf8").then(
+        JSON.parse
+      ) as Promise<{
+        engines: { node: string };
+        packageManager: string;
+        version: string;
+      }>,
+      readFile(
+        join(
+          sourceRoot,
+          "scripts/boilerplate-init/generation-receipt.schema.json"
+        ),
+        "utf8"
+      ).then(JSON.parse),
+      digestGeneratedSource(target),
+    ]);
+    const receipt: GenerationReceipt = {
+      generatedAt: new Date().toISOString(),
+      generation: {
+        installRequested: options.install,
+        validationRequested: options.validate,
+      },
+      generator: {
+        name: "wizloft-boilerplate-init",
+        version: sourcePackage.version,
+      },
+      schemaVersion: 1,
+      selection: { apps: selectedApps, profile: resolvedProfile.profile },
+      snapshot: {
+        algorithm: "sha256",
+        digest: snapshot.digest,
+        fileCount: snapshot.fileCount,
+        format: "path-content-v1",
+        scope: "generated-source-before-install",
+      },
+      source: stableSourceIdentity(
+        sourceIdentityBefore,
+        readSourceIdentity(sourceRoot)
+      ),
+      toolchain: {
+        nodeRange: sourcePackage.engines.node,
+        packageManager: sourcePackage.packageManager,
+      },
+    };
+    const validateReceipt = new Ajv2020({
+      allErrors: true,
+      strict: true,
+    }).compile(receiptSchema);
+    if (!validateReceipt(receipt)) {
+      const details = validateReceipt.errors
+        ?.map((error) => `${error.instancePath || "/"} ${error.message}`)
+        .join("; ");
+      throw new Error(
+        `Invalid generation receipt: ${details ?? "unknown error"}`
+      );
+    }
+    await writeFile(
+      join(target, "boilerplate.receipt.json"),
+      `${JSON.stringify(receipt, null, 2)}\n`
+    );
+    await formatGeneratedPaths(sourceRoot, target, [
+      "boilerplate.receipt.json",
+    ]);
+    await copyFile(join(target, ".env.example"), join(target, ".env"));
 
     if (options.install) {
-      await run("pnpm install", target);
-    } else {
-      await rm(join(target, "pnpm-lock.yaml"), { force: true });
+      await run("pnpm install --no-frozen-lockfile", target);
     }
     if (options.validate) {
       if (!options.install) {
@@ -435,9 +605,20 @@ export const generateProject = async (options: GenerateOptions) => {
       }
     }
   } catch (error) {
-    await rm(target, { force: true, recursive: true });
+    await rm(target, { force: true, recursive: true }).catch((cleanupError) => {
+      console.error(
+        "Could not clean the failed generation target.",
+        cleanupError
+      );
+    });
     throw error;
   }
 
-  return { appName, selectedApps, slug, target };
+  return {
+    appName,
+    profile: resolvedProfile.profile,
+    selectedApps,
+    slug,
+    target,
+  };
 };

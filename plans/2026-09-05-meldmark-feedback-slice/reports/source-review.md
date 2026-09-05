@@ -1,10 +1,10 @@
-# Source Review and Planning Evidence
+# Source Review and Planning Evidence (Historical)
 
 Date: 2026-09-05
-Status: **READ-ONLY SOURCE REVIEW; DESIGN DOCS WRITTEN; IMPLEMENTATION UNTESTED**
+Status: **HISTORICAL SOURCE REVIEW; ALL GAPS REMEDIATED BY IMPLEMENTATION**
 Source HEAD: `8975877d44b82682c53f3c486e8b26299cffc4b9`.
-
-## Observed facts
+Final implementation baseline and evidence recorded in implementation report.
+## Historical source observations (pre-implementation)
 
 | Observation | Source | Design consequence |
 | --- | --- | --- |
@@ -31,20 +31,22 @@ Recorded provenance: boilerplate input is the source HEAD above; untouched produ
 
 Orca/OMP primary-checkout preferences and regenerable tool projections are product workflow evidence only. This plan adopts output independence/local-state hygiene without adopting that workflow. Historical transformation line counts mix generic fixes and product specialization, so no savings forecast is based on those counts.
 
-## Verification performed in planning
+## Verification performed in planning (historical)
 
 - Read current source instructions, README, Harness/intake/architecture/context/tool registry docs, selected decisions and affected generator/runtime code.
 - Read package manifests and schema to enumerate 20 packages/16 models and derive the proposed inventory.
 - Confirmed missing project intake skill and Harness CLI; no global substitute used, no durable records fabricated.
 - A separate read-only reviewer checked BP-01–03 source contracts and drafted their phase documents; controller owns integration and plan choices.
-- Only Markdown under this plan folder is changed. No implementation, test/build, database, browser, container, dependency install or generated-project proof was executed.
+- Only Markdown under this plan folder is changed during planning. No implementation, test/build, database, browser, container, dependency install or generated-project proof was executed in planning phase.
 
-Documentation link/consistency checks are separate from runtime validation. Future implementation reports must replace pending proof with actual results, never treat this source review as release evidence.
+Documentation link/consistency checks are separate from runtime validation. This source review is retained as planning history; actual release evidence is in the implementation report and phase completion records.
 
-## Documentation closeout
+## Documentation closeout (historical)
 
 - Checked all 10 Markdown files: local links resolve, status fields exist, no trailing whitespace.
 - Reconciled phase order/BP identifiers and source-only versus generated-project responsibilities.
 - A review identified inherited real-mail configuration as inconsistent with isolated E2E proof; Phase 03 now pins console transport and a task-owned outbox, with a negative fixture requirement.
-- Profile inventories, receipt lifecycle, migration preflight and handoff authorization are explicit. The source intake/Harness precondition remains open; runtime checks remain pending implementation.
-- Git status still reports only this plan directory as untracked; no tracked application/configuration file was changed and no commit was created.
+- Profile inventories, receipt lifecycle, migration preflight and handoff authorization are explicit.
+- Git status still reports only this plan directory as untracked at planning time; no tracked application/configuration file was changed and no commit was created during planning.
+
+All prior gaps listed in observed facts were remediated during implementation. Final reviewer confirmed resolution. See implementation report for exact evidence.

@@ -75,13 +75,35 @@ pnpm templates:validate
 Create a clean project without the source repo's Harness and agent tooling:
 
 ```bash
-pnpm boilerplate:init ../my-product --name "My Product" --validate
+corepack pnpm boilerplate:init ../my-product --name "My Product" --validate
+corepack pnpm boilerplate:init ../my-core --profile core --validate
 ```
 
-The default output includes app, web, API, email, and Storybook surfaces. Add
-docs with `--with-docs`, or select an exact set with
-`--apps app,api,web`. App and API are required. This generator core is designed
-to become the implementation behind `wizloft boilerplate init` later.
+The default `saas` profile preserves the full app, web, API, email, and
+Storybook baseline. The `core` profile keeps only identity, auth recovery,
+session management, health/readiness, and neutral protected UI on a four-model
+Prisma schema. Add docs with `--with-docs`, or select an exact app set with
+`--apps app,api,web`; app and API are always required. Every generated project
+contains a passive `boilerplate.receipt.json` with its selected profile,
+surfaces, source identity when Git metadata is available, and a deterministic
+pre-install source digest. Builds and runtime behavior never read the receipt.
+
+`--skip-install` removes the copied lockfile. Run `corepack pnpm install` in the
+generated project before using `--frozen-lockfile`.
+
+Maintainers can verify every supported profile/app combination in isolated,
+target-owned workspaces:
+
+```bash
+corepack pnpm profiles:verify --full
+corepack pnpm profiles:verify --case core:app,api --runtime
+```
+
+The full mode installs, lints, typechecks, checks boundaries, and builds all 32
+combinations. Runtime mode additionally runs the generated release, isolated
+database/browser, and production-container checks for each explicit `--case`.
+Reports are written under `.data/`; generated targets are removed unless
+`--keep` is passed.
 
 Shadcn components are source-owned by `@repo/design-system` and available
 through explicit subpath imports:

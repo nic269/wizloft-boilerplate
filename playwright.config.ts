@@ -4,6 +4,7 @@ const reuseExistingServer = process.env.PLAYWRIGHT_REUSE_SERVER !== "false";
 
 export default defineConfig({
   fullyParallel: true,
+  outputDir: process.env.PLAYWRIGHT_OUTPUT_DIR ?? "test-results",
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     { name: "mobile", use: { ...devices["Pixel 7"] } },

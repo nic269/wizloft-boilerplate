@@ -1,5 +1,8 @@
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
+import { mkdtempSync, rmSync } from "node:fs";
 import net from "node:net";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const DEFAULTS = {
   API_INTERNAL_URL: "http://localhost:3002",
@@ -37,95 +40,217 @@ const firstOpenPort = async (start) => {
   );
 };
 
-const waitForPort = async (port, timeoutMs = 45_000) => {
-  const startedAt = Date.now();
+let activeChild;
+let receivedSignal;
 
-  while (Date.now() - startedAt < timeoutMs) {
-    const ready = await new Promise((resolve) => {
-      const socket = net.connect({ host: "127.0.0.1", port, timeout: 1000 });
-      socket.once("connect", () => {
-        socket.destroy();
-        resolve(true);
-      });
-      socket.once("timeout", () => {
-        socket.destroy();
-        resolve(false);
-      });
-      socket.once("error", () => resolve(false));
-    });
-
-    if (ready) {
+const run = (
+  command,
+  args,
+  commandEnv,
+  { allowDuringShutdown = false, timeoutMs } = {}
+) =>
+  new Promise((resolve, reject) => {
+    if (receivedSignal && !allowDuringShutdown) {
+      reject(new Error(`Interrupted by ${receivedSignal}.`));
       return;
     }
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  }
 
-  throw new Error(
-    `PostgreSQL did not accept TCP connections on localhost:${port}.`
-  );
-};
+    const child = spawn(command, args, {
+      env: commandEnv,
+      stdio: "inherit",
+    });
+    activeChild = child;
+    let settled = false;
+    let timeout;
+    const finish = (error) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timeout);
+      if (activeChild === child) {
+        activeChild = undefined;
+      }
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    };
 
-const run = (command, args, commandEnv) => {
-  const result = spawnSync(command, args, {
-    env: commandEnv,
-    stdio: "inherit",
+    child.once("error", finish);
+    child.once("exit", (code, signal) => {
+      if (receivedSignal && !allowDuringShutdown) {
+        finish(new Error(`Interrupted by ${receivedSignal}.`));
+      } else if (code === 0) {
+        finish();
+      } else {
+        finish(
+          new Error(
+            `${command} ${args.join(" ")} failed with ${
+              signal ? `signal ${signal}` : `exit code ${code ?? 1}`
+            }`
+          )
+        );
+      }
+    });
+
+    if (timeoutMs) {
+      timeout = setTimeout(() => {
+        child.kill("SIGTERM");
+        const escalation = setTimeout(() => {
+          if (child.exitCode === null && child.signalCode === null) {
+            child.kill("SIGKILL");
+          }
+        }, 2000);
+        escalation.unref();
+      }, timeoutMs);
+      timeout.unref();
+    }
   });
 
-  if (result.status !== 0) {
-    throw new Error(
-      `${command} ${args.join(" ")} failed with exit code ${result.status ?? 1}`
-    );
+let composeAttempted = false;
+let env;
+let mailOutboxDirectory;
+let playwrightArtifactsDirectory;
+const composeProject = `wizloft-e2e-${process.pid}`;
+const handleInterrupt = (signal) => {
+  if (receivedSignal) {
+    return;
+  }
+  receivedSignal = signal;
+  const interruptedChild = activeChild;
+  if (
+    interruptedChild &&
+    interruptedChild.exitCode === null &&
+    interruptedChild.signalCode === null
+  ) {
+    interruptedChild.kill(signal);
+    const escalation = setTimeout(() => {
+      if (
+        interruptedChild.exitCode === null &&
+        interruptedChild.signalCode === null
+      ) {
+        interruptedChild.kill("SIGKILL");
+      }
+    }, 5000);
+    interruptedChild.once("exit", () => clearTimeout(escalation));
   }
 };
-
-const requestedPort = Number(process.env.POSTGRES_PORT ?? 5432);
-const postgresPort = await firstOpenPort(
-  Number.isFinite(requestedPort) ? requestedPort : 5432
-);
-const databaseUrl = `postgresql://postgres:postgres@localhost:${postgresPort}/personal_saas_boilerplate`;
-
-const env = {
-  ...DEFAULTS,
-  ...process.env,
-  DATABASE_URL: databaseUrl,
-  POSTGRES_PORT: String(postgresPort),
+const throwIfInterrupted = () => {
+  if (receivedSignal) {
+    throw new Error(`Interrupted by ${receivedSignal}.`);
+  }
 };
-const composeProject = `wizloft-e2e-${process.pid}`;
-
-console.log(`Using PostgreSQL on localhost:${postgresPort}`);
+const handleSigint = () => handleInterrupt("SIGINT");
+const handleSigterm = () => handleInterrupt("SIGTERM");
+process.on("SIGINT", handleSigint);
+process.on("SIGTERM", handleSigterm);
 
 let primaryError;
 let cleanupError;
 try {
-  run(
+  const requestedPort = Number(process.env.POSTGRES_PORT ?? 5432);
+  const postgresPort = await firstOpenPort(
+    Number.isFinite(requestedPort) ? requestedPort : 5432
+  );
+  throwIfInterrupted();
+  const databaseUrl = `postgresql://postgres:postgres@localhost:${postgresPort}/personal_saas_boilerplate`;
+  mailOutboxDirectory = mkdtempSync(join(tmpdir(), "wizloft-e2e-mail-"));
+  playwrightArtifactsDirectory = mkdtempSync(
+    join(tmpdir(), "wizloft-e2e-playwright-")
+  );
+  env = {
+    ...DEFAULTS,
+    ...process.env,
+    API_INTERNAL_URL: DEFAULTS.API_INTERNAL_URL,
+    BETTER_AUTH_URL: DEFAULTS.BETTER_AUTH_URL,
+    DATABASE_URL: databaseUrl,
+    MAIL_OUTBOX_DIR: mailOutboxDirectory,
+    MAIL_PROVIDER: "console",
+    NEXT_PUBLIC_API_URL: DEFAULTS.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_APP_URL: DEFAULTS.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_WEB_URL: DEFAULTS.NEXT_PUBLIC_WEB_URL,
+    PLAYWRIGHT_HTML_OUTPUT_DIR: join(playwrightArtifactsDirectory, "report"),
+    PLAYWRIGHT_OUTPUT_DIR: join(playwrightArtifactsDirectory, "results"),
+    PLAYWRIGHT_REUSE_SERVER: "false",
+    POSTGRES_PORT: String(postgresPort),
+  };
+  console.log(`Using PostgreSQL on localhost:${postgresPort}`);
+  const occupiedServicePorts = (
+    await Promise.all(
+      [3000, 3002].map(async (port) => [port, await isPortInUse(port)])
+    )
+  )
+    .filter(([, occupied]) => occupied)
+    .map(([port]) => port);
+  if (occupiedServicePorts.length > 0) {
+    throw new Error(
+      `E2E requires free app/API ports; already in use: ${occupiedServicePorts.join(", ")}`
+    );
+  }
+  throwIfInterrupted();
+  composeAttempted = true;
+  await run(
     "docker",
-    ["compose", "--project-name", composeProject, "up", "-d", "postgres"],
+    [
+      "compose",
+      "--project-name",
+      composeProject,
+      "up",
+      "-d",
+      "--wait",
+      "--wait-timeout",
+      "45",
+      "postgres",
+    ],
     env
   );
-  await waitForPort(postgresPort);
-  run("pnpm", ["db:generate"], env);
-  run("pnpm", ["db:migrate:deploy"], env);
-  run("pnpm", ["--filter", "@repo/auth", "test:integration"], env);
-  run("pnpm", ["test:e2e"], env);
+  await run("pnpm", ["db:generate"], env);
+  await run("pnpm", ["db:migrate:deploy"], env);
+  await run("pnpm", ["--filter", "@repo/auth", "test:integration"], env);
+  await run("pnpm", ["test:e2e"], env);
 } catch (error) {
   primaryError = error;
 } finally {
-  try {
-    run(
-      "docker",
-      [
-        "compose",
-        "--project-name",
-        composeProject,
-        "down",
-        "--volumes",
-        "--remove-orphans",
-      ],
-      env
-    );
-  } catch (error) {
-    cleanupError = error;
+  if (composeAttempted && env) {
+    try {
+      await run(
+        "docker",
+        [
+          "compose",
+          "--project-name",
+          composeProject,
+          "down",
+          "--volumes",
+          "--remove-orphans",
+        ],
+        env,
+        { allowDuringShutdown: true, timeoutMs: 30_000 }
+      );
+    } catch (error) {
+      cleanupError = error;
+    }
   }
+  for (const path of [mailOutboxDirectory, playwrightArtifactsDirectory]) {
+    if (!path) {
+      continue;
+    }
+    try {
+      rmSync(path, { force: true, recursive: true });
+    } catch (error) {
+      cleanupError ??= error;
+    }
+  }
+}
+process.off("SIGINT", handleSigint);
+process.off("SIGTERM", handleSigterm);
+
+if (receivedSignal) {
+  if (cleanupError) {
+    console.error("E2E database cleanup also failed:", cleanupError);
+  }
+  process.kill(process.pid, receivedSignal);
 }
 
 if (primaryError) {

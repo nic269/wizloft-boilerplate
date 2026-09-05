@@ -24,6 +24,7 @@ code.
 | Workspace surfaces | Ready | Runtime app/web/API plus docs, email-preview, and Storybook handoff tooling. |
 | Release validation | Ready | `pnpm release:check`, deterministic six-journey browser E2E, and production Docker proof for fail-fast, public assets, and app/API/web readiness. |
 | Templates | Catalog-ready | Typed catalog and README tracks exist in the source boilerplate; generated projects remove source-only catalog exports. |
+| Generation profiles | Ready | Default-compatible `saas`, identity-first `core`, all 32 profile/app subsets installed and release-verified, passive receipts, and source plus generated-core E2E proof. |
 
 ## Release Checks
 
@@ -71,9 +72,10 @@ pnpm test:e2e:db
   project accepts the browser runtime cost in pull-request CI.
 - Portable Docker image build/start/readiness is locally proven; image push and
   provider-specific hosting checks remain deployment-platform responsibilities.
-- `pnpm boilerplate:init --skip-install` now removes the copied source
-  lockfile. Run `pnpm install` in the generated project before using
-  `--frozen-lockfile`.
+- `pnpm boilerplate:init --skip-install` removes the copied source lockfile.
+  Run `corepack pnpm install` in the generated project before using
+  `--frozen-lockfile`. Clean installs resolve the auth runtime at the pinned
+  schema-compatible version.
 
 ## Template Scaffold Decision
 

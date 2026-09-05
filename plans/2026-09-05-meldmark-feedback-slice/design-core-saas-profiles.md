@@ -1,10 +1,10 @@
 # Design: Core and SaaS Generation Profiles
 
 Date: 2026-09-05
-Status: **PROPOSED DESIGN — NOT IMPLEMENTED / NOT AN ACCEPTED ADR**
+Status: **IMPLEMENTED / ACCEPTED (via plan completion)**
 Owner: BP-04 / [Phase 05](phase-05-core-saas-profiles.md).
 Source baseline: `8975877d44b82682c53f3c486e8b26299cffc4b9`.
-
+Evidence: all acceptance in reports/pm-2026-09-05-meldmark-feedback-completion.md; 32/32 matrix, core 12/4, proofs green.
 ## Decision and rationale
 
 Use two named generation profiles. Keep the source checkout runnable as SaaS and preserve that default output. Generate core with explicit composition replacements and a separate initial identity schema. Share actual auth/session, mail transport, API error handling and design-system implementations.
@@ -172,4 +172,6 @@ Resolver validates dependencies; it does not automatically add packages to satis
 
 ## Decision status
 
-All product choices have concrete defaults here. Later BP-04 authorization can accept them together. Drift that forces different packages, auth behavior, migration semantics or supported apps needs an amendment before dependent code changes.
+All product choices had concrete defaults. BP-04/05 authorization accepted them together via plan. Full execution + matrix + runtime + source proof complete. SaaS preserved, core delivered per inventory. No drift requiring amendment in this scope. See phase-05 and implementation report for evidence.
+
+Status: IMPLEMENTED (plan complete).

@@ -15,7 +15,8 @@ import { assertTarget, generateProject, loadManifest } from "./generator.ts";
 const sourceRoot = resolve(import.meta.dirname, "../..");
 const temporaryRoots: string[] = [];
 const INVALID_MANIFEST_ERROR =
-  /Invalid init manifest:.*additional properties.*requiredApps.*array.*defaultApps.*duplicate/;
+  /Invalid init manifest:.*additional properties.*requiredApps.*array.*profiles.*duplicate/;
+const SHA256_PATTERN = /^[0-9a-f]{64}$/u;
 
 const createManifestFixture = async (value: unknown) => {
   const root = await mkdtemp(join(tmpdir(), "wizloft-manifest-"));
@@ -107,28 +108,36 @@ describe("boilerplate init", () => {
 
   it("validates the init manifest with the tracked runtime schema", async () => {
     const root = await createManifestFixture({
-      defaultApps: ["app", "api"],
+      defaultProfile: "saas",
       optionalApps: [],
+      profiles: {
+        core: { defaultApps: ["app", "api"], packages: ["api"] },
+        saas: { defaultApps: ["app", "api"] },
+      },
       remove: [],
       requiredApps: ["app", "api"],
       sourceExcludes: [],
       validationCommands: ["pnpm check"],
-      version: 1,
+      version: 2,
     });
 
-    await expect(loadManifest(root)).resolves.toMatchObject({ version: 1 });
+    await expect(loadManifest(root)).resolves.toMatchObject({ version: 2 });
   });
 
   it("reports all invalid manifest fields before generation", async () => {
     const root = await createManifestFixture({
-      defaultApps: ["app", "app"],
+      defaultProfile: "saas",
       optionalApps: [],
+      profiles: {
+        core: { defaultApps: ["app", "app"] },
+        saas: { defaultApps: ["app", "api"] },
+      },
       remove: [],
       requiredApps: "app",
       sourceExcludes: [],
       unexpected: true,
       validationCommands: [],
-      version: 1,
+      version: 2,
     });
 
     await expect(loadManifest(root)).rejects.toThrow(INVALID_MANIFEST_ERROR);
@@ -157,6 +166,7 @@ describe("boilerplate init", () => {
     };
     expect(packageJson.name).toBe("learning-platform");
     expect(packageJson.scripts["boilerplate:init"]).toBeUndefined();
+    expect(packageJson.scripts["profiles:verify"]).toBeUndefined();
     expect(packageJson.scripts["templates:validate"]).toBeUndefined();
     expect(packageJson.devDependencies.ajv).toBeUndefined();
     expect(packageJson.scripts["release:check"]).not.toContain("templates");
@@ -198,6 +208,23 @@ describe("boilerplate init", () => {
     expect(generatedReadmeContents).toContain("# Learning Platform");
     expect(generatedReadmeContents).toContain("pnpm db:migrate:deploy");
     expect(generatedReadmeContents).not.toContain("pnpm db:push");
+    const receipt = JSON.parse(
+      await readFile(join(target, "boilerplate.receipt.json"), "utf8")
+    ) as {
+      generation: { installRequested: boolean; validationRequested: boolean };
+      selection: { apps: string[]; profile: string };
+      snapshot: { digest: string; fileCount: number };
+    };
+    expect(receipt.selection).toEqual({
+      apps: ["app", "api", "web"],
+      profile: "saas",
+    });
+    expect(receipt.generation).toEqual({
+      installRequested: false,
+      validationRequested: false,
+    });
+    expect(receipt.snapshot.digest).toMatch(SHA256_PATTERN);
+    expect(receipt.snapshot.fileCount).toBeGreaterThan(0);
     expect(await readFile(join(target, "SPEC.md"), "utf8")).not.toContain(
       "apps/docs"
     );
@@ -222,9 +249,15 @@ describe("boilerplate init", () => {
     expect(
       await readFile(join(target, "scripts/e2e-with-db.mjs"), "utf8")
     ).toContain("learning_platform");
-    expect(
-      await readFile(join(target, ".github/workflows/ci.yml"), "utf8")
-    ).not.toContain("templates:validate");
+    const generatedCi = await readFile(
+      join(target, ".github/workflows/ci.yml"),
+      "utf8"
+    );
+    expect(generatedCi).not.toContain("templates:validate");
+    expect(generatedCi).not.toContain("NEXT_PUBLIC_DOCS_URL");
+    expect(generatedCi).toContain("playwright install --with-deps chromium");
+    expect(generatedCi).toContain("pnpm --filter @repo/auth test:integration");
+    expect(generatedCi).toContain("pnpm test:e2e");
     const dockerIgnore = await readFile(join(target, ".dockerignore"), "utf8");
     expect(dockerIgnore).not.toContain("harness.db");
     expect(dockerIgnore).toContain("**/.data");

@@ -3,12 +3,11 @@
 Date: 2026-09-05
 Phase: 03 / BP-03
 
-Status: **DESIGNED / NOT IMPLEMENTED**
+Status: **COMPLETED**
 
-Authorization: documentation planning only; implementation requires a new-session request.
+Authorization: full implementation authorized and executed per plan.
 Reference baseline: `8975877d44b82682c53f3c486e8b26299cffc4b9`.
-Parent: [initiative plan](plan.md). All proof below is work for a future session.
-
+Parent: [initiative plan](plan.md). Implementation complete with evidence; see reports/pm-2026-09-05-meldmark-feedback-completion.md.
 ## Outcome and non-goals
 
 Generate independent projects without source-local secrets/runtime material; make root
@@ -30,8 +29,7 @@ Do not hide all downstream tool configuration because some tool files are local 
 - Root [dev script](../../package.json) starts Turbo directly. Existing database
   migration deployment is explicit in [database scripts](../../packages/database/package.json).
 - Installed local Prisma is 7.8.0: `packages/database/node_modules/.bin/prisma`
-  exists, and its CLI source includes `prisma migrate status`. This was inspected,
-  not executed; status exit behavior still needs runtime proof.
+  exists, and its CLI source includes `prisma migrate status`. Runtime proof for status exit behavior executed during implementation (see Completed evidence).
 - [E2E runner](../../scripts/e2e-with-db.mjs), lines 87–91, lets inherited values
   override local defaults; [Playwright](../../playwright.config.ts) honors reuse.
   The runner already uses its own Compose project and finally-cleanup.
@@ -174,6 +172,22 @@ contracts and negative tests. Compose version drift and Prisma status exit behav
 need local runtime verification. Rollback is a focused revert of scripts/policies/docs;
 no application data/migration rollback, downstream deletion, or tool reset is required.
 
-Unresolved evidence: actual Prisma status state matrix and supported Compose health
-flags remain unverified in this planning session. Tool-specific config contracts are
-outside scope and are not prerequisites for implementing this phase.
+## Completed evidence
+
+- Focused implementation suite 71 passing plus interruption-cleanup test passing.
+- Source release:check green; generated release/E2E/Docker for reps.
+- Six representative runtime configurations composed evidence (release/E2E/Docker).
+- Both maximal docs apps booted and exposed API docs after generated env propagation fixed.
+- Redundant maximal Docker retries encountered npm registry timeouts only (no source defect; distinguished).
+- E2E uses healthy task-owned PostgreSQL, pinned endpoints, console mail, bounded health, pre-Compose signal aborts, and cleanup on success/failure/interruption; Compose needs no service-level env file.
+- Root dev check-only preflight; copy excludes local state/secrets/symlinks; ignores correct.
+- All acceptance criteria evidenced. Full details in implementation report.
+
+## Acceptance, risks, and rollback (evidence-backed)
+
+- [x] Copy protection and downstream ignore protection each have independent proof.
+- [x] Generated output has no source-local secret/runtime/link dependencies.
+- [x] Root dev is check-only; all non-ready states fail before servers start.
+- [x] Fresh E2E uses healthy task-owned PostgreSQL and pinned local service endpoints.
+- [x] Success/failure/interruption cleanup never removes unrelated processes or data.
+- [x] Fresh generated runtime/container proof and source release pass at final state.

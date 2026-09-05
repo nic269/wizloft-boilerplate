@@ -9,6 +9,7 @@ const usage = () => `Usage: pnpm boilerplate:init <target> [options]
 
 Options:
   --name <display-name>   Set the product display name
+  --profile <saas|core>  Select the SaaS or identity-first core profile
   --apps <list>           Comma-separated apps; app and api are required
   --with-docs             Add the optional docs app
   --skip-install          Do not run pnpm install
@@ -36,8 +37,13 @@ if (args.includes("--help")) {
   process.exit(0);
 }
 
+const profileFlagCount = args.filter((arg) => arg === "--profile").length;
+if (profileFlagCount > 1) {
+  throw new Error("--profile may be specified only once.");
+}
 const appName = takeValue("--name") ?? "";
 const appsValue = takeValue("--apps");
+const profile = takeValue("--profile");
 const withDocsIndex = args.indexOf("--with-docs");
 const withDocs = withDocsIndex !== -1;
 if (withDocs) {
@@ -61,12 +67,16 @@ if (!target || args.length > 0) {
 }
 
 const manifest = await loadManifest(sourceRoot);
+const selectedProfile = profile ?? manifest.defaultProfile;
+if (selectedProfile !== "saas" && selectedProfile !== "core") {
+  throw new Error(`Unknown generation profile: ${selectedProfile}`);
+}
 const selectedApps = appsValue
   ? appsValue
       .split(",")
       .map((app) => app.trim())
       .filter(Boolean)
-  : [...manifest.defaultApps];
+  : [...manifest.profiles[selectedProfile].defaultApps];
 if (withDocs && !selectedApps.includes("docs")) {
   selectedApps.push("docs");
 }
@@ -75,10 +85,12 @@ const result = await generateProject({
   appName,
   apps: selectedApps,
   install: !skipInstall,
+  profile,
   sourceRoot,
   target,
   validate,
 });
 
 console.log(`Created ${result.appName} at ${result.target}`);
+console.log(`Profile: ${result.profile}`);
 console.log(`Apps: ${result.selectedApps.join(", ")}`);

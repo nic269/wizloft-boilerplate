@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
+import { access } from "node:fs/promises";
 import net from "node:net";
 import { dirname, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -9,7 +10,14 @@ const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const imagePrefix = `wizloft-boilerplate-${Date.now()}`;
 const networkName = `${imagePrefix}-net`;
 const containerNames = [];
+const MISSING_DOCKER_RESOURCE_PATTERN =
+  /(?:No such (?:container|image)|network .+ not found)/iu;
 
+const pathExists = (path) =>
+  access(resolve(workspaceRoot, path)).then(
+    () => true,
+    () => false
+  );
 const run = async (command, args, options = {}) => {
   const child = spawn(command, args, {
     cwd: workspaceRoot,
@@ -160,48 +168,46 @@ const assertContainerRejectsConfiguration = async ({
   }
 };
 
-const removeIfExists = async (kind, name) => {
+const isMissingDockerResource = (error) =>
+  error instanceof Error && MISSING_DOCKER_RESOURCE_PATTERN.test(error.message);
+
+const removeDockerResource = async (kind, name, force = false) => {
   try {
-    await run("docker", [kind, "rm", "-f", name], { stdio: "ignore" });
-  } catch {
-    // Cleanup is best-effort.
+    await runQuiet("docker", [kind, "rm", ...(force ? ["-f"] : []), name]);
+  } catch (error) {
+    if (isMissingDockerResource(error)) {
+      return;
+    }
+    throw error;
   }
 };
 
-const removeNetworkIfExists = async (name) => {
-  try {
-    await run("docker", ["network", "rm", name], { stdio: "ignore" });
-  } catch {
-    // Cleanup is best-effort.
-  }
-};
+const removeIfExists = (kind, name) => removeDockerResource(kind, name, true);
+const removeNetworkIfExists = (name) => removeDockerResource("network", name);
+const removeImageIfExists = (name) => removeDockerResource("image", name, true);
 
-const removeImageIfExists = async (name) => {
-  try {
-    await run("docker", ["image", "rm", "-f", name], { stdio: "ignore" });
-  } catch {
-    // Cleanup is best-effort.
-  }
-};
-
+const hasStorage = await pathExists("packages/storage");
+const hasDocs = await pathExists("apps/docs");
+const hasWeb = await pathExists("apps/web");
 const apiPort = await findOpenPort(3102);
 const appPort = await findOpenPort(3100);
-const webPort = await findOpenPort(3101);
+const webPort = hasWeb ? await findOpenPort(3101) : null;
 
 const urls = {
   api: `http://127.0.0.1:${apiPort}`,
   app: `http://127.0.0.1:${appPort}`,
-  docs: "http://127.0.0.1:3003",
-  web: `http://127.0.0.1:${webPort}`,
+  ...(hasDocs ? { docs: "http://127.0.0.1:3003" } : {}),
+  ...(webPort === null ? {} : { web: `http://127.0.0.1:${webPort}` }),
 };
+const authWebUrl = urls.web ?? urls.app;
 
 const buildArgs = [
   "API_INTERNAL_URL=http://api:3002",
   "APP_INTERNAL_URL=http://app:3000",
   `NEXT_PUBLIC_API_URL=${urls.api}`,
   `NEXT_PUBLIC_APP_URL=${urls.app}`,
-  `NEXT_PUBLIC_DOCS_URL=${urls.docs}`,
-  `NEXT_PUBLIC_WEB_URL=${urls.web}`,
+  ...(urls.docs ? [`NEXT_PUBLIC_DOCS_URL=${urls.docs}`] : []),
+  `NEXT_PUBLIC_WEB_URL=${authWebUrl}`,
 ];
 
 const surfaces = [
@@ -212,7 +218,7 @@ const surfaces = [
       "PORT=3002",
       "NEXT_PUBLIC_API_URL=http://api:3002",
       `NEXT_PUBLIC_APP_URL=${urls.app}`,
-      `NEXT_PUBLIC_WEB_URL=${urls.web}`,
+      `NEXT_PUBLIC_WEB_URL=${authWebUrl}`,
       "BETTER_AUTH_SECRET=replace-with-at-least-32-random-characters",
       "BETTER_AUTH_URL=http://api:3002/api/auth",
       "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/personal_saas_boilerplate",
@@ -236,7 +242,7 @@ const surfaces = [
       "API_INTERNAL_URL=http://api:3002",
       `NEXT_PUBLIC_API_URL=${urls.api}`,
       `NEXT_PUBLIC_APP_URL=${urls.app}`,
-      `NEXT_PUBLIC_WEB_URL=${urls.web}`,
+      `NEXT_PUBLIC_WEB_URL=${authWebUrl}`,
       "BETTER_AUTH_SECRET=replace-with-at-least-32-random-characters",
       "BETTER_AUTH_URL=http://api:3002/api/auth",
       "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/personal_saas_boilerplate",
@@ -250,27 +256,33 @@ const surfaces = [
     scope: "@repo/app",
     target: "app-runner",
   },
-  {
-    containerName: `${imagePrefix}-web`,
-    containerPort: "3001",
-    env: [
-      "PORT=3001",
-      `NEXT_PUBLIC_API_URL=${urls.api}`,
-      `NEXT_PUBLIC_APP_URL=${urls.app}`,
-      `NEXT_PUBLIC_DOCS_URL=${urls.docs}`,
-      `NEXT_PUBLIC_WEB_URL=${urls.web}`,
-    ],
-    healthPath: "/",
-    hostPort: String(webPort),
-    imageTag: `${imagePrefix}:web`,
-    name: "web",
-    networkAlias: "web",
-    publicAssetPath: "/robots.txt",
-    scope: "@repo/web",
-    target: "web-runner",
-  },
+  ...(hasWeb
+    ? [
+        {
+          containerName: `${imagePrefix}-web`,
+          containerPort: "3001",
+          env: [
+            "PORT=3001",
+            `NEXT_PUBLIC_API_URL=${urls.api}`,
+            `NEXT_PUBLIC_APP_URL=${urls.app}`,
+            ...(urls.docs ? [`NEXT_PUBLIC_DOCS_URL=${urls.docs}`] : []),
+            `NEXT_PUBLIC_WEB_URL=${urls.web}`,
+          ],
+          healthPath: "/",
+          hostPort: String(webPort),
+          imageTag: `${imagePrefix}:web`,
+          name: "web",
+          networkAlias: "web",
+          publicAssetPath: "/robots.txt",
+          scope: "@repo/web",
+          target: "web-runner",
+        },
+      ]
+    : []),
 ];
 
+let primaryError;
+const cleanupErrors = [];
 try {
   await runQuiet("docker", ["version"]);
 
@@ -297,19 +309,21 @@ try {
   }
 
   const [apiSurface] = surfaces;
-  await assertContainerRejectsConfiguration({
-    containerName: `${imagePrefix}-invalid-storage`,
-    env: [
-      ...apiSurface.env,
-      "STORAGE_PROVIDER=s3",
-      "S3_BUCKET=private-files",
-      "S3_REGION=",
-      "S3_ACCESS_KEY_ID=",
-      "S3_SECRET_ACCESS_KEY=",
-    ],
-    expectedMessage: "s3 storage configuration is missing",
-    imageTag: apiSurface.imageTag,
-  });
+  if (hasStorage) {
+    await assertContainerRejectsConfiguration({
+      containerName: `${imagePrefix}-invalid-storage`,
+      env: [
+        ...apiSurface.env,
+        "STORAGE_PROVIDER=s3",
+        "S3_BUCKET=private-files",
+        "S3_REGION=",
+        "S3_ACCESS_KEY_ID=",
+        "S3_SECRET_ACCESS_KEY=",
+      ],
+      expectedMessage: "s3 storage configuration is missing",
+      imageTag: apiSurface.imageTag,
+    });
+  }
   await assertContainerRejectsConfiguration({
     containerName: `${imagePrefix}-invalid-mail`,
     env: [
@@ -390,17 +404,46 @@ try {
       );
     }
   }
-
-  console.log("Production container validation passed.");
-  console.log(`API: ${urls.api}/health`);
-  console.log(`App: ${urls.app}/sign-in`);
-  console.log(`Web: ${urls.web}/`);
+} catch (error) {
+  primaryError = error;
 } finally {
   for (const containerName of containerNames.reverse()) {
-    await removeIfExists("container", containerName);
+    try {
+      await removeIfExists("container", containerName);
+    } catch (error) {
+      cleanupErrors.push(error);
+    }
   }
-  await removeNetworkIfExists(networkName);
+  try {
+    await removeNetworkIfExists(networkName);
+  } catch (error) {
+    cleanupErrors.push(error);
+  }
   for (const surface of surfaces) {
-    await removeImageIfExists(surface.imageTag);
+    try {
+      await removeImageIfExists(surface.imageTag);
+    } catch (error) {
+      cleanupErrors.push(error);
+    }
   }
+}
+
+if (primaryError) {
+  if (cleanupErrors.length > 0) {
+    console.error("Production container cleanup also failed:", cleanupErrors);
+  }
+  throw primaryError;
+}
+if (cleanupErrors.length > 0) {
+  throw new AggregateError(
+    cleanupErrors,
+    "Production container cleanup failed"
+  );
+}
+
+console.log("Production container validation passed.");
+console.log(`API: ${urls.api}/health`);
+console.log(`App: ${urls.app}/sign-in`);
+if (urls.web) {
+  console.log(`Web: ${urls.web}/`);
 }

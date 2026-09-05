@@ -1,12 +1,9 @@
-import type { Dirent } from "node:fs";
-import { readdir, readFile } from "node:fs/promises";
+import type { Dirent, Stats } from "node:fs";
+import { lstat, readdir, readFile, realpath } from "node:fs/promises";
 import { dirname, extname, join, relative, resolve, sep } from "node:path";
 import ts from "typescript";
-
-interface BoundaryConfig {
-  clientSafeEntrypoints: Record<string, string[]>;
-  packageRules: Record<string, string[]>;
-}
+import { type BoundaryConfig, parseBoundaryConfig } from "./boundary-config.ts";
+import { forbiddenImportRule } from "./forbidden-imports.ts";
 
 interface PackageManifest {
   dependencies?: Record<string, string>;
@@ -34,6 +31,7 @@ export interface BoundaryViolation {
     | "dependency-cycle"
     | "layer-violation"
     | "package-imports-app"
+    | "forbidden-package-import"
     | "private-deep-import"
     | "unconfigured-package"
     | "undeclared-workspace-dependency";
@@ -181,6 +179,52 @@ const sourceImports = (file: string, contents: string) => {
 const containsPath = (parent: string, child: string) => {
   const rel = relative(parent, child);
   return rel === "" || !(rel === ".." || rel.startsWith(`..${sep}`));
+};
+const validateExceptionFiles = async (
+  config: BoundaryConfig,
+  workspaces: Workspace[]
+) => {
+  const byName = new Map(
+    workspaces.map((workspace) => [workspace.name, workspace])
+  );
+  for (const ownerName of Object.keys(config.forbiddenPackageImports)) {
+    if (!byName.has(ownerName)) {
+      throw new Error(`Forbidden import rules have unknown owner ${ownerName}`);
+    }
+  }
+  for (const [ownerName, paths] of Object.entries(
+    config.forbiddenImportExceptions
+  )) {
+    const owner = byName.get(ownerName);
+    if (!owner) {
+      throw new Error(
+        `Forbidden import exception has unknown owner ${ownerName}`
+      );
+    }
+    const ownerRealPath = await realpath(owner.directory);
+    for (const path of Object.keys(paths)) {
+      const candidate = resolve(owner.directory, path);
+      let candidateStat: Stats;
+      try {
+        candidateStat = await lstat(candidate);
+      } catch {
+        throw new Error(
+          `Forbidden import exception path does not exist: ${ownerName}:${path}`
+        );
+      }
+      if (!candidateStat.isFile()) {
+        throw new Error(
+          `Forbidden import exception path is not a regular file: ${ownerName}:${path}`
+        );
+      }
+      const candidateRealPath = await realpath(candidate);
+      if (!containsPath(ownerRealPath, candidateRealPath)) {
+        throw new Error(
+          `Forbidden import exception path escapes its workspace: ${ownerName}:${path}`
+        );
+      }
+    }
+  }
 };
 
 const resolveWorkspaceImport = (
@@ -422,10 +466,11 @@ export const checkBoundaries = async (input: {
   root: string;
 }) => {
   const root = resolve(input.root);
-  const config = JSON.parse(
-    await readFile(input.configPath, "utf8")
-  ) as BoundaryConfig;
+  const config = parseBoundaryConfig(
+    JSON.parse(await readFile(input.configPath, "utf8"))
+  );
   const workspaces = await loadWorkspaces(root);
+  await validateExceptionFiles(config, workspaces);
   const violations = [
     ...cycleViolations(workspaces),
     ...manifestViolations(workspaces, config, root),
@@ -439,6 +484,22 @@ export const checkBoundaries = async (input: {
       const contents = await readFile(file, "utf8");
       const { clientComponent, imports } = sourceImports(file, contents);
       for (const specifier of imports) {
+        const ownerRelativeFile = relative(owner.directory, file)
+          .split(sep)
+          .join("/");
+        const forbiddenRule = forbiddenImportRule({
+          config,
+          owner: owner.name,
+          ownerRelativeFile,
+          specifier,
+        });
+        if (forbiddenRule) {
+          violations.push({
+            code: "forbidden-package-import",
+            file: relative(root, file),
+            message: `${owner.name} must not import ${specifier} (forbidden by ${forbiddenRule})`,
+          });
+        }
         const target = resolveWorkspaceImport(specifier, file, workspaces);
         if (!target) {
           continue;
