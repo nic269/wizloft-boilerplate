@@ -4,6 +4,6 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@wizloft/harness-project": "0.1.0-alpha.4"
+    "@wizloft/harness-project": "0.1.2-alpha.3"
   }
 }
