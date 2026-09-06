@@ -4,11 +4,11 @@
   "projectId": "wizloft-boilerplate",
   "generatedBy": {
     "package": "@wizloft/harness-project",
-    "version": "0.1.0-alpha.4"
+    "version": "0.1.2-alpha.3"
   },
   "runtime": {
     "package": "@wizloft/harness-project",
-    "release": "0.1.0-alpha.4"
+    "release": "0.1.2-alpha.3"
   },
   "subjects": {
     "project": "wizloft-boilerplate:project",
