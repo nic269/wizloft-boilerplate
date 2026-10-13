@@ -1,5 +1,9 @@
 @import "tailwindcss";
 @import "@repo/design-system/styles.css";
+/* biome-ignore lint/suspicious/noUnknownAtRules: Expanded by the shared theme PostCSS adapter. */
+@app-theme default;
+/* biome-ignore lint/suspicious/noUnknownAtRules: Expanded by the shared theme PostCSS adapter. */
+@app-theme "./theme.tweakcn.css";
 @source "./**/*.{ts,tsx}";
 @source "../../../packages/design-system/src/**/*.{ts,tsx}";
 

@@ -9,5 +9,6 @@ records for the boilerplate.
 - `product/`: current product contracts.
 - `deployment.md`: deployment and runtime guidance.
 - `release-readiness.md`: release proof and known caveats.
+- `theming.md`: tweakcn-based theme editing workflow and ownership.
 - `decisions/`: accepted technical and product decisions.
 - `stories/`: historical feature packets and their validation evidence.
