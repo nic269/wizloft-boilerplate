@@ -1,0 +1,9 @@
+/* Marketing overrides. Replace with a complete tweakcn Tailwind v4 export.
+   Omitted colors inherit the default for the same mode. */
+:root {
+  --background: #fafafa;
+  --card: #ffffff;
+  --popover: #ffffff;
+  --muted: #f0f0f0;
+  --border: #d9d9d9;
+}

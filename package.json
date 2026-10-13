@@ -16,8 +16,8 @@
     "seed": "tsx packages/database/src/seed.ts"
   },
   "scripts": {
-    "build": "dotenv -e .env -- turbo run build",
-    "dev": "node scripts/check-dev-migrations.mjs && dotenv -e .env -- turbo run dev",
+    "build": "node api.js && dotenv -e .env -- turbo run build",
+    "dev": "node api.js && node scripts/check-dev-migrations.mjs && dotenv -e .env -- turbo run dev",
     "check": "ultracite fix",
     "check:ci": "ultracite check",
     "check-types": "turbo run check-types",

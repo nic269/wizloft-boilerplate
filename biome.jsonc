@@ -23,6 +23,18 @@
   },
   "overrides": [
     {
+      "includes": ["**/*.tweakcn.css"],
+      "formatter": {
+        "enabled": false
+      },
+      "linter": {
+        "enabled": false
+      },
+      "assist": {
+        "enabled": false
+      }
+    },
+    {
       "includes": ["packages/design-system/src/components/ui/**/*.tsx"],
       "linter": {
         "rules": {

@@ -14,13 +14,14 @@
     "./hooks/*": "./src/hooks/*.ts",
     "./lib/*": "./src/lib/*.ts",
     "./postcss.config.mjs": "./postcss.config.mjs",
-    "./styles.css": "./src/styles/globals.css"
+    "./styles.css": "./src/styles/globals.css",
+    "./theme-postcss": "./tooling/theme-postcss.mjs"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
     "gen-components": "pnpm dlx shadcn@latest add",
-    "test": "vitest run --passWithNoTests",
-    "test:unit": "vitest run --passWithNoTests",
+    "test": "vitest run tooling",
+    "test:unit": "vitest run tooling",
     "test:integration": "echo 'no integration tests for @repo/design-system'"
   },
   "dependencies": {
@@ -36,6 +37,7 @@
     "input-otp": "^1.4.2",
     "lucide-react": "^1.23.0",
     "next-themes": "^0.4.6",
+    "postcss": "8.5.16",
     "react-day-picker": "^10.0.1",
     "react-resizable-panels": "^4.12.1",
     "recharts": "3.9.2",
