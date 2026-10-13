@@ -5,9 +5,6 @@
     "ultracite/biome/react",
     "ultracite/biome/next"
   ],
-  "files": {
-    "includes": ["!!.wizloft/harness"]
-  },
   "linter": {
     "rules": {
       "performance": {

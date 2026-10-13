@@ -11,7 +11,3 @@ records for the boilerplate.
 - `release-readiness.md`: release proof and known caveats.
 - `decisions/`: accepted technical and product decisions.
 - `stories/`: historical feature packets and their validation evidence.
-
-Repository-local Wizloft Harness instructions live in
-`.wizloft/harness/INSTRUCTIONS.md`; they are intentionally separate from product
-documentation.
