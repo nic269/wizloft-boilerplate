@@ -28,7 +28,4 @@ tsconfig.tsbuildinfo
 
 .env
 .data/
-branch_structure.json
-temp_auto_push.bat
-temp_interactive_push.bat
 .omp
