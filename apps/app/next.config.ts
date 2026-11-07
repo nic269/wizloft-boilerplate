@@ -1,10 +1,12 @@
 import path from "node:path";
+import { securityHeaderRoutes } from "@repo/config/security-headers";
 import type { NextConfig } from "next";
 import { env } from "./env";
 
 const apiUrl = env.API_INTERNAL_URL ?? env.NEXT_PUBLIC_API_URL;
 
 const nextConfig: NextConfig = {
+  headers: async () => securityHeaderRoutes(),
   output: "standalone",
   outputFileTracingRoot: path.join(import.meta.dirname, "../.."),
   async rewrites() {

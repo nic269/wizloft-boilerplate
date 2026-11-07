@@ -1,7 +1,9 @@
+import { securityHeaderRoutes } from "@repo/config/security-headers";
 import type { NextConfig } from "next";
 import "./env";
 
 export default {
+  headers: async () => securityHeaderRoutes(),
   output: "standalone",
   transpilePackages: [
     "@repo/design-system",
