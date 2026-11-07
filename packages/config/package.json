@@ -9,6 +9,7 @@
     "./features": "./src/features.ts",
     "./navigation": "./src/navigation.ts",
     "./routes": "./src/routes.ts",
+    "./security-headers": "./src/security-headers.ts",
     "./plans": "./src/plans.ts",
     "./templates": "./src/templates.ts"
   },
@@ -21,6 +22,6 @@
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.12"
   }
 }
