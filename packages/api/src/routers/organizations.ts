@@ -26,6 +26,7 @@ import { sendInvitationMail } from "@repo/mail";
 import type { ApiContext } from "../context";
 import { ApiError } from "../errors";
 import { requireOrganizationInvitationsEnabled } from "../feature-guards";
+import { API_RATE_LIMITS, requireRateLimit } from "../rate-limit";
 import { os } from "./implementer";
 
 const invitationErrorStatus = {
@@ -89,6 +90,10 @@ const createOrganization = os.organizations.create.handler(
         422
       );
     }
+    await requireRateLimit(
+      `organizations.create:user:${user.id}`,
+      API_RATE_LIMITS.organizationCreate
+    );
 
     try {
       return {
@@ -141,6 +146,10 @@ const createOrganizationInvitation =
       input.organizationId,
       "members",
       "invite"
+    );
+    await requireRateLimit(
+      `invitations.create:user:${user.id}`,
+      API_RATE_LIMITS.invitationCreate
     );
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);

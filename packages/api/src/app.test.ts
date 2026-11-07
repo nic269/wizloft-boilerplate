@@ -105,6 +105,17 @@ vi.mock("@repo/jobs", () => ({
   }),
 }));
 
+const mockRateLimitCount = (count: number) => {
+  vi.mocked(prisma.$queryRaw).mockImplementation(((
+    query: TemplateStringsArray
+  ) =>
+    Promise.resolve(
+      query.join("").includes("api_rate_limit")
+        ? [{ count, windowStartedAt: new Date() }]
+        : [{ "?column?": 1 }]
+    )) as never);
+};
+
 describe("api app", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -113,7 +124,7 @@ describe("api app", () => {
       passwordReset: true,
       requireEmailVerification: true,
     });
-    vi.mocked(prisma.$queryRaw).mockResolvedValue([{ "?column?": 1 }]);
+    mockRateLimitCount(1);
   });
 
   afterEach(() => vi.unstubAllEnvs());
@@ -122,6 +133,33 @@ describe("api app", () => {
     const response = await createApiApp().request("/status");
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ ok: true, service: "api" });
+  });
+
+  it("sends baseline security headers", async () => {
+    const response = await createApiApp().request("/status");
+
+    expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(response.headers.get("x-frame-options")).toBe("DENY");
+    expect(response.headers.get("strict-transport-security")).toContain(
+      "max-age="
+    );
+  });
+
+  it("rejects oversized request bodies with the API error envelope", async () => {
+    const response = await createApiApp().request("/api/organizations", {
+      body: JSON.stringify({ name: "x".repeat(1024 * 1024) }),
+      headers: {
+        "content-type": "application/json",
+        "x-request-id": "req-too-large",
+      },
+      method: "POST",
+    });
+
+    expect(response.status).toBe(413);
+    expect(await response.json()).toMatchObject({
+      error: { code: "PAYLOAD_TOO_LARGE", requestId: "req-too-large" },
+    });
+    expect(getCurrentSession).not.toHaveBeenCalled();
   });
 
   it("does not expose removed legacy RPC procedures", async () => {
@@ -421,6 +459,28 @@ describe("api app", () => {
     });
   });
 
+  it("rate limits organization creation per user", async () => {
+    vi.mocked(getCurrentSession).mockResolvedValue({
+      user: { id: "user-1" },
+    } as never);
+    mockRateLimitCount(11);
+
+    const response = await createApiApp().request("/api/organizations", {
+      body: JSON.stringify({ name: "Acme Studio" }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
+
+    expect(response.status).toBe(429);
+    expect(await response.json()).toMatchObject({
+      error: {
+        code: "RATE_LIMITED",
+        details: { retryAfterSeconds: 3600 },
+      },
+    });
+    expect(createOrganizationForUser).not.toHaveBeenCalled();
+  });
+
   it("normalizes contract input validation to the API error envelope", async () => {
     const response = await createApiApp().request("/api/organizations", {
       body: JSON.stringify({ name: "x" }),
@@ -537,6 +597,30 @@ describe("api app", () => {
       to: "member@example.com",
     });
     expect(JSON.stringify(await response.json())).not.toContain("tokenHash");
+  });
+
+  it("rate limits invitation delivery per inviter", async () => {
+    vi.mocked(getCurrentSession).mockResolvedValue({
+      user: { id: "owner-1", name: "Ada Owner" },
+    } as never);
+    vi.mocked(hasPermission).mockResolvedValue(true);
+    mockRateLimitCount(31);
+
+    const response = await createApiApp().request(
+      "/api/organizations/org-1/invitations",
+      {
+        body: JSON.stringify({ email: "member@example.com" }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      }
+    );
+
+    expect(response.status).toBe(429);
+    expect(await response.json()).toMatchObject({
+      error: { code: "RATE_LIMITED" },
+    });
+    expect(createInvitation).not.toHaveBeenCalled();
+    expect(sendInvitationMail).not.toHaveBeenCalled();
   });
 
   it("returns conflict when revoking an invitation that is not pending", async () => {

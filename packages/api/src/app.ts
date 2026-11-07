@@ -2,12 +2,17 @@ import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { ORPCError, onError, ValidationError } from "@orpc/server";
 import { auth } from "@repo/auth/server";
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
+import { secureHeaders } from "hono/secure-headers";
 import { z } from "zod";
 import { requestContext } from "./context";
 import { ApiError, type ApiErrorResponse } from "./errors";
 import { requireAuthEndpointEnabled } from "./feature-guards";
 import { getOpenApiDocument } from "./openapi";
 import { router } from "./routers";
+
+/** JSON API and auth payloads are small; uploads should use presigned URLs. */
+const MAX_REQUEST_BODY_BYTES = 1024 * 1024;
 
 const orpcHandler = new OpenAPIHandler(router, {
   clientInterceptors: [
@@ -111,6 +116,30 @@ export const createApiApp = () => {
   const app = new Hono();
 
   app.use("*", requestContext);
+  app.use(
+    "*",
+    secureHeaders({
+      referrerPolicy: "strict-origin-when-cross-origin",
+      xFrameOptions: "DENY",
+    })
+  );
+  app.use(
+    "*",
+    bodyLimit({
+      maxSize: MAX_REQUEST_BODY_BYTES,
+      onError: (context) =>
+        context.json<ApiErrorResponse>(
+          {
+            error: {
+              code: "PAYLOAD_TOO_LARGE",
+              message: "Request body is too large.",
+              requestId: context.get("requestId"),
+            },
+          },
+          413
+        ),
+    })
+  );
   app.get("/openapi.json", async (context) =>
     context.json(await getOpenApiDocument())
   );

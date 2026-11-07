@@ -318,6 +318,16 @@ model IntegrationConnection {
   @@map("integration_connection")
 }
 
+// Fixed-window counters for API mutations. Kept separate from any auth
+// library storage so each limiter owns its expiry semantics.
+model ApiRateLimit {
+  key             String   @id
+  count           Int
+  windowStartedAt DateTime
+
+  @@map("api_rate_limit")
+}
+
 model FeatureFlag {
   id        String   @id @default(cuid())
   scopeId   String   @default("global")
