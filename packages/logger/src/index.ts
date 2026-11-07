@@ -9,19 +9,40 @@ export interface LogContext {
   [key: string]: unknown;
 }
 
-const REDACTED_KEY_PATTERN = /(secret|token|password|key|authorization)/i;
+const REDACTED_KEY_PATTERN =
+  /(secret|token|password|passwd|authorization|cookie|credential|api[-_]?key|private[-_]?key|access[-_]?key)/i;
+const MAX_REDACT_DEPTH = 6;
+
+const redactValue = (value: unknown, depth: number): unknown => {
+  if (value === null || typeof value !== "object" || value instanceof Date) {
+    return value;
+  }
+  if (value instanceof Error) {
+    return { message: value.message, name: value.name };
+  }
+  if (depth >= MAX_REDACT_DEPTH) {
+    return "[truncated]";
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry) => redactValue(entry, depth + 1));
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).map(([key, entry]) => [
+      key,
+      REDACTED_KEY_PATTERN.test(key)
+        ? "[redacted]"
+        : redactValue(entry, depth + 1),
+    ])
+  );
+};
 
 const redact = (value: LogContext): LogContext => {
   if (!value || typeof value !== "object") {
     return {};
   }
 
-  return Object.fromEntries(
-    Object.entries(value as Record<string, unknown>).map(([key, entry]) => [
-      key,
-      REDACTED_KEY_PATTERN.test(key) ? "[redacted]" : entry,
-    ])
-  );
+  return redactValue(value, 0) as LogContext;
 };
 
 const getSink = (level: LogLevel) => {
