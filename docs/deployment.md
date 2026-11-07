@@ -53,11 +53,20 @@ docker run --rm -p 3000:3000 \
   -e NEXT_PUBLIC_WEB_URL=http://localhost:3001 \
   -e NEXT_PUBLIC_API_URL=http://localhost:3002 \
   -e BETTER_AUTH_SECRET=replace-with-a-production-secret \
-  -e BETTER_AUTH_URL=http://localhost:3002/api/auth \
+  -e BETTER_AUTH_URL=http://localhost:3000/api/auth \
   personal-saas-app
 ```
 
 Do not copy `.env` into production images. `.dockerignore` excludes local env files and build outputs.
+
+Set `BETTER_AUTH_URL` to the product app origin plus `/api/auth` (for example
+`https://app.example.com/api/auth`) on both the app and API surfaces. Browsers
+reach auth through the app's same-origin `/api/auth` rewrite, so auth cookies
+live on the app host. OAuth callback URLs are built from `BETTER_AUTH_URL`; if
+it points at the API host, the OAuth state and session cookies end up on the
+wrong host and social sign-in fails. The API refuses to start with Google
+sign-in enabled when the two hosts differ. Register
+`<BETTER_AUTH_URL>/callback/google` as the Google OAuth redirect URI.
 
 The API surface should receive a real `PORT` value from the platform. The
 server now prefers `PORT` for binding and explicitly listens on `0.0.0.0`,

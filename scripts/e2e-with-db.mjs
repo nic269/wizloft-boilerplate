@@ -7,7 +7,7 @@ import { join } from "node:path";
 const DEFAULTS = {
   API_INTERNAL_URL: "http://localhost:3002",
   BETTER_AUTH_SECRET: "local-e2e-better-auth-secret-at-least-32",
-  BETTER_AUTH_URL: "http://localhost:3002/api/auth",
+  BETTER_AUTH_URL: "http://localhost:3000/api/auth",
   NEXT_PUBLIC_API_URL: "http://localhost:3002",
   NEXT_PUBLIC_APP_URL: "http://localhost:3000",
   NEXT_PUBLIC_WEB_URL: "http://localhost:3001",

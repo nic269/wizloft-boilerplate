@@ -51,6 +51,23 @@ export const sendEmailVerificationEmail = ({ user, url }: AuthEmailInput) =>
     to: user.email,
   });
 
+// The product app proxies /api/auth to the API, so browser auth cookies live on
+// the app host. OAuth callbacks are built from BETTER_AUTH_URL and must land on
+// that same host, or the state and session cookies are missing/misplaced.
+// Cookies ignore ports, so only the hostname has to match.
+const assertOAuthCallbackHost = (env: AuthEnv) => {
+  if (!(env.BETTER_AUTH_URL && env.NEXT_PUBLIC_APP_URL)) {
+    return;
+  }
+  const authHost = new URL(env.BETTER_AUTH_URL).hostname;
+  const appHost = new URL(env.NEXT_PUBLIC_APP_URL).hostname;
+  if (authHost !== appHost) {
+    throw new Error(
+      `BETTER_AUTH_URL host "${authHost}" must match NEXT_PUBLIC_APP_URL host "${appHost}" when social sign-in is enabled. Use the app origin, e.g. ${new URL("/api/auth", env.NEXT_PUBLIC_APP_URL).toString()}.`
+    );
+  }
+};
+
 export const createAuthOptions = (
   env: AuthEnv = keys(),
   features: AuthFeatureConfig = authFeatureConfig
@@ -58,6 +75,9 @@ export const createAuthOptions = (
   const googleEnabled = Boolean(
     env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
   );
+  if (googleEnabled) {
+    assertOAuthCallbackHost(env);
+  }
 
   return {
     advanced: {

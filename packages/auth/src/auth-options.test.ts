@@ -147,4 +147,39 @@ describe("auth options", () => {
     expect(options.emailVerification?.sendOnSignUp).toBe(false);
     expect(options.emailVerification?.sendVerificationEmail).toBeUndefined();
   });
+
+  it("rejects Google sign-in when OAuth callbacks would land on another host", () => {
+    expect(() =>
+      createAuthOptions({
+        ...env,
+        BETTER_AUTH_URL: "https://api.example.com/api/auth",
+        GOOGLE_CLIENT_ID: "client-id",
+        GOOGLE_CLIENT_SECRET: "client-secret",
+        NEXT_PUBLIC_APP_URL: "https://app.example.com",
+      })
+    ).toThrow('must match NEXT_PUBLIC_APP_URL host "app.example.com"');
+  });
+
+  it("accepts Google sign-in when OAuth callbacks use the app host", () => {
+    const options = createAuthOptions({
+      ...env,
+      BETTER_AUTH_URL: "https://app.example.com/api/auth",
+      GOOGLE_CLIENT_ID: "client-id",
+      GOOGLE_CLIENT_SECRET: "client-secret",
+      NEXT_PUBLIC_APP_URL: "https://app.example.com",
+    });
+
+    expect(options.baseURL).toBe("https://app.example.com/api/auth");
+    expect(options.socialProviders?.google).toBeDefined();
+  });
+
+  it("does not constrain the auth host when social sign-in is disabled", () => {
+    expect(() =>
+      createAuthOptions({
+        ...env,
+        BETTER_AUTH_URL: "https://api.example.com/api/auth",
+        NEXT_PUBLIC_APP_URL: "https://app.example.com",
+      })
+    ).not.toThrow();
+  });
 });
