@@ -29,14 +29,14 @@
     "@repo/database": "workspace:*",
     "@repo/mail": "workspace:*",
     "@t3-oss/env-core": "^0.13.11",
-    "better-auth": "1.6.23",
-    "zod": "^4.4.3"
+    "better-auth": "1.7.13",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^26.1.0",
     "@types/react": "^19.2.17",
-    "next": "^16.2.10",
+    "next": "^16.4.3",
     "react": "^19.2.7",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"

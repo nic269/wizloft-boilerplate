@@ -22,7 +22,7 @@
     "@t3-oss/env-core": "^0.13.11",
     "hono": "^4.12.27",
     "pg": "^8.22.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
