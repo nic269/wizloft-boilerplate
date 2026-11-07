@@ -259,6 +259,9 @@ export const acceptInvitation = async (input: {
       );
     }
 
+    // An invitation only grants the Member role, so it must never replace the
+    // role of an active member (e.g. demote an Owner). It may only create a
+    // membership or reactivate an inactive one.
     await transaction.membership.upsert({
       create: {
         organizationId: invitation.organizationId,
@@ -266,12 +269,20 @@ export const acceptInvitation = async (input: {
         status: "ACTIVE",
         userId: input.userId,
       },
-      update: { roleId: invitation.roleId, status: "ACTIVE" },
+      update: {},
       where: {
         userId_organizationId: {
           organizationId: invitation.organizationId,
           userId: input.userId,
         },
+      },
+    });
+    await transaction.membership.updateMany({
+      data: { roleId: invitation.roleId, status: "ACTIVE" },
+      where: {
+        organizationId: invitation.organizationId,
+        status: { not: "ACTIVE" },
+        userId: input.userId,
       },
     });
 

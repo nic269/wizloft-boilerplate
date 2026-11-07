@@ -250,7 +250,10 @@ describe("invitation service", () => {
         }),
         updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       },
-      membership: { upsert: vi.fn().mockResolvedValue({ id: "membership-1" }) },
+      membership: {
+        updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+        upsert: vi.fn().mockResolvedValue({ id: "membership-1" }),
+      },
     };
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) =>
       callback(transaction as never)
@@ -266,9 +269,18 @@ describe("invitation service", () => {
     ).resolves.toEqual({ id: "org-1", name: "Acme", slug: "acme" });
     expect(transaction.membership.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        update: { roleId: "role-1", status: "ACTIVE" },
+        create: expect.objectContaining({ roleId: "role-1", status: "ACTIVE" }),
+        update: {},
       })
     );
+    expect(transaction.membership.updateMany).toHaveBeenCalledWith({
+      data: { roleId: "role-1", status: "ACTIVE" },
+      where: {
+        organizationId: "org-1",
+        status: { not: "ACTIVE" },
+        userId: "user-1",
+      },
+    });
     expect(transaction.auditLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         action: "invitation.accepted",

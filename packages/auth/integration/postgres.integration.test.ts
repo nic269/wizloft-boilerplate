@@ -214,6 +214,80 @@ describe("PostgreSQL organization integrity", () => {
     ).resolves.toEqual({ status: "EXPIRED" });
   });
 
+  it("keeps an active Owner's role when they accept a Member invitation", async () => {
+    const { organization, roles } = await createOrganization();
+    const owner = await createUser("owner");
+    const membership = await prisma.membership.create({
+      data: {
+        organizationId: organization.id,
+        roleId: roles.Owner.id,
+        status: "ACTIVE",
+        userId: owner.id,
+      },
+    });
+    const token = randomUUID();
+    await prisma.invitation.create({
+      data: {
+        email: owner.email,
+        expiresAt: new Date("2030-01-01T00:00:00.000Z"),
+        organizationId: organization.id,
+        roleId: roles.Member.id,
+        tokenHash: hashInvitationToken(token),
+      },
+    });
+
+    await acceptInvitation({
+      now: new Date("2029-01-01T00:00:00.000Z"),
+      token,
+      userEmail: owner.email,
+      userId: owner.id,
+    });
+
+    await expect(
+      prisma.membership.findUnique({
+        select: { roleId: true, status: true },
+        where: { id: membership.id },
+      })
+    ).resolves.toEqual({ roleId: roles.Owner.id, status: "ACTIVE" });
+  });
+
+  it("reactivates a disabled membership with the invited role", async () => {
+    const { organization, roles } = await createOrganization();
+    const user = await createUser("returning");
+    const membership = await prisma.membership.create({
+      data: {
+        organizationId: organization.id,
+        roleId: roles.Admin.id,
+        status: "DISABLED",
+        userId: user.id,
+      },
+    });
+    const token = randomUUID();
+    await prisma.invitation.create({
+      data: {
+        email: user.email,
+        expiresAt: new Date("2030-01-01T00:00:00.000Z"),
+        organizationId: organization.id,
+        roleId: roles.Member.id,
+        tokenHash: hashInvitationToken(token),
+      },
+    });
+
+    await acceptInvitation({
+      now: new Date("2029-01-01T00:00:00.000Z"),
+      token,
+      userEmail: user.email,
+      userId: user.id,
+    });
+
+    await expect(
+      prisma.membership.findUnique({
+        select: { roleId: true, status: true },
+        where: { id: membership.id },
+      })
+    ).resolves.toEqual({ roleId: roles.Member.id, status: "ACTIVE" });
+  });
+
   it("rejects orphan integrations and cascades organization-owned rows", async () => {
     await expect(
       prisma.integrationConnection.create({
