@@ -1,8 +1,10 @@
 import { serve } from "@hono/node-server";
 import { createApiApp } from "@repo/api/app";
 import { assertApiProviderConfiguration } from "@repo/api/health";
+import { assertProductionAuthSecret } from "@repo/auth/keys";
 import { env } from "../env";
 
+assertProductionAuthSecret();
 assertApiProviderConfiguration();
 const app = createApiApp();
 const configuredPort =

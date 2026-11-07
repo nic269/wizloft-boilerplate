@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { keys } from "./keys";
+import { assertProductionAuthSecret, keys } from "./keys";
 
 describe("auth keys", () => {
   afterEach(() => {
@@ -18,5 +18,17 @@ describe("auth keys", () => {
 
     expect(env.GOOGLE_CLIENT_ID).toBeUndefined();
     expect(env.GOOGLE_CLIENT_SECRET).toBeUndefined();
+  });
+
+  it("rejects the example secret in production only", () => {
+    const secret = "replace-with-at-least-32-random-characters";
+
+    expect(() =>
+      assertProductionAuthSecret(secret, "development")
+    ).not.toThrow();
+    expect(() => assertProductionAuthSecret(secret, "production")).toThrow();
+    expect(() =>
+      assertProductionAuthSecret("x".repeat(32), "production")
+    ).not.toThrow();
   });
 });

@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { once } from "node:events";
 import { access } from "node:fs/promises";
 import net from "node:net";
@@ -7,6 +8,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
 const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const authSecret = randomBytes(32).toString("base64url");
 const imagePrefix = `wizloft-boilerplate-${Date.now()}`;
 const networkName = `${imagePrefix}-net`;
 const containerNames = [];
@@ -219,7 +221,7 @@ const surfaces = [
       "NEXT_PUBLIC_API_URL=http://api:3002",
       `NEXT_PUBLIC_APP_URL=${urls.app}`,
       `NEXT_PUBLIC_WEB_URL=${authWebUrl}`,
-      "BETTER_AUTH_SECRET=replace-with-at-least-32-random-characters",
+      `BETTER_AUTH_SECRET=${authSecret}`,
       `BETTER_AUTH_URL=${urls.app}/api/auth`,
       "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/personal_saas_boilerplate",
       "MAIL_PROVIDER=resend",
@@ -243,7 +245,7 @@ const surfaces = [
       `NEXT_PUBLIC_API_URL=${urls.api}`,
       `NEXT_PUBLIC_APP_URL=${urls.app}`,
       `NEXT_PUBLIC_WEB_URL=${authWebUrl}`,
-      "BETTER_AUTH_SECRET=replace-with-at-least-32-random-characters",
+      `BETTER_AUTH_SECRET=${authSecret}`,
       `BETTER_AUTH_URL=${urls.app}/api/auth`,
       "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/personal_saas_boilerplate",
     ],

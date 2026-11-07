@@ -1,6 +1,8 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
+const PLACEHOLDER_SECRET_PREFIX = "replace-with";
+
 export const keys = () =>
   createEnv({
     emptyStringAsUndefined: true,
@@ -15,3 +17,22 @@ export const keys = () =>
     },
     skipValidation: process.env.SKIP_ENV_VALIDATION === "true",
   });
+
+/**
+ * Refuses to start a production server with the example secret. Called at
+ * server startup rather than in env validation, because `next build` also runs
+ * with NODE_ENV=production and must work with local example values.
+ */
+export const assertProductionAuthSecret = (
+  secret: string | undefined = process.env.BETTER_AUTH_SECRET,
+  nodeEnv: string | undefined = process.env.NODE_ENV
+) => {
+  if (
+    nodeEnv === "production" &&
+    secret?.startsWith(PLACEHOLDER_SECRET_PREFIX)
+  ) {
+    throw new Error(
+      "BETTER_AUTH_SECRET still uses the example placeholder. Generate one with `openssl rand -base64 32`."
+    );
+  }
+};
