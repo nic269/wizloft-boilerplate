@@ -256,7 +256,9 @@ describe("boilerplate init", () => {
     expect(generatedCi).not.toContain("templates:validate");
     expect(generatedCi).not.toContain("NEXT_PUBLIC_DOCS_URL");
     expect(generatedCi).toContain("playwright install --with-deps chromium");
-    expect(generatedCi).toContain("pnpm --filter @repo/auth test:integration");
+    expect(generatedCi).toContain(
+      "pnpm --filter @repo/auth --filter @repo/api test:integration"
+    );
     expect(generatedCi).toContain("pnpm test:e2e");
     const dockerIgnore = await readFile(join(target, ".dockerignore"), "utf8");
     expect(dockerIgnore).not.toContain("harness.db");

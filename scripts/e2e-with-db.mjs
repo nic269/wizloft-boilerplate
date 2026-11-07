@@ -208,7 +208,11 @@ try {
   );
   await run("pnpm", ["db:generate"], env);
   await run("pnpm", ["db:migrate:deploy"], env);
-  await run("pnpm", ["--filter", "@repo/auth", "test:integration"], env);
+  await run(
+    "pnpm",
+    ["--filter", "@repo/auth", "--filter", "@repo/api", "test:integration"],
+    env
+  );
   await run("pnpm", ["test:e2e"], env);
 } catch (error) {
   primaryError = error;

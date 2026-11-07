@@ -10,10 +10,13 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     services:
       postgres:
@@ -39,22 +42,30 @@ jobs:
       BETTER_AUTH_SECRET: ci-better-auth-secret-at-least-32-chars
       BETTER_AUTH_URL: http://localhost:3000/api/auth
       SKIP_ENV_VALIDATION: "false"
+      MAIL_OUTBOX_DIR: apps/api/.data/mail
+      MAIL_PROVIDER: console
+      PLAYWRIGHT_REUSE_SERVER: "false"
 
     steps:
+      # Third-party actions are pinned to full commit SHAs; the comment names
+      # the release each SHA belongs to.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
           cache: pnpm
 
       - name: Install
         run: pnpm install --frozen-lockfile
+
+      - name: Audit production dependencies
+        run: pnpm audit --prod --audit-level critical
 
       - name: Generate database client
         run: pnpm db:generate
@@ -79,3 +90,12 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run database integration
+        run: pnpm --filter @repo/auth --filter @repo/api test:integration
+
+      - name: Run browser identity journeys
+        run: pnpm test:e2e

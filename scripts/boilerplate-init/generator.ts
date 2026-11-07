@@ -136,23 +136,6 @@ const APP_SURFACES_PATTERN =
   /export const appSurfaces: readonly string\[\] = \[[\s\S]*?\];/;
 const TEMPLATE_CI_STEP_PATTERN =
   /\n {6}- name: Validate templates\n {8}run: pnpm templates:validate\n/;
-const GENERATED_CI_BUILD_STEP =
-  "      - name: Build\n        run: pnpm build\n";
-const GENERATED_CI_ENV_ANCHOR = '      SKIP_ENV_VALIDATION: "false"\n';
-const GENERATED_CI_ENV = `${GENERATED_CI_ENV_ANCHOR}      MAIL_OUTBOX_DIR: apps/api/.data/mail
-      MAIL_PROVIDER: console
-      PLAYWRIGHT_REUSE_SERVER: "false"
-`;
-const GENERATED_CI_RUNTIME_STEPS = `${GENERATED_CI_BUILD_STEP}
-      - name: Install Chromium
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Run auth integration
-        run: pnpm --filter @repo/auth test:integration
-
-      - name: Run browser identity journeys
-        run: pnpm test:e2e
-`;
 const REMOVED_PACKAGE_SCRIPTS = new Set([
   "boilerplate:init",
   "profiles:verify",
@@ -386,20 +369,6 @@ const rewriteGeneratedConfig = async (target: string) => {
     indexPath,
     index.replace('export * from "./templates";\n', "")
   );
-  const ciPath = join(target, ".github/workflows/ci.yml");
-  let ci = await readFile(ciPath, "utf8");
-  if (
-    !(
-      ci.includes(GENERATED_CI_BUILD_STEP) &&
-      ci.includes(GENERATED_CI_ENV_ANCHOR)
-    )
-  ) {
-    throw new Error("Generated CI anchors could not be located.");
-  }
-  ci = ci
-    .replace(GENERATED_CI_ENV_ANCHOR, GENERATED_CI_ENV)
-    .replace(GENERATED_CI_BUILD_STEP, GENERATED_CI_RUNTIME_STEPS);
-  await writeFile(ciPath, ci);
 };
 
 const generatedReadme = (

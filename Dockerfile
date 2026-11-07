@@ -6,7 +6,7 @@ WORKDIR /app
 
 FROM base AS pruner
 ARG APP_SCOPE=@repo/app
-RUN npm install --global turbo@^2.10.3
+RUN npm install --global turbo@2.10.3
 COPY . .
 RUN turbo prune "${APP_SCOPE}" --docker
 
