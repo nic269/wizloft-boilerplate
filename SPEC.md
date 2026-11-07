@@ -5,7 +5,7 @@ Nguyen's future apps.
 
 Core stack:
 
-- pnpm 10 and Turborepo
+- pnpm 11 and Turborepo
 - Biome
 - TypeScript strict
 - Next.js App Router

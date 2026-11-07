@@ -13,6 +13,7 @@ node_modules/
 .next/
 apps/*/next-env.d.ts
 storybook-static/
+debug-storybook.log
 .react-email/
 coverage/
 
