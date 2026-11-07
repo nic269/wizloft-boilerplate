@@ -7,6 +7,7 @@ import { createTestSuffix, E2E_PASSWORD, signUp } from "./support/user-flows";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
 const RESET_SUBJECT_PREFIX = "Reset your ";
 const SIGN_IN_URL_PATTERN = /\/sign-in$/;
+const DASHBOARD_SIGN_IN_URL_PATTERN = /\/sign-in\?callbackUrl=%2Fdashboard$/;
 const VERIFICATION_URL_PATTERN = /\/verify-email\?/;
 const WEB_URL_PATTERN = /https?:\/\/\S+/;
 const outboxDirectory = resolve(
@@ -125,7 +126,7 @@ test("unverified users cannot open protected app surfaces", async ({
   await registerWithoutVerification({ email, page });
 
   await page.goto("/dashboard");
-  await expect(page).toHaveURL(SIGN_IN_URL_PATTERN);
+  await expect(page).toHaveURL(DASHBOARD_SIGN_IN_URL_PATTERN);
 });
 
 for (const state of ["suspended", "deleted", "expired-session"] as const) {

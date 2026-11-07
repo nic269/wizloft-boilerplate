@@ -24,14 +24,25 @@ const hasSessionCookie = (request: AuthGuardRequest) =>
       .some((cookie) => cookie.trim().startsWith(`${name}=`));
   });
 
+const matchesPathPrefix = (pathname: string, prefix: string) =>
+  pathname === prefix || pathname.startsWith(`${prefix}/`);
+
+/**
+ * Optimistic edge redirect for signed-out visitors. Pages must still verify
+ * the session server-side; this only avoids rendering protected routes.
+ */
 export const createAuthGuard =
-  (paths: { signIn: string; dashboard: string }) =>
+  (paths: { protectedPaths: readonly string[]; signIn: string }) =>
   (request: AuthGuardRequest) => {
     const url = request.nextUrl ?? new URL(request.url);
-    const isProtected = url.pathname.startsWith(paths.dashboard);
+    const isProtected = paths.protectedPaths.some((prefix) =>
+      matchesPathPrefix(url.pathname, prefix)
+    );
 
     if (isProtected && !hasSessionCookie(request)) {
-      return NextResponse.redirect(new URL(paths.signIn, request.url));
+      const signInUrl = new URL(paths.signIn, request.url);
+      signInUrl.searchParams.set("callbackUrl", `${url.pathname}${url.search}`);
+      return NextResponse.redirect(signInUrl);
     }
 
     return NextResponse.next();
