@@ -52,7 +52,7 @@ docker run --rm -p 3000:3000 \
   -e NEXT_PUBLIC_APP_URL=http://localhost:3000 \
   -e NEXT_PUBLIC_WEB_URL=http://localhost:3001 \
   -e NEXT_PUBLIC_API_URL=http://localhost:3002 \
-  -e BETTER_AUTH_SECRET=replace-with-a-production-secret \
+  -e BETTER_AUTH_SECRET="$(openssl rand -base64 32)" \
   -e BETTER_AUTH_URL=http://localhost:3000/api/auth \
   personal-saas-app
 ```
@@ -101,6 +101,7 @@ managed ingress, and secret delivery still belong to the deployment platform.
 
 ```bash
 pnpm install --frozen-lockfile
+pnpm audit --prod --audit-level critical
 pnpm db:generate
 pnpm db:migrate:deploy
 pnpm templates:validate
@@ -109,9 +110,14 @@ pnpm check-types
 pnpm test
 pnpm boundaries
 pnpm build
+pnpm exec playwright install --with-deps chromium
+pnpm --filter @repo/auth --filter @repo/api test:integration
+pnpm test:e2e
 ```
 
 The workflow starts a PostgreSQL service and injects CI env vars directly.
+Third-party actions are pinned to full commit SHAs, and `pnpm-workspace.yaml`
+only resolves package versions published at least seven days ago.
 
 Run the same release ladder locally before cutting a reusable boilerplate fork:
 
@@ -139,8 +145,21 @@ database or a required provider is unhealthy.
 
 The final fork-readiness audit lives in `docs/release-readiness.md`.
 
+## Rate Limits
+
+- Better Auth's built-in limiter guards `/api/auth/*` in production (sign-in,
+  sign-up, and email-sending endpoints have stricter windows). It keeps counters
+  in process memory, so each API instance counts separately. When running more
+  than one API instance, configure Better Auth secondary storage (for example
+  Redis) so the limit is shared. Better Auth reads the client IP from
+  `x-forwarded-for`; make sure the platform's proxy sets it.
+- API mutations that create records or send email (organization creation and
+  invitation delivery) use PostgreSQL-backed fixed windows in the
+  `api_rate_limit` table, so the limits hold across instances. Limits live in
+  `packages/api/src/rate-limit.ts`; rejected calls return `429 RATE_LIMITED`
+  with `details.retryAfterSeconds`.
+
 ## Follow-Ups
 
 - Add provider-specific deployment smoke checks when choosing a hosting platform.
 - Add live mail, storage, and job delivery checks only in environments with credentials.
-- Promote `pnpm test:e2e:db` into CI when pull request runtime budget allows a browser smoke.
